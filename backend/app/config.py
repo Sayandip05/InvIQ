@@ -17,6 +17,11 @@ class Settings:
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
     SARVAM_API_KEY = os.getenv("SARVAM_API_KEY")
     
+    # LangSmith (observability & tracing)
+    LANGCHAIN_API_KEY = os.getenv("LANGCHAIN_API_KEY")
+    LANGCHAIN_PROJECT = os.getenv("LANGCHAIN_PROJECT", "smart-inventory-assistant")
+    LANGCHAIN_TRACING_V2 = os.getenv("LANGCHAIN_TRACING_V2", "false")
+    
     # Environment
     ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
     
@@ -29,6 +34,22 @@ class Settings:
     # API Settings
     API_V1_PREFIX = "/api"
     PROJECT_NAME = "Smart Inventory Assistant"
-    VERSION = "1.0.0"
+    VERSION = "2.0.0"
 
 settings = Settings()
+
+
+def configure_langsmith():
+    """Auto-enable LangSmith tracing when API key is available."""
+    if settings.LANGCHAIN_API_KEY:
+        os.environ["LANGCHAIN_TRACING_V2"] = "true"
+        os.environ["LANGCHAIN_API_KEY"] = settings.LANGCHAIN_API_KEY
+        os.environ["LANGCHAIN_PROJECT"] = settings.LANGCHAIN_PROJECT
+        os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
+        print(f"✅ LangSmith tracing enabled → project: {settings.LANGCHAIN_PROJECT}")
+    else:
+        os.environ["LANGCHAIN_TRACING_V2"] = "false"
+
+
+# Auto-configure on import
+configure_langsmith()
