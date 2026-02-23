@@ -12,3 +12,12 @@ database/*.sqlite3
 # Python cache
 __pycache__/
 *.pyc
+
+# ChromaDB persistent storage
+data/
+
+# Backup files
+*.bak
+
+# Debug scripts
+backend/debug_import.py
