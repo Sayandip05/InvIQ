@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import analytics, chat, inventory
+from app.api.routes import analytics, chat, inventory, requisition
 from app.config import settings
 from app.database.connection import Base, engine
 
@@ -25,6 +25,7 @@ app.add_middleware(
 app.include_router(analytics.router, prefix=settings.API_V1_PREFIX)
 app.include_router(chat.router, prefix=settings.API_V1_PREFIX)
 app.include_router(inventory.router, prefix=settings.API_V1_PREFIX)
+app.include_router(requisition.router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/")
@@ -56,5 +57,10 @@ def health_check():
             "/api/inventory/reset-data",
             "/api/inventory/transaction",
             "/api/inventory/bulk-transaction",
+            "/api/requisition/create",
+            "/api/requisition/list",
+            "/api/requisition/stats",
+            "/api/requisition/{id}/approve",
+            "/api/requisition/{id}/reject",
         ],
     }

@@ -31,4 +31,15 @@ export const chat = {
     },
 };
 
+export const requisition = {
+    create: (data) => api.post('/requisition/create', data),
+    list: (params) => api.get('/requisition/list', { params }),
+    get: (id) => api.get(`/requisition/${id}`),
+    stats: () => api.get('/requisition/stats'),
+    approve: (id, data) => api.put(`/requisition/${id}/approve`, data),
+    reject: (id, data) => api.put(`/requisition/${id}/reject`, data),
+    cancel: (id, data) => api.put(`/requisition/${id}/cancel`, data),
+};
+
 export default api;
+
