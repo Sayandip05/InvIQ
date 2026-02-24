@@ -105,3 +105,36 @@ JOIN items i ON t.item_id = i.id;
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON inventory_transactions(date);
 CREATE INDEX IF NOT EXISTS idx_transactions_location ON inventory_transactions(location_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_item ON inventory_transactions(item_id);
+
+-- ─── Stock OUT Requisitions ───
+
+CREATE TABLE IF NOT EXISTS requisitions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    requisition_number VARCHAR(50) NOT NULL UNIQUE,
+    location_id INTEGER NOT NULL,
+    requested_by VARCHAR(100) NOT NULL,
+    department VARCHAR(100) NOT NULL,
+    urgency VARCHAR(20) NOT NULL DEFAULT 'NORMAL',
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    approved_by VARCHAR(100),
+    rejection_reason TEXT,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (location_id) REFERENCES locations(id)
+);
+
+CREATE TABLE IF NOT EXISTS requisition_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    requisition_id INTEGER NOT NULL,
+    item_id INTEGER NOT NULL,
+    quantity_requested INTEGER NOT NULL,
+    quantity_approved INTEGER,
+    notes TEXT,
+    FOREIGN KEY (requisition_id) REFERENCES requisitions(id),
+    FOREIGN KEY (item_id) REFERENCES items(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_requisitions_status ON requisitions(status);
+CREATE INDEX IF NOT EXISTS idx_requisitions_location ON requisitions(location_id);
+CREATE INDEX IF NOT EXISTS idx_requisition_items_req ON requisition_items(requisition_id);

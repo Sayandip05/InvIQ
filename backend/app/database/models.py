@@ -72,3 +72,41 @@ class ChatMessage(Base):
     
     # Relationships
     session = relationship("ChatSession", back_populates="messages")
+
+
+# ─── Stock OUT Requisition System ───
+
+class Requisition(Base):
+    __tablename__ = "requisitions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    requisition_number = Column(String(50), unique=True, nullable=False, index=True)
+    location_id = Column(Integer, ForeignKey("locations.id"), nullable=False)
+    requested_by = Column(String(100), nullable=False)
+    department = Column(String(100), nullable=False)
+    urgency = Column(String(20), nullable=False, default="NORMAL")  # LOW, NORMAL, HIGH, EMERGENCY
+    status = Column(String(20), nullable=False, default="PENDING")  # PENDING, APPROVED, REJECTED, CANCELLED
+    approved_by = Column(String(100), nullable=True)
+    rejection_reason = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(TIMESTAMP, server_default=func.now())
+    updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
+
+    # Relationships
+    location = relationship("Location")
+    items = relationship("RequisitionItem", back_populates="requisition", cascade="all, delete-orphan")
+
+
+class RequisitionItem(Base):
+    __tablename__ = "requisition_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    requisition_id = Column(Integer, ForeignKey("requisitions.id"), nullable=False)
+    item_id = Column(Integer, ForeignKey("items.id"), nullable=False)
+    quantity_requested = Column(Integer, nullable=False)
+    quantity_approved = Column(Integer, nullable=True)
+    notes = Column(Text, nullable=True)
+
+    # Relationships
+    requisition = relationship("Requisition", back_populates="items")
+    item = relationship("Item")
