@@ -1,4 +1,5 @@
 import os
+import logging
 from dotenv import load_dotenv
 
 from pathlib import Path
@@ -8,6 +9,8 @@ from pathlib import Path
 root_dir = Path(__file__).resolve().parent.parent.parent
 env_path = root_dir / ".env"
 load_dotenv(dotenv_path=env_path)
+
+logger = logging.getLogger("smart_inventory")
 
 class Settings:
     # Database
@@ -46,7 +49,7 @@ def configure_langsmith():
         os.environ["LANGCHAIN_API_KEY"] = settings.LANGCHAIN_API_KEY
         os.environ["LANGCHAIN_PROJECT"] = settings.LANGCHAIN_PROJECT
         os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
-        print(f"✅ LangSmith tracing enabled → project: {settings.LANGCHAIN_PROJECT}")
+        logger.info("LangSmith tracing enabled → project: %s", settings.LANGCHAIN_PROJECT)
     else:
         os.environ["LANGCHAIN_TRACING_V2"] = "false"
 
