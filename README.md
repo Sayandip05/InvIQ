@@ -130,10 +130,10 @@ flowchart TB
         MAIN[main.py - Entry Point]
         
         subgraph "API Routes"
-            ROUTES1[/api/analytics]
-            ROUTES2[/api/inventory]
-            ROUTES3[/api/chat]
-            ROUTES4[/api/requisition]
+            ROUTES1["/api/analytics"]
+            ROUTES2["/api/inventory"]
+            ROUTES3["/api/chat"]
+            ROUTES4["/api/requisition"]
         end
         
         subgraph "Core Infrastructure"
@@ -248,7 +248,7 @@ flowchart TB
     end
 
     subgraph "Backend - Chat Flow"
-        ROUTE[/api/chat/query]
+        ROUTE["/api/chat/query"]
         AGENT[AI Agent Service]
         
         subgraph "Memory Retrieval"
