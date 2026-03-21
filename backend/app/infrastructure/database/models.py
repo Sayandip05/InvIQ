@@ -1,7 +1,31 @@
-from sqlalchemy import Column, Integer, String, Date, Text, ForeignKey, TIMESTAMP
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Date,
+    Text,
+    ForeignKey,
+    TIMESTAMP,
+    Boolean,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.infrastructure.database.connection import Base
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    username = Column(String(100), unique=True, nullable=False, index=True)
+    hashed_password = Column(String(255), nullable=False)
+    full_name = Column(String(200), nullable=True)
+    role = Column(String(50), nullable=False, default="staff")
+    is_active = Column(Boolean, default=True)
+    is_verified = Column(Boolean, default=False)
+    created_at = Column(TIMESTAMP, server_default=func.now())
+    updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
 
 
 class Location(Base):
