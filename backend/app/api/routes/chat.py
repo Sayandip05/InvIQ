@@ -1,9 +1,21 @@
-from fastapi import APIRouter, Depends, UploadFile, File
+"""
+Chat API routes.
+
+Provides AI-powered chat for inventory queries with:
+- LangGraph ReAct agent (Groq LLM) as primary path
+- Rule-based fallback when LLM unavailable
+- Vector memory RAG (ChromaDB) for cross-session context
+- Conversation history within sessions
+- Chat session ownership enforcement
+"""
+
+from fastapi import APIRouter, Depends
 from app.core.exceptions import (
     ValidationError,
     AppException,
     NotFoundError,
     DatabaseError,
+    AuthorizationError,
 )
 from app.core.dependencies import get_current_user
 from app.infrastructure.database.models import User
@@ -23,6 +35,7 @@ from app.application.agent_tools import (
     set_db_session,
 )
 from app.infrastructure.vector_store.vector_store import get_vector_memory
+from app.application.agent_service import is_agent_available, invoke_agent
 from app.core.config import settings
 from app.api.schemas.chat_schemas import ChatRequest, ChatResponse
 import httpx
@@ -35,12 +48,55 @@ logger = logging.getLogger("smart_inventory.chat")
 router = APIRouter(prefix="/chat", tags=["Chatbot"])
 
 
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _get_conversation_history(db: Session, conversation_id: str, limit: int = 10) -> list[dict]:
+    """Load the last N messages from a conversation for context."""
+    session = db.query(ChatSession).filter(ChatSession.id == conversation_id).first()
+    if not session or not session.messages:
+        return []
+
+    recent = session.messages[-limit:]
+    return [{"role": msg.role, "content": msg.content} for msg in recent]
+
+
+def _get_vector_context(question: str, conversation_id: str = "") -> str:
+    """Retrieve relevant past context from vector memory."""
+    try:
+        memory = get_vector_memory()
+        if not memory.is_available:
+            return ""
+
+        matches = memory.search_relevant(
+            query=question,
+            n_results=3,
+            exclude_session=conversation_id or None,
+        )
+
+        if not matches:
+            return ""
+
+        context_parts = []
+        for m in matches:
+            context_parts.append(
+                f"[{m['timestamp']}] ({m['role']}): {m['content'][:300]}"
+            )
+
+        return "\n".join(context_parts)
+    except Exception as e:
+        logger.warning("Vector memory retrieval failed: %s", e)
+        return ""
+
+
 def _build_agent_response(
     question: str, db: Session, conversation_id: Optional[str] = None
 ) -> dict:
-    """Rule-based response path when LLM is unavailable."""
+    """Try LLM agent first, fall back to rule-based if unavailable."""
     set_db_session(db)
 
+    # Check if inventory has data
     overview = get_inventory_overview.invoke({})
     if isinstance(overview, dict) and not overview.get("has_data"):
         return {
@@ -52,31 +108,63 @@ def _build_agent_response(
             "question": question,
         }
 
+    # Gather context
+    past_context = _get_vector_context(question, conversation_id or "")
+    history = []
+    if conversation_id:
+        history = _get_conversation_history(db, conversation_id, limit=6)
+
+    # ── Try LLM agent first ────────────────────────────────────────────
+    if is_agent_available():
+        try:
+            response_text = invoke_agent(
+                question=question,
+                conversation_history=history,
+                vector_context=past_context,
+            )
+            return {
+                "success": True,
+                "response": response_text,
+                "question": question,
+            }
+        except RuntimeError as e:
+            logger.warning("LLM agent failed, falling back to rule-based: %s", e)
+
+    # ── Rule-based fallback ────────────────────────────────────────────
+    return _rule_based_response(question, past_context)
+
+
+def _rule_based_response(question: str, past_context: str = "") -> dict:
+    """Keyword-matching fallback when LLM is unavailable."""
     question_lower = question.lower()
 
     if any(k in question_lower for k in ["trend", "usage", "consumption"]):
         result = get_consumption_trends.invoke({})
-        return _format_result("Consumption trend summary", result, question)
+        return _format_result("Consumption trend summary", result, question, past_context)
 
     if any(k in question_lower for k in ["reorder", "order", "purchase"]):
         result = calculate_reorder_suggestions.invoke({})
-        return _format_result("Reorder suggestions", result, question)
+        return _format_result("Reorder suggestions", result, question, past_context)
 
     if any(k in question_lower for k in ["critical", "warning", "alert"]):
         severity = "WARNING" if "warning" in question_lower else "CRITICAL"
         result = get_critical_items.invoke({"severity": severity})
-        return _format_result(f"{severity} stock alerts", result, question)
+        return _format_result(f"{severity} stock alerts", result, question, past_context)
 
     if "category" in question_lower:
         result = get_category_analysis.invoke({"category": ""})
-        return _format_result("Category snapshot", result, question)
+        return _format_result("Category snapshot", result, question, past_context)
 
     result = get_stock_health.invoke({})
-    return _format_result("Current stock health", result, question)
+    return _format_result("Current stock health", result, question, past_context)
 
 
-def _format_result(title: str, payload, question: str) -> dict:
+def _format_result(title: str, payload, question: str, past_context: str = "") -> dict:
     import json
+
+    prefix = ""
+    if past_context:
+        prefix = f"(Based on past context)\n"
 
     if isinstance(payload, dict):
         if payload.get("error"):
@@ -86,10 +174,10 @@ def _format_result(title: str, payload, question: str) -> dict:
                 "question": question,
             }
         if payload.get("info"):
-            return {"success": True, "response": payload["info"], "question": question}
+            return {"success": True, "response": f"{prefix}{payload['info']}", "question": question}
         return {
             "success": True,
-            "response": f"{title}:\n{json.dumps(payload, indent=2)}",
+            "response": f"{prefix}{title}:\n{json.dumps(payload, indent=2)}",
             "question": question,
         }
 
@@ -102,7 +190,7 @@ def _format_result(title: str, payload, question: str) -> dict:
             }
         first = payload[0]
         if isinstance(first, dict) and first.get("info"):
-            return {"success": True, "response": first["info"], "question": question}
+            return {"success": True, "response": f"{prefix}{first['info']}", "question": question}
         if isinstance(first, dict) and first.get("error"):
             return {
                 "success": True,
@@ -111,16 +199,27 @@ def _format_result(title: str, payload, question: str) -> dict:
             }
         return {
             "success": True,
-            "response": f"{title}:\n{json.dumps(payload[:10], indent=2)}",
+            "response": f"{prefix}{title}:\n{json.dumps(payload[:10], indent=2)}",
             "question": question,
         }
 
     return {
         "success": True,
-        "response": f"{title}: {str(payload)}",
+        "response": f"{prefix}{title}: {str(payload)}",
         "question": question,
     }
 
+
+def _verify_session_ownership(db: Session, conversation_id: str, user_id: int) -> None:
+    """Ensure the conversation belongs to the requesting user."""
+    session = db.query(ChatSession).filter(ChatSession.id == conversation_id).first()
+    if session and session.user_id != str(user_id):
+        raise AuthorizationError("You do not have access to this conversation")
+
+
+# ---------------------------------------------------------------------------
+# Routes
+# ---------------------------------------------------------------------------
 
 @router.post("/query", response_model=ChatResponse)
 def chat_query(
@@ -130,6 +229,10 @@ def chat_query(
 ):
     if not request.question or len(request.question.strip()) < 3:
         raise ValidationError("Question must be at least 3 characters")
+
+    # Verify ownership if continuing an existing conversation
+    if request.conversation_id:
+        _verify_session_ownership(db, request.conversation_id, current_user.id)
 
     try:
         result = _build_agent_response(
@@ -155,6 +258,7 @@ def chat_query(
         )
         db.commit()
 
+        # Store in vector memory for future RAG
         try:
             memory = get_vector_memory()
             if memory.is_available:
@@ -187,7 +291,7 @@ def chat_query(
             suggested_actions=suggested_actions if suggested_actions else None,
         )
 
-    except (ValidationError, AppException):
+    except (ValidationError, AppException, AuthorizationError):
         raise
     except SQLAlchemyError as e:
         db.rollback()
@@ -209,6 +313,9 @@ def get_chat_history(
     if not session:
         raise NotFoundError("Conversation", conversation_id)
 
+    # Ownership check
+    _verify_session_ownership(db, conversation_id, current_user.id)
+
     messages = [{"role": msg.role, "content": msg.content} for msg in session.messages]
 
     return {"success": True, "conversation_id": conversation_id, "messages": messages}
@@ -223,6 +330,9 @@ def clear_chat_history(
     session = db.query(ChatSession).filter(ChatSession.id == conversation_id).first()
     if not session:
         raise NotFoundError("Conversation", conversation_id)
+
+    # Ownership check
+    _verify_session_ownership(db, conversation_id, current_user.id)
 
     db.delete(session)
     db.commit()
@@ -285,7 +395,13 @@ def get_chat_sessions(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    db_sessions = db.query(ChatSession).order_by(ChatSession.updated_at.desc()).all()
+    # Filter sessions by the current user only
+    db_sessions = (
+        db.query(ChatSession)
+        .filter(ChatSession.user_id == str(current_user.id))
+        .order_by(ChatSession.updated_at.desc())
+        .all()
+    )
 
     sessions = []
     for s in db_sessions:
@@ -297,54 +413,3 @@ def get_chat_sessions(
 
     return {"success": True, "sessions": sessions}
 
-
-@router.post("/transcribe")
-async def transcribe_audio(
-    file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user),
-):
-    if not settings.SARVAM_API_KEY:
-        raise AppException(
-            "SARVAM_API_KEY is not configured. Add it to your .env file."
-        )
-
-    try:
-        audio_bytes = await file.read()
-
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                "https://api.sarvam.ai/speech-to-text-translate",
-                headers={
-                    "api-subscription-key": settings.SARVAM_API_KEY,
-                },
-                files={
-                    "file": (
-                        file.filename or "audio.wav",
-                        audio_bytes,
-                        file.content_type or "audio/wav",
-                    ),
-                },
-                data={
-                    "model": "saaras:v3",
-                    "with_diarization": "false",
-                },
-            )
-
-        if response.status_code != 200:
-            error_detail = response.text
-            raise AppException(f"Sarvam AI API error: {error_detail}")
-
-        result = response.json()
-        transcript = result.get("transcript", "")
-
-        return {
-            "success": True,
-            "text": transcript,
-        }
-
-    except httpx.TimeoutException:
-        raise AppException("Sarvam AI API timed out. Please try again.")
-    except AppException:
-        raise
-    except Exception as e:
-        raise AppException(f"Transcription failed: {str(e)}")

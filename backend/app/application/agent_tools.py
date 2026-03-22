@@ -1,3 +1,4 @@
+from contextvars import ContextVar
 from datetime import timedelta
 from typing import Optional, List, Dict, Any
 from sqlalchemy.orm import Session
@@ -10,13 +11,18 @@ from app.infrastructure.database.queries import (
 from app.infrastructure.database.models import Location, Item, InventoryTransaction
 from app.domain.calculations import calculate_reorder_quantity
 
-_db_session: Optional[Session] = None
+_db_session_var: ContextVar[Optional[Session]] = ContextVar("_db_session_var", default=None)
 
 
 def set_db_session(db: Session):
-    """Set the database session for tools to use"""
-    global _db_session
-    _db_session = db
+    """Set the database session for tools to use (request-scoped via contextvars)."""
+    _db_session_var.set(db)
+
+
+def _get_db() -> Optional[Session]:
+    """Get the current request-scoped database session."""
+    return _db_session_var.get()
+
 
 
 def _no_data_message(message: str) -> List[Dict[str, Any]]:
@@ -25,14 +31,16 @@ def _no_data_message(message: str) -> List[Dict[str, Any]]:
 
 @tool
 def get_inventory_overview() -> Dict[str, Any]:
-    if not _db_session:
+    """Get a high-level overview of inventory: location, item, and transaction counts."""
+    db = _get_db()
+    if not db:
         return {"error": "Database not connected"}
 
     try:
-        locations_count = _db_session.query(Location).count()
-        items_count = _db_session.query(Item).count()
-        transactions_count = _db_session.query(InventoryTransaction).count()
-        min_date, max_date = _db_session.query(
+        locations_count = db.query(Location).count()
+        items_count = db.query(Item).count()
+        transactions_count = db.query(InventoryTransaction).count()
+        min_date, max_date = db.query(
             func.min(InventoryTransaction.date),
             func.max(InventoryTransaction.date),
         ).one()
@@ -53,14 +61,16 @@ def get_inventory_overview() -> Dict[str, Any]:
 def get_critical_items(
     location: str = "", severity: str = "CRITICAL"
 ) -> List[Dict[str, Any]]:
-    if not _db_session:
+    """Get items with critically low or warning-level stock. Filter by location and severity."""
+    db = _get_db()
+    if not db:
         return [{"error": "Database not connected"}]
 
     try:
         if severity not in {"CRITICAL", "WARNING"}:
             return [{"error": "Severity must be CRITICAL or WARNING"}]
 
-        alerts = get_critical_alerts(_db_session, severity)
+        alerts = get_critical_alerts(db, severity)
 
         if location and location.strip():
             alerts = [
@@ -97,11 +107,13 @@ def get_critical_items(
 
 @tool
 def get_stock_health(item: str = "", location: str = "") -> List[Dict[str, Any]]:
-    if not _db_session:
+    """Get current stock health across all locations and items, with optional filters."""
+    db = _get_db()
+    if not db:
         return [{"error": "Database not connected"}]
 
     try:
-        stock_health = get_latest_stock_health(_db_session)
+        stock_health = get_latest_stock_health(db)
 
         if item and item.strip():
             stock_health = [
@@ -141,11 +153,13 @@ def get_stock_health(item: str = "", location: str = "") -> List[Dict[str, Any]]
 
 @tool
 def calculate_reorder_suggestions(location: str = "") -> List[Dict[str, Any]]:
-    if not _db_session:
+    """Calculate recommended reorder quantities for critical items."""
+    db = _get_db()
+    if not db:
         return [{"error": "Database not connected"}]
 
     try:
-        critical = get_critical_alerts(_db_session, "CRITICAL")
+        critical = get_critical_alerts(db, "CRITICAL")
 
         if location and location.strip():
             critical = [
@@ -185,11 +199,13 @@ def calculate_reorder_suggestions(location: str = "") -> List[Dict[str, Any]]:
 
 @tool
 def get_location_summary(location_name: str) -> Dict[str, Any]:
-    if not _db_session:
+    """Get a health summary for a specific location by name."""
+    db = _get_db()
+    if not db:
         return {"error": "Database not connected"}
 
     try:
-        stock_health = get_latest_stock_health(_db_session)
+        stock_health = get_latest_stock_health(db)
 
         location_data = [
             s for s in stock_health if location_name.lower() in s.location_name.lower()
@@ -216,11 +232,13 @@ def get_location_summary(location_name: str) -> Dict[str, Any]:
 
 @tool
 def get_category_analysis(category: str) -> List[Dict[str, Any]]:
-    if not _db_session:
+    """Analyze stock health for items in a specific category."""
+    db = _get_db()
+    if not db:
         return [{"error": "Database not connected"}]
 
     try:
-        stock_health = get_latest_stock_health(_db_session)
+        stock_health = get_latest_stock_health(db)
 
         category_data = [
             s for s in stock_health if category.lower() in s.category.lower()
@@ -252,20 +270,22 @@ def get_category_analysis(category: str) -> List[Dict[str, Any]]:
 def get_consumption_trends(
     item: str = "", location: str = "", days: int = 14
 ) -> Dict[str, Any]:
-    if not _db_session:
+    """Get consumption trends over the last N days, with optional item/location filters."""
+    db = _get_db()
+    if not db:
         return {"error": "Database not connected"}
 
     days = max(1, min(days, 90))
 
     try:
-        latest_date = _db_session.query(func.max(InventoryTransaction.date)).scalar()
+        latest_date = db.query(func.max(InventoryTransaction.date)).scalar()
         if not latest_date:
             return {"info": "No transaction data available yet."}
 
         start_date = latest_date - timedelta(days=days - 1)
 
         query = (
-            _db_session.query(
+            db.query(
                 InventoryTransaction.date.label("date"),
                 func.sum(InventoryTransaction.issued).label("issued"),
             )
@@ -303,3 +323,4 @@ def get_consumption_trends(
         }
     except Exception as e:
         return {"error": str(e)}
+
