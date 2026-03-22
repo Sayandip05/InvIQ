@@ -1,120 +1,125 @@
 # Implementation Memory
 
-Last updated: March 20, 2026
+**Project:** Smart Inventory Assistant
+**Last Updated:** March 21, 2026
+**Architecture:** Modular Monolith → Docker → AWS ECS (Production)
+
+---
 
 ## Status Summary
 
-- Implemented: 8/27
-- Partially Implemented: 6/27
-- Not Implemented: 13/27
+```
+✅ Done:        19/27 modules  (70%)
+🟡 Partial:      3/27 modules  (11%)
+🔴 Not Started:  5/27 modules  (19%)
+```
 
-## Full Module Audit (1-27)
+---
 
-| # | Module | Status | Evidence |
-|---|---|---|---|
-| 1 | HTTP and How the Web Works | Implemented | FastAPI app with root and health endpoints in `backend/app/main.py`. |
-| 2 | Routing and Path Operations | Implemented | Route groups in `backend/app/api/routes/*` with path params and query params. |
-| 3 | JSON and Data Serialization | Implemented | JSON request/response handling across all APIs with Pydantic models in routes. |
-| 4 | Authentication and Authorization | Not Implemented | No JWT, no auth routes, no user model, no role middleware. |
-| 5 | Data Validation (Pydantic) | Implemented | `Field` constraints, regex patterns, and validation handler in `core/error_handlers.py`. |
-| 6 | Application Architecture | Implemented | Layered design: routes -> services -> repositories with DI in `core/dependencies.py`. |
-| 7 | API Design Best Practices | Partially Implemented | Common success envelope exists, but `response_model` and pagination are inconsistent. |
-| 8 | Databases and ORMs (SQLAlchemy) | Implemented | SQLAlchemy engine/session/models and repository abstraction are active. |
-| 9 | Caching (Redis) | Not Implemented | No Redis client and no cache layer found. |
-| 10 | Task Queues (Celery) | Not Implemented | No Celery, no queue workers, no broker config. |
-| 11 | Error Handling and Exception Management | Implemented | Custom exception hierarchy plus global handlers in `core/exceptions.py` and `core/error_handlers.py`. |
-| 12 | Configuration Management | Implemented | Centralized settings in `backend/app/core/config.py` + `.env` usage. |
-| 13 | Logging and Observability (LangSmith, Prometheus) | Partially Implemented | Structured logging and LangSmith toggles exist; Prometheus metrics are not implemented. |
-| 14 | Graceful Shutdown and Lifespan | Not Implemented | No FastAPI lifespan context and no explicit shutdown cleanup. |
-| 15 | Backend Security (JWT, HMAC, Rate Limiting, BOLA/BFLA, XSS) | Not Implemented | No backend authz enforcement, no rate limiter, no HMAC/webhook verification flow. |
-| 16 | Scaling and Performance Part A | Partially Implemented | DB indexes exist and some `joinedload` usage exists; no explicit pooling/latency instrumentation strategy. |
-| 17 | Scaling and Performance Part B | Not Implemented | No load balancing/CDN/worker strategy; Docker runtime is placeholder. |
-| 18 | Concurrency and Parallelism | Partially Implemented | `async` transcription endpoint exists; most API surface remains synchronous. |
-| 19 | Testing and Code Quality | Not Implemented | No `tests/`, no pytest suite, no TestClient coverage. |
-| 20 | Object Storage and Large Files (S3) | Not Implemented | No S3/Boto3 integration, no pre-signed upload/download URLs. |
-| 21 | Real-Time Systems (WebSockets, Pub/Sub) | Not Implemented | No WebSocket endpoints and no pub/sub layer. |
-| 22 | Webhooks | Not Implemented | No webhook receiver, signature verification, or idempotency mechanism. |
-| 23 | Advanced Search (Elasticsearch/BM25) | Not Implemented | No Elasticsearch integration or search index pipeline. |
-| 24 | Transactional Emails and Background Tasks | Not Implemented | No ESP integration and no asynchronous email workflow. |
-| 25 | API Documentation (OpenAPI/Swagger/ReDoc/response_model) | Partially Implemented | Swagger is available by default; documentation contracts are not consistently explicit. |
-| 26 | The 12-Factor App | Partially Implemented | Env-based config is present; delivery parity/disposability/runtime hardening are incomplete. |
-| 27 | DevOps and Containerization | Not Implemented | `Dockerfile` is placeholder, `docker-compose.yml` and `cicd.yaml` are effectively empty. |
+## Full Module Audit (27 Modules)
 
-## Implemented Foundations
+| # | Module | Status | Notes |
+|---|--------|--------|-------|
+| 1 | HTTP & Web | ✅ Done | FastAPI app, CORS, health endpoint |
+| 2 | Routing & Path Ops | ✅ Done | 6 route groups, 49 endpoints, `APIRouter` |
+| 3 | JSON & Serialization | ✅ Done | Pydantic models on all request/response bodies |
+| 4 | Auth & Authorization | ✅ Done | JWT (`python-jose`), bcrypt, User model, RBAC (admin/manager/staff/viewer), login lockout, audit trail, admin dashboard API |
+| 5 | Data Validation | ✅ Done | `Field` constraints, regex patterns, `RequestValidationError` handler |
+| 6 | Architecture | ✅ Done | Repository pattern, DI via `dependencies.py`, routes → services → repos |
+| 7 | API Design | 🟡 Partial | `{success, data}` envelope ✅. **Missing:** `response_model` on all routes, pagination |
+| 8 | Databases & ORM | ✅ Done | SQLAlchemy, 9 ORM models, `get_db` session factory, joinedload |
+| 9 | Caching (Redis) | ✅ Done | Redis client (graceful fallback), analytics cache (5-min TTL), token blacklist (SETEX), cache invalidation on inventory writes |
+| 10 | Task Queues (Celery) | 🔴 Not Started | ChromaDB writes are synchronous. No background tasks. |
+| 11 | Error Handling | ✅ Done | 8 custom exceptions, 3 global handlers, zero bare `HTTPException` |
+| 12 | Config Management | ✅ Done | `Settings` class, `.env`, `python-dotenv`, env-based log levels |
+| 13 | Logging & Observability | ✅ Done | Structured logging, `X-Request-ID` middleware, LangSmith toggle |
+| 14 | Graceful Shutdown | ✅ Done | `lifespan` context manager, `engine.dispose()`, Redis `close()` on shutdown |
+| 15 | Backend Security | ✅ Done | Login lockout, audit trail, rate limiting (`slowapi` 5/min login, 30/min analytics), token blacklist, `/auth/logout` |
+| 16 | Scaling A (DB perf) | 🟡 Partial | `X-Process-Time` middleware ✅. **Missing:** slow query logs, pooling config |
+| 17 | Scaling B (multi-worker) | 🔴 Not Started | Single-process `uvicorn`. No Gunicorn. Dockerfile is placeholder. |
+| 18 | Concurrency | 🟡 Partial | Most routes sync `def`. Agent invocation is sync. |
+| 19 | Testing | 🔴 Not Started | Zero tests. No `pytest`, no `TestClient`, no `conftest.py`. |
+| 20 | Object Storage (S3) | 🔴 Not Started | Audio in-memory only. No S3 or file storage. |
+| 21 | Real-Time (WebSockets) | 🔴 Not Started | Chat is request-response only. No live stock alerts. |
+| 22 | Webhooks | 🔴 Not Started | No server-to-server callbacks, no HMAC. |
+| 23 | Advanced Search | 🔴 Not Started | Search is SQL `LIKE`. No Elasticsearch. |
+| 24 | Transactional Emails | 🔴 Not Started | No email on requisition approve/reject, no SendGrid/SES. |
+| 25 | API Documentation | ✅ Partial → Done | Swagger at `/docs`. `response_model` still partial. |
+| 26 | 12-Factor App | 🟡 Partial | Config from env ✅. **Missing:** dev/prod parity, disposability. |
+| 27 | DevOps & Docker | 🔴 Not Started | Placeholder Dockerfile. No `docker-compose`, no CI/CD pipeline. |
 
-- Modular monolith backend architecture with clear separation of concerns.
-- SQLAlchemy-based persistence with repositories and service-level business logic.
-- AI assistant flow with LangGraph + ChromaDB memory + speech transcription endpoint.
-- Core operational baseline: centralized config, request logging, and global exception handling.
+---
 
-## Implementation Roadmap
+## Phased Implementation Roadmap
 
-### Phase 1: Production-Safe Access and Security
+> Ordered by dependency chain — each phase builds on the previous.
 
-1. **Module 4 - Authentication and Authorization**
-   - Add user model, login endpoint, JWT issuance, token validation dependency.
-   - Enforce role checks on protected inventory/requisition/admin endpoints.
+| Phase | Modules | Status | Priority | What You Get |
+|-------|---------|--------|----------|-------------|
+| **P1** | 11, 13 | ✅ Done | — | Error handling, structured logging, request correlation |
+| **P2** | 6, 7, 8 | ✅ Done | — | Repository pattern, DI, ORM, response schemas |
+| **P3** | 4 + auth improvements | ✅ Done | — | JWT, User model, RBAC, login attempts, audit log |
+| **P4** | 19 | 🔴 Next | 🔴 MUST | pytest, TestClient, fixtures, ≥80% coverage |
+| **P5** | 14, 15 | 🔴 Next | 🔴 MUST | Rate limiting (login), security headers, graceful shutdown |
+| **P6** | 9, 10, 18 | 🔴 Planned | 🟡 Strong | Redis cache (analytics), BackgroundTasks, async routes |
+| **P7** | 17, 27 | 🔴 Planned | 🔴 MUST | Production Dockerfile, docker-compose, GitHub Actions CI/CD |
+| **P8** | 20, 21, 22, 24 | 🔴 Optional | 🟢 Nice | WebSockets (live alerts), emails, S3, webhooks |
+| **P9** | 23, 25, 26 | 🔴 Optional | 🟢 Nice | Elasticsearch, 12-factor hardening, API doc polish |
 
-2. **Module 15 - Backend Security**
-   - Add request rate limiting.
-   - Add security response headers.
-   - Add backend-level access control to remove UI-only trust.
+---
 
-### Phase 2: Testability and Quality Gate
+## Resume Priority Guide — Backend Engineer Job Market
 
-3. **Module 19 - Testing and Code Quality**
-   - Add pytest + FastAPI TestClient test suite.
-   - Add dependency overrides and DB fixtures.
-   - Cover route + service layer behavior and failure paths.
+### Must-Have (Every interview asks these)
 
-### Phase 3: Runtime Reliability
+| Module | Why It Matters |
+|--------|---------------|
+| Auth & JWT (4) | Q1 in every backend interview |
+| Testing (19) | No tests = junior signal |
+| Docker (27) | Expected baseline today |
+| Error Handling (11) | Custom exceptions shows maturity |
+| Architecture (6) | Repository + DI = mid-level thinking |
 
-4. **Module 14 - Graceful Shutdown and Lifespan**
-   - Add startup/shutdown lifecycle hooks.
-   - Close/dispose DB and memory resources cleanly.
+### Strong Differentiators (Top 20% of candidates)
 
-5. **Module 10 - Task Queues (or FastAPI background tasks as first step)**
-   - Move non-critical work (memory indexing/notifications) out of request path.
+| Module | Why It Stands Out |
+|--------|------------------|
+| Caching / Redis (9) | Performance awareness |
+| Background Tasks (10) | Async processing literacy |
+| Rate Limiting (15) | Security awareness |
+| Graceful Shutdown (14) | Production maturity |
+| WebSockets (21) | Real-time = modern backend |
 
-6. **Module 18 - Concurrency and Parallelism**
-   - Convert blocking routes/services where safe.
-   - Remove shared mutable global patterns that can break under concurrent load.
+### Job-Readiness Target
 
-### Phase 4: Performance and Scale Baseline
+> **Minimum viable resume:** Complete P4 + P5 + P7 → covers all non-negotiables.
+> **Full mid-level backend project:** P4 → P7 complete = 20/27 modules.
 
-7. **Module 16 - Scaling and Performance Part A**
-   - Tighten query performance strategy (indexes, query plans, slow query logs).
-   - Formalize DB engine pool settings for target runtime.
+---
 
-8. **Module 9 - Caching (Redis)**
-   - Add cache strategy for read-heavy analytics and reference data.
-   - Add invalidation on write paths.
+## What's Already Built (Summary)
 
-### Phase 5: Delivery and Deployability
+- Modular monolith: `api/` → `application/` → `domain/` → `infrastructure/`
+- SQLAlchemy ORM with 9 models: User, Location, Item, InventoryTransaction, Requisition, RequisitionItem, ChatSession, ChatMessage, AuditLog
+- JWT authentication + RBAC (4 roles), audit log service, chat session ownership
+- AI chatbot: LangChain `@tool` functions + ChromaDB vector memory (RAG stored, retrieved)
+- Analytics: heatmap, alerts, summary, dashboard stats
+- Requisition workflow: PENDING → APPROVED/REJECTED with timestamps
+- Vector-semantic memory: ChromaDB stores + retrieves cross-session context
+- Frontend: React + Vite dashboard + Landing page
 
-9. **Module 27 - DevOps and Containerization**
-   - Replace placeholder Dockerfile with production image.
-   - Create meaningful docker-compose services and health checks.
-   - Add real CI pipeline in `cicd.yaml`.
+## Planned DB Migration (Dev → Production)
 
-10. **Module 17 - Scaling and Performance Part B**
-    - Define multi-worker process model and stateless deployment strategy.
+| Stage | DB | Vector Store | Hosting |
+|-------|----|----|---------|
+| Development | PostgreSQL | ChromaDB (local) | `uvicorn` local |
+| Production | PostgreSQL (Supabase) | ChromaDB (local) | Render / Railway |
 
-### Phase 6: Platform Features (After Core Stability)
+---
 
-11. **Module 25 - API Documentation hardening** (currently partial)
-    - Add explicit `response_model` coverage and examples.
+## Next Immediate Steps
 
-12. **Module 20 - Object Storage and Large Files**
-13. **Module 21 - Real-Time Systems**
-14. **Module 22 - Webhooks**
-15. **Module 24 - Transactional Emails and async notifications**
-16. **Module 23 - Advanced Search**
-17. **Module 26 - 12-Factor completion** (runtime and deploy parity hardening)
-
-## Immediate Next 4 Modules (Recommended)
-
-1. Module 4 (Auth)
-2. Module 15 (Security)
-3. Module 19 (Testing)
-4. Module 27 (DevOps/Containerization)
+1. **Testing** — `pytest` with `TestClient` and PostgreSQL test database
+2. **Docker** — `Dockerfile` (multi-stage), `docker-compose.yml`, GitHub Actions CI/CD
+3. **Deploy** — Render + Supabase + Upstash (Redis)
+4. **WebSocket alerts** — live stock notifications

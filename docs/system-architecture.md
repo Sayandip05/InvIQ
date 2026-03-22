@@ -53,8 +53,8 @@
 │  │                         DATA LAYER                                           │  │
 │  │  ┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐  │  │
 │  │  │      SQLite         │  │     ChromaDB        │  │   External APIs    │  │  │
-│  │  │  (Transactions,     │  │  (Vector Store      │  │   Groq, Sarvam     │  │  │
-│  │  │   Items, Reqs,      │  │   for AI Memory)   │  │                    │  │  │
+│  │  │  (Transactions,     │  │  (Vector Store      │  │   Groq (LLM)       │  │  │
+│  │  │   Items, Reqs,      │  │   for AI Memory)   │  │   LangSmith        │  │  │
 │  │  │   Chat Sessions)    │  │                     │  │                    │  │  │
 │  │  └─────────────────────┘  └─────────────────────┘  └─────────────────────┘  │  │
 │  └──────────────────────────────────────────────────────────────────────────────┘  │
@@ -160,7 +160,7 @@ The backend follows **Clean Architecture** with strict layer separation.
 │  ┌─────────────────────────────┬─────────────────────────────────────────────────┐ │
 │  │        SQLite               │        ChromaDB          │     External APIs     │ │
 │  │  locations, items,         │  chat_memory collection  │  Groq (LLM)          │ │
-│  │  transactions,              │  semantic search         │  Sarvam (STT)        │ │
+│  │  transactions,              │  semantic search         │  Groq (LLM)          │ │
 │  │  requisitions,              │  cross-session recall    │  LangSmith (tracing) │ │
 │  │  chat_sessions/messages    │                         │                       │ │
 │  └─────────────────────────────┴───────────────────────────┴───────────────────────┘ │
@@ -180,7 +180,6 @@ The backend follows **Clean Architecture** with strict layer separation.
 | **Vector DB** | ChromaDB | AI Semantic Memory |
 | **AI Framework** | LangGraph + LangChain | Agent Orchestration |
 | **LLM** | Groq (OpenAI-compatible) | Language Model |
-| **Speech-to-Text** | Sarvam AI | Voice Input |
 | **Observability** | LangSmith (optional) | Tracing |
 
 ---
@@ -190,10 +189,10 @@ The backend follows **Clean Architecture** with strict layer separation.
 ```env
 # Database
 DATABASE_PATH=../database/smart_inventory.db
+DATABASE_URL=  # Set for PostgreSQL (Supabase) in production
 
 # API Keys
 GROQ_API_KEY=<key>
-SARVAM_API_KEY=<key>
 LANGCHAIN_API_KEY=<optional>
 
 # App

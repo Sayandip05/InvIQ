@@ -1,23 +1,57 @@
+# ── Python ──────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# ── Virtual Environment ────────────────────────────────────
 venv/
+.venv/
+env/
+
+# ── Environment Variables (secrets!) ───────────────────────
 .env
+.env.*
+!.env.example
 
-database/smart_inventory.db
-
-# SQLite database files
+# ── Database ───────────────────────────────────────────────
 database/*.db
 database/*.sqlite
 database/*.sqlite3
 
-
-# Python cache
-__pycache__/
-*.pyc
-
-# ChromaDB persistent storage
+# ── ChromaDB Persistent Storage ────────────────────────────
 data/
+chroma_data/
 
-# Backup files
+# ── IDE / Editor ───────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS Files ───────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Node / Frontend ───────────────────────────────────────
+node_modules/
+frontend/main_dashboard/dist/
+frontend/main_dashboard/.env
+frontend/landing/dist/
+
+# ── Testing & Coverage ────────────────────────────────────
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# ── Docker ─────────────────────────────────────────────────
+*.log
+
+# ── Misc ───────────────────────────────────────────────────
 *.bak
-
-# Debug scripts
 backend/debug_import.py

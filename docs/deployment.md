@@ -86,7 +86,6 @@ Push Code → Build → Test (pytest) → Lint (ruff) → Build Docker → Push 
 DATABASE_PATH=../database/smart_inventory.db
 ENVIRONMENT=development
 GROQ_API_KEY=<key>
-SARVAM_API_KEY=<key>
 LANGCHAIN_API_KEY=<optional>
 ```
 
@@ -96,7 +95,6 @@ LANGCHAIN_API_KEY=<optional>
 DATABASE_URL=postgresql://user:pass@staging-db:5432/inventory
 ENVIRONMENT=staging
 GROQ_API_KEY=<key>
-SARVAM_API_KEY=<key>
 ```
 
 ### Production
@@ -105,7 +103,6 @@ SARVAM_API_KEY=<key>
 DATABASE_URL=postgresql://user:pass@prod-db.amazonaws.com:5432/inventory
 ENVIRONMENT=production
 GROQ_API_KEY=<secrets-manager>
-SARVAM_API_KEY=<secrets-manager>
 ```
 
 ---

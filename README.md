@@ -49,11 +49,12 @@ Create `backend/.env` from `.env.example`:
 
 ```env
 DATABASE_PATH=../database/smart_inventory.db
+DATABASE_URL=  # Set for PostgreSQL (Supabase) in production
 ENVIRONMENT=development
 GROQ_API_KEY=<your-key>
-SARVAM_API_KEY=<your-key>
 LANGCHAIN_API_KEY=<optional>
 CORS_ORIGINS=http://localhost:5173
+SECRET_KEY=<change-in-production>
 ```
 
 ---
@@ -67,10 +68,12 @@ smart-inventory-assistant/
 │       ├── main.py                              # FastAPI entry point
 │       ├── api/
 │       │   ├── routes/
-│       │   │   ├── analytics.py                # Heatmap, alerts, summary
-│       │   │   ├── chat.py                    # Chatbot query, history, transcription
-│       │   │   ├── inventory.py               # Locations, items, transactions
-│       │   │   └── requisition.py              # Create, approve, reject
+│       │   │   ├── admin.py                 # Super admin dashboard
+│       │   │   ├── analytics.py             # Heatmap, alerts, summary
+│       │   │   ├── auth.py                  # Login, register, user management
+│       │   │   ├── chat.py                  # Chatbot query, history
+│       │   │   ├── inventory.py             # Locations, items, transactions
+│       │   │   └── requisition.py            # Create, approve, reject
 │       │   └── schemas/
 │       │       ├── chat_schemas.py
 │       │       ├── inventory_schemas.py
@@ -140,17 +143,20 @@ Clean Architecture with strict layer separation:
 
 ---
 
-## Module Audit (8/27 Implemented)
+## Module Audit (19/27 Implemented)
 
 See `docs/memory.md` for the full audit table and phased roadmap.
 
 Key implemented:
-- FastAPI REST API with 4 route groups
-- SQLAlchemy ORM + Repository pattern
-- LangGraph AI agent with ChromaDB semantic memory
-- Structured logging + global exception handling
+- FastAPI REST API with 6 route groups (49 endpoints)
+- JWT auth + RBAC (4 roles) + login lockout + audit trail + logout
+- Redis caching (analytics TTL) + token blacklist
+- Rate limiting (slowapi — 5/min login, 30/min analytics)
+- LangGraph AI agent (Groq LLM) with ChromaDB semantic memory
+- Graceful shutdown via lifespan context manager
+- SQLAlchemy ORM + Repository pattern + PostgreSQL ready
 
-Pending (Phase 1): JWT auth, role-based access, rate limiting, tests
+Next: Testing (pytest), Docker, Deployment
 
 ---
 
@@ -159,15 +165,17 @@ Pending (Phase 1): JWT auth, role-based access, rate limiting, tests
 | Layer | Technology |
 |-------|------------|
 | Backend | FastAPI, SQLAlchemy, Pydantic |
+| Auth | JWT (python-jose), bcrypt (passlib), RBAC |
 | AI | LangGraph, Groq (LLM), ChromaDB (memory) |
-| Speech | Sarvam AI API |
+| Caching | Redis + in-memory fallback |
+| Security | Rate limiting (slowapi), token blacklist |
 | Frontend | React, Vite, Tailwind |
-| Database | SQLite (dev) / PostgreSQL (prod) |
+| Database | PostgreSQL (Supabase) |
 
 ---
 
 ## Key Notes
 
-- Role boundaries in the frontend (vendor/staff/admin) are UX-level only — backend authorization is pending Phase 1.
-- `Dockerfile`, `docker-compose.yml`, and `cicd.yaml` are placeholders — full production implementation is Phase 5.
+- JWT authentication and RBAC are fully implemented on the backend.
+- `Dockerfile`, `docker-compose.yml`, and `cicd.yaml` are placeholders — full production implementation is planned.
 - See `docs/memory.md` for detailed implementation status and `docs/deployment.md` for deployment guide.

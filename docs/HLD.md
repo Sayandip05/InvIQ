@@ -114,7 +114,31 @@
 | `/api/chat/history/{id}` | GET | Get conversation |
 | `/api/chat/sessions` | GET | List conversations |
 | `/api/chat/suggestions` | GET | Question suggestions |
-| `/api/chat/transcribe` | POST | Audio to text |
+
+### 2.5 Auth APIs
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/auth/login` | POST | JWT login (lockout after 5 failures) |
+| `/api/auth/register` | POST | Admin creates new user |
+| `/api/auth/me` | GET | Current user profile |
+| `/api/auth/me` | PATCH | Update own profile |
+| `/api/auth/change-password` | POST | Change own password |
+| `/api/auth/refresh` | POST | Refresh JWT token |
+| `/api/auth/users` | GET | List users (filterable) |
+| `/api/auth/users/{id}` | GET | Single user detail |
+| `/api/auth/users/{id}/role` | PUT | Update user role |
+| `/api/auth/users/{id}/activate` | PUT | Activate user |
+| `/api/auth/users/{id}/deactivate` | PUT | Deactivate user |
+| `/api/auth/users/{id}/reset-password` | POST | Admin reset password |
+
+### 2.6 Admin Dashboard APIs
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/admin/overview` | GET | Platform stats |
+| `/api/admin/audit-logs` | GET | Filterable audit trail |
+| `/api/admin/users/summary` | GET | User management overview |
 
 ---
 
@@ -239,8 +263,8 @@ Admin → Chatbot page → POST /api/chat/query
 | Database Queries | < 100ms (p95) | Simple queries |
 | Uptime | 99.5% (prod) | Excluding maintenance |
 | Concurrent Users | 50 (initial) | Can scale vertically |
-| Authentication | JWT (Phase 1) | Pending implementation |
-| Authorization | Role-based (Phase 1) | Pending implementation |
+| Authentication | JWT (done) | Implemented |
+| Authorization | Role-based (done) | 4 roles: admin, manager, staff, viewer |
 
 ---
 
@@ -253,12 +277,12 @@ Admin → Chatbot page → POST /api/chat/query
 - Stock health calculations
 - AI-powered chat for inventory queries
 - Analytics dashboard
-- Voice input (speech-to-text)
+- JWT authentication + RBAC (4 roles)
+- Audit trail (who did what, when)
 - Cross-session semantic memory
 
 ### Does NOT Do (Yet)
 
-- User authentication (Phase 1)
 - Email notifications (Phase 6)
 - Payment processing
 - Multi-tenant isolation
