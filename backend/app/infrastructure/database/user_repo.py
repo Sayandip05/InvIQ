@@ -2,6 +2,7 @@ import logging
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from typing import Optional, List
+from datetime import datetime, timezone
 
 from app.infrastructure.database.models import User
 from app.core.security import hash_password
@@ -99,3 +100,84 @@ class UserRepository:
         except SQLAlchemyError as e:
             logger.error("Database error counting users: %s", str(e))
             raise DatabaseError(f"Failed to count users: {str(e)}")
+
+    def get_all_filtered(
+        self,
+        role: Optional[str] = None,
+        is_active: Optional[bool] = None,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> List[User]:
+        try:
+            query = self.db.query(User)
+            if role:
+                query = query.filter(User.role == role)
+            if is_active is not None:
+                query = query.filter(User.is_active == is_active)
+            return query.offset(skip).limit(limit).all()
+        except SQLAlchemyError as e:
+            logger.error("Database error filtering users: %s", str(e))
+            raise DatabaseError(f"Failed to filter users: {str(e)}")
+
+    def count_filtered(
+        self,
+        role: Optional[str] = None,
+        is_active: Optional[bool] = None,
+    ) -> int:
+        try:
+            query = self.db.query(User)
+            if role:
+                query = query.filter(User.role == role)
+            if is_active is not None:
+                query = query.filter(User.is_active == is_active)
+            return query.count()
+        except SQLAlchemyError as e:
+            logger.error("Database error counting filtered users: %s", str(e))
+            raise DatabaseError(f"Failed to count filtered users: {str(e)}")
+
+    def increment_login_attempts(self, user: User) -> User:
+        try:
+            user.login_attempts = (user.login_attempts or 0) + 1
+            self.db.commit()
+            self.db.refresh(user)
+            return user
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            logger.error("Database error incrementing login attempts: %s", str(e))
+            raise DatabaseError(f"Failed to increment login attempts: {str(e)}")
+
+    def reset_login_attempts(self, user: User) -> User:
+        try:
+            user.login_attempts = 0
+            user.locked_until = None
+            self.db.commit()
+            self.db.refresh(user)
+            return user
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            logger.error("Database error resetting login attempts: %s", str(e))
+            raise DatabaseError(f"Failed to reset login attempts: {str(e)}")
+
+    def lock_user(self, user: User, until: datetime) -> User:
+        try:
+            user.locked_until = until
+            self.db.commit()
+            self.db.refresh(user)
+            return user
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            logger.error("Database error locking user: %s", str(e))
+            raise DatabaseError(f"Failed to lock user: {str(e)}")
+
+    def record_login(self, user: User) -> User:
+        try:
+            user.last_login_at = datetime.now(timezone.utc)
+            user.login_attempts = 0
+            user.locked_until = None
+            self.db.commit()
+            self.db.refresh(user)
+            return user
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            logger.error("Database error recording login: %s", str(e))
+            raise DatabaseError(f"Failed to record login: {str(e)}")

@@ -62,6 +62,12 @@ def get_current_user(
 ) -> User:
     try:
         token = credentials.credentials
+
+        # ── Check if token has been blacklisted (logout) ──────────────
+        from app.infrastructure.cache.token_blacklist import is_token_blacklisted
+        if is_token_blacklisted(token):
+            raise AuthenticationError("Token has been revoked")
+
         payload = verify_access_token(token)
         user_id = payload.get("sub")
         if user_id is None:
@@ -105,4 +111,8 @@ def require_manager(current_user: User = Depends(require_role("manager"))) -> Us
 
 
 def require_staff(current_user: User = Depends(require_role("staff"))) -> User:
+    return current_user
+
+
+def require_viewer(current_user: User = Depends(require_role("viewer"))) -> User:
     return current_user
