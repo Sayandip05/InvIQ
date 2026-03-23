@@ -12,6 +12,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app.api.routes import analytics, chat, inventory, requisition, auth, admin
+from app.api.routes.websocket import router as ws_router
 from app.core.config import settings
 from app.infrastructure.database.connection import Base, engine
 from app.core.logging_config import setup_logging
@@ -106,6 +107,7 @@ app.include_router(chat.router, prefix=settings.API_V1_PREFIX)
 app.include_router(inventory.router, prefix=settings.API_V1_PREFIX)
 app.include_router(requisition.router, prefix=settings.API_V1_PREFIX)
 app.include_router(admin.router, prefix=settings.API_V1_PREFIX)
+app.include_router(ws_router)
 
 
 @app.get("/")
