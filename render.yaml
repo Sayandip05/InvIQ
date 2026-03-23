@@ -1,0 +1,40 @@
+# ── Render Infrastructure as Code ────────────────────────────────────────
+# Deploy Smart Inventory Assistant to Render.com
+
+services:
+  # ── FastAPI Backend ──────────────────────────────────────────────────
+  - type: web
+    name: smart-inventory-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    region: oregon
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: smart-inventory-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: smart-inventory-redis
+          type: redis
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ENVIRONMENT
+        value: production
+      - key: GROQ_API_KEY
+        sync: false # manually set in Render dashboard
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        sync: false # manually set in Render dashboard
+
+databases:
+  # ── PostgreSQL (or use Supabase externally) ─────────────────────────
+  - name: smart-inventory-db
+    plan: free
+    databaseName: smart_inventory
+    user: inventory_user
+    region: oregon

@@ -35,3 +35,11 @@ langsmith
 # ── Caching & Rate Limiting ─────────────────────────────────
 redis
 slowapi
+
+# ── WebSocket ───────────────────────────────────────────────
+websockets
+
+# ── Testing ─────────────────────────────────────────────────
+pytest
+pytest-asyncio
+httpx

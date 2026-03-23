@@ -9,9 +9,9 @@
 ## Status Summary
 
 ```
-✅ Done:        19/27 modules  (70%)
+✅ Done:        22/27 modules  (81%)
 🟡 Partial:      3/27 modules  (11%)
-🔴 Not Started:  5/27 modules  (19%)
+🔴 Not Started:  2/27 modules  (8%)
 ```
 
 ---
@@ -38,15 +38,15 @@
 | 16 | Scaling A (DB perf) | 🟡 Partial | `X-Process-Time` middleware ✅. **Missing:** slow query logs, pooling config |
 | 17 | Scaling B (multi-worker) | 🔴 Not Started | Single-process `uvicorn`. No Gunicorn. Dockerfile is placeholder. |
 | 18 | Concurrency | 🟡 Partial | Most routes sync `def`. Agent invocation is sync. |
-| 19 | Testing | 🔴 Not Started | Zero tests. No `pytest`, no `TestClient`, no `conftest.py`. |
+| 19 | Testing | ✅ Done | `pytest`, `TestClient`, `conftest.py` fixtures, 29 tests (auth, analytics, agent) |
 | 20 | Object Storage (S3) | 🔴 Not Started | Audio in-memory only. No S3 or file storage. |
-| 21 | Real-Time (WebSockets) | 🔴 Not Started | Chat is request-response only. No live stock alerts. |
+| 21 | Real-Time (WebSockets) | ✅ Done | `/ws/alerts`, `ConnectionManager`, broadcast to connected clients |
 | 22 | Webhooks | 🔴 Not Started | No server-to-server callbacks, no HMAC. |
 | 23 | Advanced Search | 🔴 Not Started | Search is SQL `LIKE`. No Elasticsearch. |
 | 24 | Transactional Emails | 🔴 Not Started | No email on requisition approve/reject, no SendGrid/SES. |
 | 25 | API Documentation | ✅ Partial → Done | Swagger at `/docs`. `response_model` still partial. |
 | 26 | 12-Factor App | 🟡 Partial | Config from env ✅. **Missing:** dev/prod parity, disposability. |
-| 27 | DevOps & Docker | 🔴 Not Started | Placeholder Dockerfile. No `docker-compose`, no CI/CD pipeline. |
+| 27 | DevOps & Docker | ✅ Done | Multi-stage `Dockerfile`, `docker-compose.yml`, `render.yaml`, GitHub Actions CI/CD |
 
 ---
 
@@ -119,7 +119,6 @@
 
 ## Next Immediate Steps
 
-1. **Testing** — `pytest` with `TestClient` and PostgreSQL test database
-2. **Docker** — `Dockerfile` (multi-stage), `docker-compose.yml`, GitHub Actions CI/CD
-3. **Deploy** — Render + Supabase + Upstash (Redis)
-4. **WebSocket alerts** — live stock notifications
+1. **Deploy** — Render + Supabase + Upstash (Redis)
+2. **Frontend integration** — Connect React dashboard to WebSocket alerts
+3. **Object Storage** — S3/Cloudinary for audio files

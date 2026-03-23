@@ -143,20 +143,24 @@ Clean Architecture with strict layer separation:
 
 ---
 
-## Module Audit (19/27 Implemented)
+## Module Audit (22/27 Implemented)
 
 See `docs/memory.md` for the full audit table and phased roadmap.
 
 Key implemented:
-- FastAPI REST API with 6 route groups (49 endpoints)
+- FastAPI REST API with 6 route groups (50+ endpoints)
 - JWT auth + RBAC (4 roles) + login lockout + audit trail + logout
 - Redis caching (analytics TTL) + token blacklist
 - Rate limiting (slowapi — 5/min login, 30/min analytics)
 - LangGraph AI agent (Groq LLM) with ChromaDB semantic memory
+- WebSocket real-time stock alerts (`/ws/alerts`)
+- Automated testing (pytest, 29 tests)
+- Docker (multi-stage build + docker-compose)
+- CI/CD (GitHub Actions with PostgreSQL service)
 - Graceful shutdown via lifespan context manager
-- SQLAlchemy ORM + Repository pattern + PostgreSQL ready
+- SQLAlchemy ORM + Repository pattern + PostgreSQL
 
-Next: Testing (pytest), Docker, Deployment
+Next: Deployment (Render/Supabase), Frontend WebSocket integration
 
 ---
 
