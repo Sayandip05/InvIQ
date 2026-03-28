@@ -55,3 +55,7 @@ coverage.xml
 # ── Misc ───────────────────────────────────────────────────
 *.bak
 backend/debug_import.py
+
+# ── Documentation (Internal) ───────────────────────────────
+docs/
+opencode.md
