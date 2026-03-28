@@ -1,5 +1,10 @@
 # ── Docker Compose: Local Development Stack ──────────────────────────────
 # Orchestrates the FastAPI app, PostgreSQL, and Redis for local dev.
+#
+# Usage:
+#   docker compose up -d          → start all services
+#   docker compose logs -f app    → tail the app logs
+#   docker compose down -v        → stop + remove volumes
 
 services:
   # ── PostgreSQL Database ────────────────────────────────────────────────
@@ -24,8 +29,11 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -41,11 +49,24 @@ services:
     ports:
       - "8000:8000"
     environment:
+      # Database — connects to the 'db' service above
       DATABASE_URL: postgresql://inventory_user:inventory_pass@db:5432/smart_inventory
-      REDIS_URL: redis://redis:6379
       ENVIRONMENT: production
-    env_file:
-      - backend/.env
+
+      # Redis — connects to the 'redis' service above
+      REDIS_URL: redis://redis:6379/0
+
+      # Security — CHANGE THESE for production!
+      SECRET_KEY: ${SECRET_KEY:-change-me-generate-with-openssl-rand-hex-32}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@inventory.local}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+
+      # CORS
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173}
+
+      # AI Keys (optional — provide via .env or host env)
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
     depends_on:
       db:
         condition: service_healthy
@@ -54,3 +75,4 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:

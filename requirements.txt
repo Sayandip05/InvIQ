@@ -1,6 +1,7 @@
 # ── Core Framework ──────────────────────────────────────────
 fastapi==0.104.1
 uvicorn==0.24.0
+gunicorn>=21.2.0            # Production WSGI server (manages uvicorn workers)
 python-multipart==0.0.6
 
 # ── Database ────────────────────────────────────────────────
@@ -13,8 +14,8 @@ pydantic[email]
 python-dotenv==1.0.0
 
 # ── Authentication ──────────────────────────────────────────
-python-jose[cryptography]
-passlib[bcrypt]
+PyJWT>=2.8.0              # JWT encode/decode (official FastAPI recommendation)
+pwdlib[argon2]            # Argon2 password hashing (winner of Password Hashing Competition)
 
 # ── AI / LangChain ──────────────────────────────────────────
 langchain>=0.2.0
@@ -42,4 +43,3 @@ websockets
 # ── Testing ─────────────────────────────────────────────────
 pytest
 pytest-asyncio
-httpx
