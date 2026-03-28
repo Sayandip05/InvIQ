@@ -8,7 +8,6 @@ import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app.api.routes import analytics, chat, inventory, requisition, auth, admin
@@ -19,7 +18,7 @@ from app.core.logging_config import setup_logging
 from app.core.error_handlers import register_exception_handlers
 from app.core.middleware.request_logger import RequestLoggerMiddleware
 from app.core.security import hash_password
-from app.core.rate_limiter import limiter
+from app.core.rate_limiter import limiter, rate_limit_handler
 from app.infrastructure.database.models import User, AuditLog  # noqa: F401
 from app.infrastructure.cache.redis_client import get_redis, close_redis
 
@@ -85,7 +84,7 @@ app = FastAPI(
 
 # ── Rate Limiter ───────────────────────────────────────────────────────────
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 
 # ── Middleware ─────────────────────────────────────────────────────────────
 app.add_middleware(RequestLoggerMiddleware)
@@ -123,9 +122,18 @@ def root():
 @app.get("/health")
 def health_check():
     from app.infrastructure.cache.redis_client import is_redis_available
+    from fastapi.responses import JSONResponse
 
-    return {
-        "status": "healthy",
-        "database": "connected",
-        "redis": "connected" if is_redis_available() else "unavailable",
-    }
+    redis_ok = is_redis_available()
+    status = "healthy" if redis_ok else "degraded"
+    http_status = 200 if redis_ok else 503
+
+    return JSONResponse(
+        status_code=http_status,
+        content={
+            "status": status,
+            "version": settings.VERSION,
+            "database": "connected",
+            "redis": "connected" if redis_ok else "unavailable",
+        },
+    )

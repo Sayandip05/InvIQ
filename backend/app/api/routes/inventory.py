@@ -5,7 +5,8 @@ Routes receive pre-configured services via FastAPI's Depends() system.
 No direct DB queries here — everything goes through the service layer.
 """
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
+from app.core.rate_limiter import limiter
 
 from app.core.dependencies import (
     get_inventory_service,
@@ -107,20 +108,22 @@ def get_current_stock(
 
 
 @router.post("/locations")
+@limiter.limit("20/minute")
 def create_location(
-    request: CreateLocationRequest,
+    request: Request,
+    body: CreateLocationRequest,
     repo: InventoryRepository = Depends(get_inventory_repo),
     current_user: User = Depends(require_staff),
 ):
-    existing = repo.get_location_by_name(request.name.strip())
+    existing = repo.get_location_by_name(body.name.strip())
     if existing:
-        raise DuplicateError(f"Location '{request.name}' already exists")
+        raise DuplicateError(f"Location '{body.name}' already exists")
 
     location = repo.create_location(
-        name=request.name.strip(),
-        type=request.type.strip().lower(),
-        region=request.region.strip(),
-        address=request.address.strip() if request.address else None,
+        name=body.name.strip(),
+        type=body.type.strip().lower(),
+        region=body.region.strip(),
+        address=body.address.strip() if body.address else None,
     )
 
     return {
@@ -137,21 +140,23 @@ def create_location(
 
 
 @router.post("/items")
+@limiter.limit("20/minute")
 def create_item(
-    request: CreateItemRequest,
+    request: Request,
+    body: CreateItemRequest,
     repo: InventoryRepository = Depends(get_inventory_repo),
     current_user: User = Depends(require_staff),
 ):
-    existing = repo.get_item_by_name(request.name.strip())
+    existing = repo.get_item_by_name(body.name.strip())
     if existing:
-        raise DuplicateError(f"Item '{request.name}' already exists")
+        raise DuplicateError(f"Item '{body.name}' already exists")
 
     item = repo.create_item(
-        name=request.name.strip(),
-        category=request.category.strip().lower(),
-        unit=request.unit.strip().lower(),
-        lead_time_days=request.lead_time_days,
-        min_stock=request.min_stock,
+        name=body.name.strip(),
+        category=body.category.strip().lower(),
+        unit=body.unit.strip().lower(),
+        lead_time_days=body.lead_time_days,
+        min_stock=body.min_stock,
     )
 
     return {
@@ -169,12 +174,14 @@ def create_item(
 
 
 @router.post("/reset-data")
+@limiter.limit("3/minute")
 def reset_inventory_data(
-    request: ResetDataRequest,
+    request: Request,
+    body: ResetDataRequest,
     repo: InventoryRepository = Depends(get_inventory_repo),
     current_user: User = Depends(require_staff),
 ):
-    if not request.confirm:
+    if not body.confirm:
         from app.core.exceptions import ValidationError
 
         raise ValidationError("Set confirm=true to reset data")
@@ -195,24 +202,26 @@ def reset_inventory_data(
 
 
 @router.post("/transaction")
+@limiter.limit("30/minute")
 def add_single_transaction(
-    request: SingleTransactionRequest,
+    request: Request,
+    body: SingleTransactionRequest,
     repo: InventoryRepository = Depends(get_inventory_repo),
     service: InventoryService = Depends(get_inventory_service),
     current_user: User = Depends(require_staff),
 ):
-    if not repo.get_location_by_id(request.location_id):
-        raise NotFoundError("Location", request.location_id)
-    if not repo.get_item_by_id(request.item_id):
-        raise NotFoundError("Item", request.item_id)
+    if not repo.get_location_by_id(body.location_id):
+        raise NotFoundError("Location", body.location_id)
+    if not repo.get_item_by_id(body.item_id):
+        raise NotFoundError("Item", body.item_id)
 
     result = service.add_transaction(
-        location_id=request.location_id,
-        item_id=request.item_id,
-        transaction_date=request.date,
-        received=request.received,
-        issued=request.issued,
-        notes=request.notes,
+        location_id=body.location_id,
+        item_id=body.item_id,
+        transaction_date=body.date,
+        received=body.received,
+        issued=body.issued,
+        notes=body.notes,
         entered_by=str(current_user.username),
     )
     cache_invalidate_pattern("analytics:*")
@@ -220,14 +229,16 @@ def add_single_transaction(
 
 
 @router.post("/bulk-transaction")
+@limiter.limit("10/minute")
 def add_bulk_transactions(
-    request: BulkTransactionRequest,
+    request: Request,
+    body: BulkTransactionRequest,
     repo: InventoryRepository = Depends(get_inventory_repo),
     service: InventoryService = Depends(get_inventory_service),
     current_user: User = Depends(require_staff),
 ):
-    if not repo.get_location_by_id(request.location_id):
-        raise NotFoundError("Location", request.location_id)
+    if not repo.get_location_by_id(body.location_id):
+        raise NotFoundError("Location", body.location_id)
 
     items_data = [
         {
@@ -236,12 +247,12 @@ def add_bulk_transactions(
             "issued": item.issued,
             "notes": item.notes,
         }
-        for item in request.items
+        for item in body.items
     ]
 
     result = service.bulk_add_transactions(
-        location_id=request.location_id,
-        transaction_date=request.date,
+        location_id=body.location_id,
+        transaction_date=body.date,
         items_data=items_data,
         entered_by=str(current_user.username),
     )

@@ -2,13 +2,17 @@
 WebSocket route for real-time critical stock alerts.
 
 Layer: API
-Clients connect to /ws/alerts to receive push notifications
-when inventory transactions cause stock levels to drop below thresholds.
+Clients connect to /ws/alerts?token=<jwt> to receive push notifications.
+Authentication is enforced via JWT token in query parameter before connection
+is accepted, preventing unauthenticated access to sensitive stock alerts.
 """
 
 import logging
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from typing import List
+
+from app.core.security import verify_access_token
+from app.core.exceptions import AuthenticationError
 
 logger = logging.getLogger("smart_inventory.websocket")
 
@@ -27,7 +31,8 @@ class ConnectionManager:
         logger.info("WebSocket client connected (%d total)", len(self.active_connections))
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
         logger.info("WebSocket client disconnected (%d remaining)", len(self.active_connections))
 
     async def broadcast(self, message: dict):
@@ -40,7 +45,8 @@ class ConnectionManager:
                 disconnected.append(connection)
         # Clean up dead connections
         for conn in disconnected:
-            self.active_connections.remove(conn)
+            if conn in self.active_connections:
+                self.active_connections.remove(conn)
 
 
 # Singleton manager — importable by inventory routes for broadcasting
@@ -52,12 +58,33 @@ async def websocket_alerts(websocket: WebSocket):
     """
     WebSocket endpoint for real-time stock alerts.
 
-    Clients connect here and receive JSON messages when:
+    Requires JWT token in query parameter: /ws/alerts?token=<access_token>
+    Rejects unauthenticated or invalid token connections before accepting.
+
+    Clients receive JSON messages when:
     - Stock drops below critical threshold after a transaction
     - Reorder points are triggered
     - System-wide alerts are issued
     """
+    # ── Authentication: validate token BEFORE accepting connection ──────
+    token = websocket.query_params.get("token")
+    if not token:
+        logger.warning("WebSocket rejected: no token provided from %s", websocket.client)
+        await websocket.close(code=4001, reason="Authentication token required")
+        return
+
+    try:
+        payload = verify_access_token(token)
+        username = payload.get("username", "unknown")
+    except AuthenticationError:
+        logger.warning("WebSocket rejected: invalid token from %s", websocket.client)
+        await websocket.close(code=4001, reason="Invalid or expired token")
+        return
+
+    # ── Connection accepted for authenticated user ──────────────────────
     await manager.connect(websocket)
+    logger.info("WebSocket authenticated user '%s' connected", username)
+
     try:
         while True:
             # Keep connection alive — listen for client pings
@@ -66,3 +93,5 @@ async def websocket_alerts(websocket: WebSocket):
                 await websocket.send_json({"type": "pong"})
     except WebSocketDisconnect:
         manager.disconnect(websocket)
+        logger.info("WebSocket user '%s' disconnected", username)
+

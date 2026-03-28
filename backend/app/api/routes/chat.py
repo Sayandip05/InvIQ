@@ -9,7 +9,8 @@ Provides AI-powered chat for inventory queries with:
 - Chat session ownership enforcement
 """
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
+from app.core.rate_limiter import limiter
 from app.core.exceptions import (
     ValidationError,
     AppException,
@@ -213,7 +214,7 @@ def _format_result(title: str, payload, question: str, past_context: str = "") -
 def _verify_session_ownership(db: Session, conversation_id: str, user_id: int) -> None:
     """Ensure the conversation belongs to the requesting user."""
     session = db.query(ChatSession).filter(ChatSession.id == conversation_id).first()
-    if session and session.user_id != str(user_id):
+    if session and session.user_id != user_id:
         raise AuthorizationError("You do not have access to this conversation")
 
 
@@ -222,35 +223,37 @@ def _verify_session_ownership(db: Session, conversation_id: str, user_id: int) -
 # ---------------------------------------------------------------------------
 
 @router.post("/query", response_model=ChatResponse)
+@limiter.limit("20/minute")
 def chat_query(
-    request: ChatRequest,
+    request: Request,
+    chat_request: ChatRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if not request.question or len(request.question.strip()) < 3:
+    if not chat_request.question or len(chat_request.question.strip()) < 3:
         raise ValidationError("Question must be at least 3 characters")
 
     # Verify ownership if continuing an existing conversation
-    if request.conversation_id:
-        _verify_session_ownership(db, request.conversation_id, current_user.id)
+    if chat_request.conversation_id:
+        _verify_session_ownership(db, chat_request.conversation_id, current_user.id)
 
     try:
         result = _build_agent_response(
-            request.question, db, request.conversation_id or ""
+            chat_request.question, db, chat_request.conversation_id or ""
         )
 
-        conv_id = request.conversation_id
+        conv_id = chat_request.conversation_id
         if not conv_id:
             conv_id = f"conv_{uuid.uuid4().hex[:12]}"
             title = (
-                request.question[:50] + "..."
-                if len(request.question) > 50
-                else request.question
+                chat_request.question[:50] + "..."
+                if len(chat_request.question) > 50
+                else chat_request.question
             )
-            session = ChatSession(id=conv_id, user_id=str(current_user.id), title=title)
+            session = ChatSession(id=conv_id, user_id=current_user.id, title=title)
             db.add(session)
 
-        db.add(ChatMessage(session_id=conv_id, role="user", content=request.question))
+        db.add(ChatMessage(session_id=conv_id, role="user", content=chat_request.question))
         db.add(
             ChatMessage(
                 session_id=conv_id, role="assistant", content=result["response"]
@@ -263,7 +266,7 @@ def chat_query(
             memory = get_vector_memory()
             if memory.is_available:
                 now = datetime.now()
-                memory.add_message(conv_id, "user", request.question, now)
+                memory.add_message(conv_id, "user", chat_request.question, now)
                 memory.add_message(conv_id, "assistant", result["response"], now)
         except Exception as e:
             logger.warning("Failed to store in vector memory: %s", e)
@@ -286,7 +289,7 @@ def chat_query(
         return ChatResponse(
             success=True,
             response=result["response"],
-            question=request.question,
+            question=chat_request.question,
             conversation_id=conv_id,
             suggested_actions=suggested_actions if suggested_actions else None,
         )
@@ -322,8 +325,10 @@ def get_chat_history(
 
 
 @router.delete("/history/{conversation_id}")
+@limiter.limit("10/minute")
 def clear_chat_history(
     conversation_id: str,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -398,7 +403,7 @@ def get_chat_sessions(
     # Filter sessions by the current user only
     db_sessions = (
         db.query(ChatSession)
-        .filter(ChatSession.user_id == str(current_user.id))
+        .filter(ChatSession.user_id == current_user.id)
         .order_by(ChatSession.updated_at.desc())
         .all()
     )

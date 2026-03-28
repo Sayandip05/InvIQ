@@ -12,7 +12,7 @@ logger = logging.getLogger("smart_inventory")
 
 
 class Settings:
-    DATABASE_URL = os.getenv("DATABASE_URL", "")  # PostgreSQL string (required)
+    DATABASE_URL = os.getenv("DATABASE_URL", "")  # PostgreSQL (Supabase) — REQUIRED
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
     LANGCHAIN_API_KEY = os.getenv("LANGCHAIN_API_KEY")
     LANGCHAIN_PROJECT = os.getenv("LANGCHAIN_PROJECT", "smart-inventory-assistant")
@@ -27,6 +27,7 @@ class Settings:
     VERSION = "2.0.0"
 
     # ── Auth & Security ───────────────────────────────────────────────
+    # REQUIRED: Generate a secure key with: openssl rand -hex 32
     SECRET_KEY = os.getenv("SECRET_KEY", "your-super-secret-key-change-in-production")
     ALGORITHM = os.getenv("ALGORITHM", "HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
@@ -36,14 +37,14 @@ class Settings:
     MAX_LOGIN_ATTEMPTS = int(os.getenv("MAX_LOGIN_ATTEMPTS", "5"))
     LOCKOUT_DURATION_MINUTES = int(os.getenv("LOCKOUT_DURATION_MINUTES", "15"))
 
-    # ── Admin Seed (first startup) ────────────────────────────────────
+    # ── Admin Seed (first startup only) ───────────────────────────────
     ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@inventory.local")
     ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
     ADMIN_FULL_NAME = os.getenv("ADMIN_FULL_NAME", "System Administrator")
 
     # ── Redis ─────────────────────────────────────────────────────────
-    REDIS_URL = os.getenv("REDIS_URL", "")  # e.g. redis://localhost:6379 or Upstash URL
+    REDIS_URL = os.getenv("REDIS_URL", "")  # e.g. redis://localhost:6379 or Upstash
 
     # ── Rate Limiting ─────────────────────────────────────────────────
     RATE_LIMIT_DEFAULT = os.getenv("RATE_LIMIT_DEFAULT", "60/minute")
@@ -51,6 +52,30 @@ class Settings:
 
 
 settings = Settings()
+
+
+# ── Production safety checks ──────────────────────────────────────────────
+def _validate_production_config():
+    """Fail loudly if critical secrets are using insecure defaults in production."""
+    if settings.ENVIRONMENT == "production":
+        if settings.SECRET_KEY == "your-super-secret-key-change-in-production":
+            raise ValueError(
+                "FATAL: SECRET_KEY is still the insecure default! "
+                "Generate a secure key with: openssl rand -hex 32"
+            )
+        if settings.ADMIN_PASSWORD == "admin123":
+            logger.warning(
+                "⚠️  ADMIN_PASSWORD is the default 'admin123'. "
+                "Set ADMIN_PASSWORD env var to a strong password for production."
+            )
+    elif settings.SECRET_KEY == "your-super-secret-key-change-in-production":
+        logger.warning(
+            "SECRET_KEY is using the insecure default — acceptable for local dev only. "
+            "Generate a secure key for production: openssl rand -hex 32"
+        )
+
+
+_validate_production_config()
 
 
 def configure_langsmith():
