@@ -80,13 +80,13 @@ const Inventory = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-800">Inventory Management</h2>
+                    <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Inventory Management</h2>
                     <p className="text-slate-500">View and manage stock levels per location</p>
                 </div>
 
                 <div className="flex items-center space-x-4 w-full md:w-auto">
                     <select
-                        className="bg-white border border-slate-300 text-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="bg-white border border-slate-200 text-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-sm"
                         value={selectedLocation}
                         onChange={(e) => setSelectedLocation(e.target.value)}
                     >
@@ -97,19 +97,19 @@ const Inventory = () => {
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div className="p-4 border-b border-slate-100 flex items-center space-x-4">
                     <div className="relative flex-1 max-w-md">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
                         <input
                             type="text"
                             placeholder="Search items..."
-                            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-sm text-sm"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-lg">
+                    <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-50 rounded-xl transition-colors border border-transparent hover:border-slate-200">
                         <Filter size={20} />
                     </button>
                 </div>

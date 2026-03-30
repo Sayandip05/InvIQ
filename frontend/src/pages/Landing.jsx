@@ -92,14 +92,21 @@ export default function Landing() {
             <span className="font-semibold text-lg tracking-tight">Inviq</span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-            <a href="#" className="hover:text-slate-900 transition-colors">Features</a>
-            <a href="#" className="hover:text-slate-900 transition-colors">Process</a>
-            <a href="#" className="hover:text-slate-900 transition-colors">Pricing</a>
-            <a href="#" className="hover:text-slate-900 transition-colors">Changelog</a>
-            <a href="#" className="hover:text-slate-900 transition-colors">Customers</a>
+            {['features', 'process', 'pricing', 'faq', 'customers'].map((id) => (
+              <button 
+                key={id}
+                onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })} 
+                className="hover:text-slate-900 transition-colors capitalize"
+              >
+                {id === 'faq' ? 'FAQ' : id}
+              </button>
+            ))}
           </div>
           <div>
-            <button className="bg-black text-white px-5 py-2.5 rounded-full text-sm font-medium hover:bg-slate-800 transition-colors">
+            <button 
+              onClick={() => window.location.href = '/signup'} 
+              className="bg-black text-white px-5 py-2.5 rounded-full text-sm font-medium hover:bg-slate-800 transition-colors"
+            >
               Sign up
             </button>
           </div>
@@ -118,7 +125,10 @@ export default function Landing() {
             Optimize stock levels, prevent shortages, cut excess inventory, and simplify your inventory management effortlessly.
           </p>
           <div className="flex items-center justify-center gap-4">
-            <button className="bg-blue-600 text-white px-8 py-3.5 rounded-full text-base font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20">
+            <button 
+              onClick={() => window.location.href = '/signup'}
+              className="bg-blue-600 text-white px-8 py-3.5 rounded-full text-base font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20"
+            >
               Get started
             </button>
             <button className="bg-white text-slate-700 border border-slate-200 px-8 py-3.5 rounded-full text-base font-medium hover:bg-slate-50 transition-colors shadow-sm">
@@ -447,7 +457,7 @@ export default function Landing() {
         </div>
 
         {/* Features Section (Combined Design) */}
-        <div className="py-32 mt-16 border-t border-slate-200/60 relative overflow-hidden">
+        <div id="features" className="py-32 mt-16 border-t border-slate-200/60 relative overflow-hidden">
           {/* Background Pattern */}
           <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px] opacity-30" />
           
@@ -534,7 +544,7 @@ export default function Landing() {
         </div>
 
         {/* Process Section */}
-        <div className="py-32 border-t border-slate-200/60 relative">
+        <div id="process" className="py-32 border-t border-slate-200/60 relative">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-white border border-indigo-100 shadow-[0_2px_10px_rgba(99,102,241,0.08)] text-slate-700 text-sm font-medium mb-6">
               <TrendingUp className="w-4 h-4 mr-2 text-[#5B65FF]" />
@@ -606,7 +616,7 @@ export default function Landing() {
         </div>
 
         {/* Pricing Section */}
-        <div className="py-32 border-t border-slate-200/60">
+        <div id="pricing" className="py-32 border-t border-slate-200/60">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-cyan-50 text-cyan-500 text-xs font-semibold mb-6 relative">
               {/* Decorative lines */}
@@ -757,7 +767,7 @@ export default function Landing() {
         </div>
 
         {/* Customers Section */}
-        <div className="py-32 border-t border-slate-200/60 relative bg-white">
+        <div id="customers" className="py-32 border-t border-slate-200/60 relative bg-white">
           {/* Vertical lines matching the design */}
           <div className="hidden md:block absolute top-0 bottom-0 left-[10%] w-px bg-indigo-100/50" />
           <div className="hidden md:block absolute top-0 bottom-0 right-[10%] w-px bg-indigo-100/50" />
@@ -804,7 +814,7 @@ export default function Landing() {
       </div>
 
       {/* FAQ Section */}
-      <div className="py-24 relative bg-white border-t border-slate-200/60 overflow-hidden z-10">
+      <div id="faq" className="py-24 relative bg-white border-t border-slate-200/60 overflow-hidden z-10">
         {/* Background Pattern */}
         <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px] opacity-30" />
         <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-white to-transparent z-10" />

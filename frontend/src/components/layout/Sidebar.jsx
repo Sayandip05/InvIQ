@@ -41,7 +41,7 @@ const Sidebar = () => {
 
     const handleLogout = async () => {
         await logout();
-        navigate('/login', { replace: true });
+        navigate('/signin', { replace: true });
     };
 
     const roleInfo = ROLE_LABELS[role] || ROLE_LABELS.viewer;
@@ -57,11 +57,13 @@ const Sidebar = () => {
     }[role] || 'Portal';
 
     return (
-        <div className="h-screen w-64 bg-slate-900 text-white flex flex-col p-4 shadow-xl">
+        <div className="h-screen w-64 bg-white border-r border-slate-100 flex flex-col p-4 shrink-0">
             {/* Brand */}
-            <div className="mb-8 px-4 py-2">
-                <h1 className="text-xl font-bold text-blue-400">InvIQ</h1>
-                <p className="text-xs text-slate-400 mt-1">{portalLabel}</p>
+            <div className="mb-8 px-4 py-2 flex flex-col">
+                <div className="flex items-center gap-2">
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">InvIQ</h1>
+                </div>
+                <p className="text-xs text-slate-500 font-medium mt-1 uppercase tracking-wider">{portalLabel}</p>
             </div>
 
             {/* Nav links */}
@@ -69,14 +71,14 @@ const Sidebar = () => {
                 {navItems.map((item, idx) => (
                     <React.Fragment key={item.path}>
                         {item.divider && idx > 0 && (
-                            <div className="border-t border-slate-800 my-2" />
+                            <div className="border-t border-slate-100 my-2" />
                         )}
                         <NavLink
                             to={item.path}
                             className={({ isActive }) =>
-                                `flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive
-                                    ? 'bg-blue-600 text-white shadow-md'
-                                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                                `flex items-center space-x-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium ${isActive
+                                    ? 'bg-primaryLight text-primary shadow-sm'
+                                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                                 }`
                             }
                         >
@@ -88,16 +90,16 @@ const Sidebar = () => {
             </nav>
 
             {/* Bottom section */}
-            <div className="mt-auto pt-4 border-t border-slate-800 space-y-2">
+            <div className="mt-auto pt-4 border-t border-slate-100 space-y-2">
                 {/* Logged-in user info */}
                 {user && (
-                    <div className="px-4 py-3 rounded-lg bg-slate-800/60 flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold uppercase">
+                    <div className="px-3 py-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center text-xs font-bold uppercase shadow-sm">
                             {user.username?.[0] || '?'}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-white truncate">{user.username}</p>
-                            <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${roleInfo.color}`}>
+                            <p className="text-sm font-semibold text-slate-900 truncate">{user.username}</p>
+                            <span className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded font-bold ${roleInfo.color}`}>
                                 {roleInfo.label}
                             </span>
                         </div>
@@ -108,10 +110,10 @@ const Sidebar = () => {
                 <button
                     id="sidebar-logout"
                     onClick={handleLogout}
-                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-950/50 hover:text-red-300 transition-colors text-left"
+                    className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors text-left text-sm font-medium"
                 >
                     <LogOut size={20} />
-                    <span className="font-medium">Sign Out</span>
+                    <span>Sign Out</span>
                 </button>
             </div>
         </div>

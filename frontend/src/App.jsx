@@ -19,8 +19,9 @@ import DataEntry from './pages/vendor/DataEntry';
 // ── Landing Page ────────────────────────────────────────────────
 import Landing from './pages/Landing';
 
-// ── Login ─────────────────────────────────────────────────────
-import Login from './pages/Login';
+// ── Login & Registration ─────────────────────────────────────
+import { LightSignIn } from './components/ui/sign-in';
+import { LightSignUp } from './components/ui/sign-up';
 
 /**
  * Role → default landing page mapping.
@@ -37,7 +38,7 @@ const ROLE_HOME = {
 
 function RoleRedirect() {
   const { user } = useAuth();
-  const home = user ? (ROLE_HOME[user.role] || '/admin/dashboard') : '/login';
+  const home = user ? (ROLE_HOME[user.role] || '/admin/dashboard') : '/signin';
   return <Navigate to={home} replace />;
 }
 
@@ -48,7 +49,8 @@ function App() {
         <Routes>
           {/* ── Public ──────────────────────────────────────────── */}
           <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/signin" element={<LightSignIn />} />
+          <Route path="/signup" element={<LightSignUp />} />
 
           {/* Root → redirect based on role */}
           <Route path="/dashboard" element={<RoleRedirect />} />
@@ -76,7 +78,7 @@ function App() {
           </Route>
 
           {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/signin" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

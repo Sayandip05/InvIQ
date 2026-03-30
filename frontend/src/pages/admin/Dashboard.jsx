@@ -14,14 +14,12 @@ const STATUS_COLORS = {
 };
 
 const StatCard = ({ title, value, icon: Icon, color }) => (
-    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center space-x-4">
-        <div className={`p-3 rounded-lg ${color}`}>
-            <Icon className="text-white" size={24} />
+    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center">
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${color}`}>
+            <Icon size={20} />
         </div>
-        <div>
-            <p className="text-slate-500 text-sm font-medium">{title}</p>
-            <h3 className="text-2xl font-bold text-slate-800">{value}</h3>
-        </div>
+        <div className="text-sm font-medium text-slate-500 mb-1">{title}</div>
+        <div className="text-2xl font-bold text-slate-900">{value}</div>
     </div>
 );
 
@@ -63,7 +61,7 @@ const Dashboard = () => {
 
     return (
         <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-slate-800">Dashboard Overview</h2>
+            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Dashboard Overview</h2>
 
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -71,31 +69,31 @@ const Dashboard = () => {
                     title="Total Stock Items"
                     value={totalItems}
                     icon={Package}
-                    color="bg-blue-500"
+                    color="bg-primaryLight text-primary"
                 />
                 <StatCard
                     title="Healthy Items"
                     value={status_distribution.find(i => i.name === 'HEALTHY')?.value || 0}
                     icon={CheckCircle}
-                    color="bg-green-500"
+                    color="bg-emerald-50 text-emerald-500"
                 />
                 <StatCard
                     title="Critical Shortages"
                     value={criticalItems}
                     icon={AlertTriangle}
-                    color="bg-red-500"
+                    color="bg-red-50 text-red-500"
                 />
                 <StatCard
                     title="Low Stock Warnings"
                     value={warningItems}
                     icon={Activity}
-                    color="bg-amber-500"
+                    color="bg-amber-50 text-amber-500"
                 />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Status Distribution */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <h3 className="text-lg font-semibold text-slate-700 mb-4">Stock Health Status</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
@@ -121,7 +119,7 @@ const Dashboard = () => {
                 </div>
 
                 {/* Category Distribution */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <h3 className="text-lg font-semibold text-slate-700 mb-4">Inventory by Category</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
@@ -137,7 +135,7 @@ const Dashboard = () => {
                 </div>
 
                 {/* Location Stock Levels */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <h3 className="text-lg font-semibold text-slate-700 mb-4">Stock Volume by Location</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
@@ -153,7 +151,7 @@ const Dashboard = () => {
                 </div>
 
                 {/* Top Critical Items */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <h3 className="text-lg font-semibold text-slate-700 mb-4">Top Critical Shortages</h3>
                     <div className="space-y-4">
                         {low_stock_items.length === 0 ? (

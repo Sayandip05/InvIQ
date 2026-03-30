@@ -1,5 +1,5 @@
 /**
- * ProtectedRoute — Redirects unauthenticated users to /login.
+ * ProtectedRoute — Redirects unauthenticated users to /signin.
  *
  * Usage:
  *   <Route element={<ProtectedRoute />}>
@@ -31,7 +31,7 @@ export default function ProtectedRoute({ requiredRole = null }) {
 
     // Not logged in → redirect to login, preserve intended destination
     if (!isAuthenticated) {
-        return <Navigate to="/login" state={{ from: location }} replace />;
+        return <Navigate to="/signin" state={{ from: location }} replace />;
     }
 
     // Role check — if a specific role is required
