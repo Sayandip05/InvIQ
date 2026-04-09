@@ -48,6 +48,62 @@ class AuditRepository:
             logger.error("Database error creating audit log: %s", str(e))
             raise DatabaseError(f"Failed to create audit log: {str(e)}")
 
+    def get_recent(self, limit: int = 100) -> List[AuditLog]:
+        """Get most recent audit logs."""
+        try:
+            return (
+                self.db.query(AuditLog)
+                .order_by(AuditLog.created_at.desc())
+                .limit(limit)
+                .all()
+            )
+        except SQLAlchemyError as e:
+            logger.error("Database error getting recent audit logs: %s", str(e))
+            raise DatabaseError(f"Failed to get recent audit logs: {str(e)}")
+
+    def get_by_user(self, username: str, limit: int = 100) -> List[AuditLog]:
+        """Get audit logs for a specific user."""
+        try:
+            return (
+                self.db.query(AuditLog)
+                .filter(AuditLog.username == username)
+                .order_by(AuditLog.created_at.desc())
+                .limit(limit)
+                .all()
+            )
+        except SQLAlchemyError as e:
+            logger.error("Database error getting audit logs by user: %s", str(e))
+            raise DatabaseError(f"Failed to get audit logs by user: {str(e)}")
+
+    def get_by_action(self, action: str, limit: int = 100) -> List[AuditLog]:
+        """Get audit logs for a specific action type."""
+        try:
+            return (
+                self.db.query(AuditLog)
+                .filter(AuditLog.action == action)
+                .order_by(AuditLog.created_at.desc())
+                .limit(limit)
+                .all()
+            )
+        except SQLAlchemyError as e:
+            logger.error("Database error getting audit logs by action: %s", str(e))
+            raise DatabaseError(f"Failed to get audit logs by action: {str(e)}")
+
+    def get_by_resource(
+        self, resource_type: str, resource_id: Optional[str] = None, limit: int = 100
+    ) -> List[AuditLog]:
+        """Get audit logs for a specific resource type and optionally resource ID."""
+        try:
+            query = self.db.query(AuditLog).filter(
+                AuditLog.resource_type == resource_type
+            )
+            if resource_id:
+                query = query.filter(AuditLog.resource_id == resource_id)
+            return query.order_by(AuditLog.created_at.desc()).limit(limit).all()
+        except SQLAlchemyError as e:
+            logger.error("Database error getting audit logs by resource: %s", str(e))
+            raise DatabaseError(f"Failed to get audit logs by resource: {str(e)}")
+
     def get_recent(self, limit: int = 50) -> List[AuditLog]:
         try:
             return (

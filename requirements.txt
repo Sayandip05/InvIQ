@@ -1,49 +1,59 @@
-# ── Core Framework ──────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════
+# InvIQ Smart Inventory Assistant — Python Dependencies
+# ══════════════════════════════════════════════════════════════════════════
+
+# ── Web Framework ──────────────────────────────────────────────────────────
 fastapi==0.104.1
-uvicorn==0.24.0
-gunicorn>=21.2.0            # Production WSGI server (manages uvicorn workers)
+uvicorn[standard]==0.24.0
+gunicorn==21.2.0
 python-multipart==0.0.6
 
-# ── Database ────────────────────────────────────────────────
+# ── Database ───────────────────────────────────────────────────────────────
 sqlalchemy==2.0.23
-psycopg2-binary
+psycopg2-binary==2.9.9
+alembic==1.12.1
 
-# ── Validation & Config ────────────────────────────────────
-pydantic>=2.8.0
-pydantic[email]
+# ── Security & Auth ────────────────────────────────────────────────────────
+pyjwt==2.8.0
+pwdlib[argon2]==0.2.0
+python-jose[cryptography]==3.3.0
+
+# ── Caching & Rate Limiting ────────────────────────────────────────────────
+redis==5.0.1
+slowapi==0.1.9
+
+# ── AI & LLM ───────────────────────────────────────────────────────────────
+langchain==0.1.0
+langchain-groq==0.0.1
+langchain-community==0.0.13
+langchain-openai==0.0.5
+chromadb==0.4.22
+sentence-transformers==2.2.2
+
+# ── Data Processing ────────────────────────────────────────────────────────
+pydantic==2.5.2
+pydantic-settings==2.1.0
+openpyxl==3.1.2
+
+# ── PDF Generation ─────────────────────────────────────────────────────────
+reportlab==4.0.7
+
+# ── HTTP & Observability ───────────────────────────────────────────────────
+httpx==0.25.2
+requests==2.31.0
+
+# ── WebSocket ──────────────────────────────────────────────────────────────
+websockets==12.0
+
+# ── Utilities ──────────────────────────────────────────────────────────────
 python-dotenv==1.0.0
 
-# ── Authentication ──────────────────────────────────────────
-PyJWT>=2.8.0              # JWT encode/decode (official FastAPI recommendation)
-pwdlib[argon2]            # Argon2 password hashing (winner of Password Hashing Competition)
+# ── Testing (Development Only) ─────────────────────────────────────────────
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
 
-# ── AI / LangChain ──────────────────────────────────────────
-langchain>=0.2.0
-langchain-core>=0.2.0
-langchain-openai
-langchain-groq
-langchain-community
-langgraph
-
-# ── Vector Memory ───────────────────────────────────────────
-chromadb
-
-# ── HTTP & Observability ────────────────────────────────────
-httpx
-requests
-langsmith
-
-# ── Caching & Rate Limiting ─────────────────────────────────
-redis
-slowapi
-
-# ── WebSocket ───────────────────────────────────────────────
-websockets
-
-# ── Vendor & Reports ────────────────────────────────────────
-openpyxl                    # Excel parsing for vendor delivery uploads
-reportlab                   # PDF report generation
-
-# ── Testing ─────────────────────────────────────────────────
-pytest
-pytest-asyncio
+# ── Code Quality (Development Only) ────────────────────────────────────────
+ruff==0.1.8
+black==23.12.1
+mypy==1.7.1

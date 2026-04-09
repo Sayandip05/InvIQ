@@ -1,0 +1,33 @@
+# ══════════════════════════════════════════════════════════════════════════
+# Development-Only Dependencies
+# ══════════════════════════════════════════════════════════════════════════
+# Install with: pip install -r requirements-dev.txt
+#
+# This file extends the root requirements.txt with additional dev tools.
+# For production, only install: pip install -r ../requirements.txt
+
+-r ../requirements.txt
+
+# ── Additional Testing Tools ───────────────────────────────────────────────
+pytest-xdist==3.5.0          # Parallel test execution
+pytest-mock==3.12.0          # Enhanced mocking
+pytest-timeout==2.2.0        # Test timeout enforcement
+faker==22.0.0                # Test data generation
+
+# ── Code Quality & Linting ─────────────────────────────────────────────────
+pylint==3.0.3                # Additional linting
+bandit==1.7.6                # Security vulnerability scanner
+safety==2.3.5                # Dependency security checker
+
+# ── Type Checking ──────────────────────────────────────────────────────────
+types-redis==4.6.0.11
+types-requests==2.31.0.10
+
+# ── Documentation ──────────────────────────────────────────────────────────
+mkdocs==1.5.3                # Documentation generator
+mkdocs-material==9.5.3       # Material theme for docs
+
+# ── Debugging & Profiling ──────────────────────────────────────────────────
+ipython==8.19.0              # Enhanced Python shell
+ipdb==0.13.13                # IPython debugger
+memory-profiler==0.61.0      # Memory usage profiling
