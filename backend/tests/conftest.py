@@ -57,7 +57,7 @@ def db():
 
 @pytest.fixture(scope="session")
 def client():
-    c = TestClient(app, base_url="http://testserver")
+    c = TestClient(app)
     yield c
 
 

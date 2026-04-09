@@ -1,14 +1,14 @@
 # Deployment
 
-**Project:** Smart Inventory Assistant  
-**Updated:** March 20, 2026
+**Project:** InvIQ — Smart Inventory Assistant  
+**Updated:** April 9, 2026
 
 ---
 
 ## 1. Cloud Provider
 
-**Provider:** AWS  
-**Reason:** Mature services, good Python ecosystem support, cost-effective for startup
+**Provider:** Render (Backend) + Supabase (PostgreSQL) + Vercel (Frontend)  
+**Reason:** Free tier friendly, Python support, managed PostgreSQL, auto-deploy from git
 
 ---
 
@@ -17,22 +17,26 @@
 | Environment | Compute | Database | Vector Store | Deployment |
 |-------------|---------|----------|-------------|------------|
 | **Development** | Local machine | SQLite (file) | ChromaDB (local) | Manual (`uvicorn`) |
-| **Staging** | AWS EC2 t3.small | RDS PostgreSQL db.t3.micro | ChromaDB (local) | GitHub Actions |
-| **Production** | AWS ECS Fargate (2 tasks) | RDS PostgreSQL db.t3.medium | ChromaDB (EFS) | GitHub Actions |
+| **Staging** | Render (Free) | Supabase PostgreSQL | ChromaDB (local) | GitHub Actions auto-deploy |
+| **Production** | Render (Paid) | Supabase PostgreSQL | ChromaDB (persistent) | GitHub Actions auto-deploy |
 
 ---
 
 ## 3. Docker Setup
 
-### 3.1 Dockerfile
+### 3.1 Dockerfile (Multi-stage for production)
 
 ```dockerfile
-FROM python:3.11-slim
+FROM python:3.11-slim AS builder
 WORKDIR /app
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY backend/app ./app
+RUN pip install --no-cache-dir -r requirements.txt --target=/app/deps
+
+FROM python:3.11-slim
+COPY --from=builder /app/deps /app/deps
 ENV PYTHONPATH=/app
+ENV PATH=/app/deps/bin:$PATH
+COPY backend/app ./app
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
@@ -64,17 +68,15 @@ services:
 ## 4. CI/CD Pipeline
 
 ```
-Push Code → Build → Test (pytest) → Lint (ruff) → Build Docker → Push ECR → Deploy Staging → Manual Approval → Deploy Production
+Push Code → Lint (ruff) → Test (pytest) → Build Docker → Deploy Render
 ```
 
 ### 4.1 Pipeline Steps (cicd.yaml)
 
-1. **Lint** — ruff (Python), ESLint (JavaScript)
-2. **Test** — pytest (Python), Vitest (JavaScript)
+1. **Lint** — ruff (Python)
+2. **Test** — pytest with PostgreSQL service container
 3. **Build** — Docker image build
-4. **Push** — ECR registry
-5. **Deploy Staging** — ECS task definition update
-6. **Deploy Production** — ECS task definition update (manual approval gate)
+4. **Deploy** — Render auto-deploy from main branch
 
 ---
 
@@ -89,20 +91,15 @@ GROQ_API_KEY=<key>
 LANGCHAIN_API_KEY=<optional>
 ```
 
-### Staging
+### Staging/Production
 
 ```env
-DATABASE_URL=postgresql://user:pass@staging-db:5432/inventory
-ENVIRONMENT=staging
-GROQ_API_KEY=<key>
-```
-
-### Production
-
-```env
-DATABASE_URL=postgresql://user:pass@prod-db.amazonaws.com:5432/inventory
+DATABASE_URL=postgresql://[user]:[pass]@host:5432/inventory
+REDIS_URL=redis://[host]:6379
 ENVIRONMENT=production
 GROQ_API_KEY=<secrets-manager>
+SECRET_KEY=<strong-random-key>
+CORS_ORIGINS=https://your-domain.vercel.app
 ```
 
 ---
@@ -111,12 +108,12 @@ GROQ_API_KEY=<secrets-manager>
 
 | Layer | Implementation |
 |-------|----------------|
-| **Network** | VPC with private subnets, security groups |
-| **SSL/TLS** | ACM certificate, HTTPS only |
-| **API** | Rate limiting (Phase 1), API Keys (Phase 1) |
-| **Database** | IAM authentication, encryption at rest |
-| **Secrets** | AWS Secrets Manager |
-| **Backup** | RDS automated backups (7 days retention) |
+| **Network** | Render's private networking, security groups |
+| **SSL/TLS** | Render auto-provisioned TLS |
+| **API** | Rate limiting (slowapi + Redis), token blacklist |
+| **Database** | Supabase row-level security, encryption at rest |
+| **Secrets** | Render Environment Variables |
+| **Backup** | Supabase Point-in-time recovery |
 
 ---
 
@@ -124,37 +121,28 @@ GROQ_API_KEY=<secrets-manager>
 
 | Metric | Tool |
 |--------|------|
-| **Logs** | CloudWatch Logs |
-| **Metrics** | CloudWatch Metrics |
-| **Alerts** | CloudWatch Alarms → SNS → Email |
+| **Logs** | Render built-in logs |
+| **Metrics** | Render Metrics (paid) |
+| **Alerts** | Health check endpoint + external monitor |
 | **Tracing** | LangSmith (AI calls) |
-| **Uptime** | CloudWatch Synthetics |
+| **Uptime** | Render always-on (paid) or external monitor |
 
 ---
 
 ## 8. Rollback Steps
 
-### 8.1 ECS Rollback
+### 8.1 Render Rollback
 
 ```bash
-# List previous task definition revisions
-aws ecs list-task-definitions --family smart-inventory --sort DESC
-
-# Deregister bad revision
-aws ecs deregister-task-definition --task-definition smart-inventory:NEW_BAD_REVISION
-
-# Register previous good revision
-aws ecs update-service --cluster production --service smart-inventory --task-definition smart-inventory:GOOD_REVISION --region us-east-1
+# Deploy previous commit
+git push render <previous-commit-sha>:main --force
 ```
 
 ### 8.2 Database Rollback
 
 ```bash
-# Restore from RDS snapshot
-aws rds restore-db-instance-from-db-snapshot \
-  --db-instance-identifier inventory-restore \
-  --db-snapshot-identifier rds:inventory-YYYY-MM-DD \
-  --region us-east-1
+# Supabase point-in-time recovery from dashboard
+# Or restore from Supabase dashboard → Backups
 ```
 
 ---
@@ -163,27 +151,24 @@ aws rds restore-db-instance-from-db-snapshot \
 
 | Service | Free Tier | Usage |
 |---------|-----------|-------|
-| **EC2** | 750h/month t2.micro (12 months) | Staging only |
-| **RDS** | 750h/month db.t3.micro (12 months) | Dev/Staging |
-| **S3** | 5GB | Logs, backups |
-| **CloudWatch** | 10 custom metrics | Basic monitoring |
-| **ECS Fargate** | None | Production needs paid |
+| **Render** | 750h/month (spins down after 15min inactivity) | Dev/Staging |
+| **Supabase** | 500MB DB, 1GB file storage, 100K API calls/day | Dev/Staging |
+| **Vercel** | 100GB bandwidth, serverless functions | Frontend |
+| **ChromaDB** | Local only (no cloud) | Dev |
 
-**Estimated Production Cost:** $95–195/month
+**Estimated Production Cost:** $20–40/month (Render paid + Supabase pro)
 
 ---
 
 ## 10. Infrastructure Checklist (Pre-Production)
 
-- [ ] Replace placeholder Dockerfile with multi-stage production image
-- [ ] Configure RDS PostgreSQL with backup retention
-- [ ] Set up EFS for ChromaDB vector persistence
-- [ ] Configure Secrets Manager for API keys
-- [ ] Set up ALB with health checks
-- [ ] Configure CloudWatch dashboards
-- [ ] Set up SNS notification topics
-- [ ] Define ECS autoscaling policy
-- [ ] Create Route 53 DNS records
-- [ ] Enable ACM TLS certificate
-- [ ] Configure WAF rate limiting rules
-- [ ] Test rollback procedure in staging
+- [x] Multi-stage Dockerfile for production
+- [x] Docker-compose for local dev
+- [x] Render.com account and auto-deploy configured
+- [x] Supabase PostgreSQL project created
+- [x] Environment variables configured in Render
+- [x] Health check endpoint (`/health`) implemented
+- [x] CORS configured for frontend domain
+- [x] Redis/Upstash configured for caching and rate limiting
+- [x] Custom domain (optional)
+- [x] CI/CD GitHub Actions pipeline tested

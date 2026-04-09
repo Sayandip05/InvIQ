@@ -1,7 +1,7 @@
 # Low Level Design (LLD)
 
-**Project:** Smart Inventory Assistant  
-**Updated:** March 20, 2026
+**Project:** InvIQ — Smart Inventory Assistant  
+**Updated:** April 9, 2026
 
 ---
 
@@ -11,8 +11,11 @@
 |---------|--------|-------------|
 | **Inventory Management** | `inventory` | CRUD for locations, items, and daily transactions |
 | **Requisition Management** | `requisition` | Create, approve, reject stock requisitions |
-| **Analytics** | `analytics` | Dashboard charts, alerts, heatmap |
-| **AI Chatbot** | `chat` | Natural language queries with LangGraph tools |
+| **Analytics** | `analytics` | Dashboard charts, alerts, heatmap with Redis caching |
+| **AI Chatbot** | `chat` | Natural language queries with LangGraph ReAct agent |
+| **Vendor Upload** | `vendor` | Excel delivery ingestion with fuzzy matching |
+| **PDF Reports** | `admin` | ReportLab PDF generation |
+| **Real-time Alerts** | `websocket` | WebSocket stock alert push |
 
 ---
 
@@ -146,6 +149,62 @@ CREATE TABLE chat_messages (
     FOREIGN KEY (session_id) REFERENCES chat_sessions(id) ON DELETE CASCADE
 );
 CREATE INDEX idx_chat_messages_session ON chat_messages(session_id);
+```
+
+### 2.8 Organizations Table (Multi-tenancy)
+
+```sql
+CREATE TABLE organizations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(200) NOT NULL UNIQUE,
+    slug VARCHAR(100) NOT NULL UNIQUE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_organizations_slug ON organizations(slug);
+```
+
+### 2.9 Vendor Uploads Table
+
+```sql
+CREATE TABLE vendor_uploads (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    vendor_user_id INTEGER NOT NULL,
+    org_id INTEGER,
+    filename VARCHAR(255) NOT NULL,
+    location_id INTEGER NOT NULL,
+    total_rows INTEGER DEFAULT 0,
+    success_rows INTEGER DEFAULT 0,
+    error_rows INTEGER DEFAULT 0,
+    errors_detail JSON,
+    status VARCHAR(20) DEFAULT 'PROCESSING',
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (vendor_user_id) REFERENCES users(id),
+    FOREIGN KEY (location_id) REFERENCES locations(id)
+);
+CREATE INDEX idx_vendor_uploads_vendor ON vendor_uploads(vendor_user_id);
+CREATE INDEX idx_vendor_uploads_org ON vendor_uploads(org_id);
+```
+
+### 2.10 Audit Logs Table
+
+```sql
+CREATE TABLE audit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    org_id INTEGER,
+    username VARCHAR(100) NOT NULL,
+    action VARCHAR(50) NOT NULL,
+    resource_type VARCHAR(50) NOT NULL,
+    resource_id VARCHAR(100),
+    details JSON,
+    ip_address VARCHAR(45),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_audit_logs_org ON audit_logs(org_id);
+CREATE INDEX idx_audit_logs_user ON audit_logs(user_id);
+CREATE INDEX idx_audit_logs_created ON audit_logs(created_at);
 ```
 
 ---
@@ -500,6 +559,11 @@ sequenceDiagram
 | **Chat** | No Groq API key | Uses fallback rule-based responses |
 | **Chat** | ChromaDB unavailable | Continues without semantic memory |
 | **Analytics** | No transaction data | Returns empty charts with info message |
+| **Vendor Upload** | Fuzzy match below 85% threshold | Row marked as error, continue processing |
+| **Vendor Upload** | Invalid quantity/date | Row marked as error, continue processing |
+| **WebSocket** | Invalid JWT on connect | Close connection immediately (1008) |
+| **Redis** | Redis unavailable | Falls back to in-memory/simple return |
+| **Rate Limit** | Exceeded limit | Return 429 with retry-after header |
 
 ---
 
@@ -507,24 +571,32 @@ sequenceDiagram
 
 | File | Purpose |
 |------|---------|
-| `app/main.py` | FastAPI app bootstrap |
+| `app/main.py` | FastAPI app bootstrap with lifespan |
 | `app/core/config.py` | Settings from .env |
 | `app/core/dependencies.py` | FastAPI DI factories |
 | `app/core/exceptions.py` | Custom exception classes |
 | `app/core/error_handlers.py` | Global exception → HTTP handlers |
 | `app/core/logging_config.py` | Structured logging setup |
+| `app/core/security.py` | JWT encode/decode, token blacklist |
+| `app/core/rate_limiter.py` | slowapi rate limiter setup |
 | `app/core/middleware/request_logger.py` | Request/response logging |
 | `app/api/routes/inventory.py` | Inventory API endpoints |
 | `app/api/routes/requisition.py` | Requisition API endpoints |
 | `app/api/routes/analytics.py` | Analytics API endpoints |
-| `app/api/routes/chat.py` | Chat API endpoints |
-| `app/api/schemas/inventory_schemas.py` | Inventory Pydantic models |
-| `app/api/schemas/requisition_schemas.py` | Requisition Pydantic models |
-| `app/api/schemas/chat_schemas.py` | Chat Pydantic models |
+| `app/api/routes/chat.py` | Chat/AI agent endpoints |
+| `app/api/routes/auth.py` | Auth + user management endpoints |
+| `app/api/routes/admin.py` | Admin dashboard + PDF reports |
+| `app/api/routes/vendor.py` | Vendor Excel upload endpoints |
+| `app/api/routes/websocket.py` | WebSocket real-time alerts |
+| `app/api/routes/superadmin.py` | Super admin platform management |
 | `app/application/inventory_service.py` | Inventory business logic |
-| `app/application/requisition_service.py` | Requisition business logic |
-| `app/application/analytics_service.py` | Analytics computation |
+| `app/application/requisition_service.py` | Requisition workflow |
+| `app/application/analytics_service.py` | Analytics + Redis caching |
+| `app/application/vendor_service.py` | Excel parsing + fuzzy matching |
+| `app/application/agent_service.py` | AI agent orchestration |
 | `app/application/agent_tools.py` | LangGraph @tool functions |
+| `app/application/cache_service.py` | Redis cache helpers |
+| `app/application/audit_service.py` | Audit log creation |
 | `app/domain/calculations.py` | Pure stock formulas |
 | `app/domain/agent/prompts.py` | System prompt text |
 | `app/infrastructure/database/connection.py` | SQLAlchemy engine/session |
@@ -532,6 +604,11 @@ sequenceDiagram
 | `app/infrastructure/database/queries.py` | Complex SQL queries |
 | `app/infrastructure/database/inventory_repo.py` | Inventory data access |
 | `app/infrastructure/database/requisition_repo.py` | Requisition data access |
+| `app/infrastructure/database/user_repo.py` | User data access |
+| `app/infrastructure/database/audit_repo.py` | Audit log data access |
 | `app/infrastructure/vector_store/vector_store.py` | ChromaDB semantic memory |
+| `app/infrastructure/cache/redis_client.py` | Redis client |
+| `app/infrastructure/cache/token_blacklist.py` | Token blacklist helpers |
+| `app/infrastructure/cache/login_attempts.py` | Login attempt tracking |
 | `database/schema.sql` | Database schema reference |
 | `database/seed_data.py` | Sample data population |

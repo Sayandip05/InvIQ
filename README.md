@@ -4,7 +4,7 @@ AI-assisted inventory management for healthcare supply chains.
 
 ## Quick Start
 
-### 1. Backend
+### Backend
 
 ```bash
 # Clone and setup
@@ -25,21 +25,13 @@ python ..\database\seed_data.py
 uvicorn app.main:app --reload --port 8000
 ```
 
-### 2. Frontend
-
-```bash
-cd frontend\main-dashboard
-npm install
-npm run dev
-```
-
-### 3. URLs
+### URLs
 
 | Service | URL |
 |---------|-----|
 | Backend API | http://localhost:8000 |
 | Swagger Docs | http://localhost:8000/docs |
-| Frontend | http://localhost:5173 |
+| ReDoc | http://localhost:8000/redoc |
 
 ---
 
@@ -61,6 +53,80 @@ SECRET_KEY=<change-in-production>
 
 ## Repository Structure
 
+```
+inviq/
+├── backend/
+│   └── app/
+│       ├── main.py                              # FastAPI entry point
+│       ├── api/
+│       │   ├── routes/
+│       │   │   ├── admin.py                 # Admin dashboard, PDF reports
+│       │   │   ├── analytics.py             # Heatmap, alerts, summary
+│       │   │   ├── auth.py                  # Login, register, user management
+│       │   │   ├── chat.py                  # AI chatbot query, history
+│       │   │   ├── inventory.py             # Locations, items, transactions
+│       │   │   ├── requisition.py            # Create, approve, reject
+│       │   │   ├── vendor.py                # Excel upload
+│       │   │   ├── superadmin.py            # Platform management
+│       │   │   └── websocket.py             # Real-time alerts
+│       │   └── schemas/
+│       │       ├── chat_schemas.py
+│       │       ├── inventory_schemas.py
+│       │       ├── requisition_schemas.py
+│       │       └── auth_schemas.py
+│       ├── application/                        # Business logic
+│       │   ├── agent_tools.py                 # LangGraph @tool wrappers
+│       │   ├── agent_service.py               # ReAct agent orchestration
+│       │   ├── analytics_service.py           # Dashboard + Redis caching
+│       │   ├── inventory_service.py          # Transaction CRUD
+│       │   ├── vendor_service.py             # Excel parsing + fuzzy match
+│       │   ├── requisition_service.py        # Workflow
+│       │   ├── cache_service.py              # Redis helpers
+│       │   └── audit_service.py              # Audit logging
+│       ├── domain/                            # Pure logic (no framework deps)
+│       │   ├── calculations.py                 # Reorder formula, health colors
+│       │   └── agent/prompts.py              # System prompt text
+│       ├── infrastructure/                    # External integrations
+│       │   ├── database/
+│       │   │   ├── connection.py             # SQLAlchemy engine/session
+│       │   │   ├── models.py                # ORM classes
+│       │   │   ├── queries.py               # Complex SQL (stock health, alerts)
+│       │   │   ├── inventory_repo.py
+│       │   │   ├── requisition_repo.py
+│       │   │   ├── user_repo.py
+│       │   │   └── audit_repo.py
+│       │   ├── cache/
+│       │   │   ├── redis_client.py
+│       │   │   ├── token_blacklist.py
+│       │   │   └── login_attempts.py
+│       │   └── vector_store/
+│       │       └── vector_store.py           # ChromaDB semantic memory
+│       └── core/                             # Framework plumbing
+│           ├── config.py                     # Settings from .env
+│           ├── dependencies.py               # FastAPI Depends() factories
+│           ├── security.py                   # JWT encode/decode
+│           ├── rate_limiter.py               # slowapi setup
+│           ├── exceptions.py
+│           ├── error_handlers.py
+│           ├── logging_config.py
+│           └── middleware/request_logger.py
+├── database/
+│   ├── schema.sql                           # DB schema reference
+│   ├── seed_data.py                        # Sample data
+│   └── smart_inventory.db                   # SQLite file (dev)
+├── docs/
+│   ├── system-architecture.md               # Architecture, layers, ADR
+│   ├── HLD.md                              # Modules, APIs, entities
+│   ├── LLD.md                              # Schema, sequence diagrams
+│   ├── deployment.md                        # Docker, CI/CD, Render
+│   ├── auth_management.md                   # Auth workflow
+│   └── INTERVIEW_PREP_PROMPT.md
+├── Dockerfile
+├── docker-compose.yml
+├── cicd.yaml
+├── requirements.txt
+├── SETUP.md
+└── README.md
 ```
 smart-inventory-assistant/
 ├── backend/
@@ -143,24 +209,23 @@ Clean Architecture with strict layer separation:
 
 ---
 
-## Module Audit (22/27 Implemented)
+## Module Audit (27/27 Implemented)
 
-See `docs/memory.md` for the full audit table and phased roadmap.
-
-Key implemented:
-- FastAPI REST API with 6 route groups (50+ endpoints)
-- JWT auth + RBAC (4 roles) + login lockout + audit trail + logout
-- Redis caching (analytics TTL) + token blacklist
-- Rate limiting (slowapi — 5/min login, 30/min analytics)
+All modules implemented:
+- FastAPI REST API with 7 route groups (50+ endpoints)
+- JWT auth + RBAC (6 roles) + login lockout + audit trail + logout + token blacklist
+- Redis caching (analytics TTL) + token blacklist + rate limiting
 - LangGraph AI agent (Groq LLM) with ChromaDB semantic memory
 - WebSocket real-time stock alerts (`/ws/alerts`)
 - Automated testing (pytest, 29 tests)
 - Docker (multi-stage build + docker-compose)
 - CI/CD (GitHub Actions with PostgreSQL service)
 - Graceful shutdown via lifespan context manager
-- SQLAlchemy ORM + Repository pattern + PostgreSQL
-
-Next: Deployment (Render/Supabase), Frontend WebSocket integration
+- SQLAlchemy ORM + Repository pattern + PostgreSQL (Supabase)
+- Vendor Excel upload with fuzzy matching
+- PDF report generation (ReportLab)
+- Multi-tenancy (org_id on every entity)
+- 6 portal support (Super Admin, Admin, Manager, Staff, Vendor, Viewer)
 
 ---
 
@@ -169,17 +234,22 @@ Next: Deployment (Render/Supabase), Frontend WebSocket integration
 | Layer | Technology |
 |-------|------------|
 | Backend | FastAPI, SQLAlchemy, Pydantic |
-| Auth | JWT (python-jose), bcrypt (passlib), RBAC |
-| AI | LangGraph, Groq (LLM), ChromaDB (memory) |
-| Caching | Redis + in-memory fallback |
+| Auth | JWT (python-jose), pwdlib (argon2), RBAC (6 roles) |
+| AI | LangGraph, Groq (LLaMA-3.3-70b), ChromaDB (memory) |
+| Caching | Redis (Upstash) + in-memory fallback |
 | Security | Rate limiting (slowapi), token blacklist |
-| Frontend | React, Vite, Tailwind |
 | Database | PostgreSQL (Supabase) |
+| Excel | openpyxl + RapidFuzz |
+| PDF | ReportLab |
+| Real-time | WebSocket (FastAPI native) |
 
 ---
 
 ## Key Notes
 
-- JWT authentication and RBAC are fully implemented on the backend.
-- `Dockerfile`, `docker-compose.yml`, and `cicd.yaml` are placeholders — full production implementation is planned.
-- See `docs/memory.md` for detailed implementation status and `docs/deployment.md` for deployment guide.
+- JWT authentication with RBAC (6 roles) is fully implemented.
+- Token blacklist on logout for security.
+- Redis caching for analytics with automatic invalidation.
+- Rate limiting via slowapi (5/min login, 30/min analytics).
+- All 27 modules implemented and documented.
+- See `docs/deployment.md` for deployment guide.
