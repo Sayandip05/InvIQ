@@ -1,40 +1,65 @@
 # ── Render Infrastructure as Code ────────────────────────────────────────
-# Deploy Smart Inventory Assistant to Render.com
+# Deploy InvIQ to Render.com
+# Database: Supabase (external PostgreSQL — set DATABASE_URL manually)
+# Cache: Upstash Redis (external — set REDIS_URL manually)
 
 services:
   # ── FastAPI Backend ──────────────────────────────────────────────────
   - type: web
-    name: smart-inventory-api
+    name: inviq-backend
     runtime: docker
     dockerfilePath: ./Dockerfile
-    region: oregon
+    region: singapore        # closest to India
     plan: free
     healthCheckPath: /health
     envVars:
+      # ── Database (Supabase) — set manually in Render dashboard ──
       - key: DATABASE_URL
-        fromDatabase:
-          name: smart-inventory-db
-          property: connectionString
+        sync: false          # paste Supabase connection string in dashboard
+
+      # ── Redis (Upstash) — set manually in Render dashboard ──
       - key: REDIS_URL
-        fromService:
-          name: smart-inventory-redis
-          type: redis
-          property: connectionString
+        sync: false          # paste Upstash Redis URL in dashboard
+
+      - key: REDIS_ENABLED
+        value: "true"
+
+      # ── Auth ──
       - key: SECRET_KEY
-        generateValue: true
+        generateValue: true  # Render auto-generates a secure random value
+
       - key: ENVIRONMENT
         value: production
+
+      # ── CORS — point to your Vercel frontend ──
+      - key: CORS_ORIGINS
+        sync: false          # set to: https://your-app.vercel.app
+
+      - key: FRONTEND_URL
+        sync: false          # set to: https://your-app.vercel.app
+
+      # ── AI ──
       - key: GROQ_API_KEY
-        sync: false # manually set in Render dashboard
+        sync: false          # set manually in dashboard
+
+      # ── RAG — disabled on free tier (no persistent disk) ──
+      - key: CHROMADB_ENABLED
+        value: "false"
+
+      # ── Admin seed credentials ──
+      - key: ADMIN_EMAIL
+        sync: false
       - key: ADMIN_USERNAME
         value: admin
       - key: ADMIN_PASSWORD
-        sync: false # manually set in Render dashboard
+        sync: false          # set a strong password in dashboard
+      - key: ADMIN_FULL_NAME
+        value: "System Administrator"
 
-databases:
-  # ── PostgreSQL (or use Supabase externally) ─────────────────────────
-  - name: smart-inventory-db
-    plan: free
-    databaseName: smart_inventory
-    user: inventory_user
-    region: oregon
+      # ── Super Admin ──
+      - key: SUPER_ADMIN_EMAIL
+        sync: false          # your personal email
+
+      # ── Email (optional — disable if not needed) ──
+      - key: SMTP_ENABLED
+        value: "false"

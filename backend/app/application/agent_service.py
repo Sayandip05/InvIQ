@@ -57,10 +57,10 @@ def _build_agent():
         from langgraph.prebuilt import create_react_agent
 
         llm = ChatGroq(
-            model="llama-3.3-70b-versatile",
+            model=settings.LLM_MODEL,
             api_key=settings.GROQ_API_KEY,
-            temperature=0.1,
-            max_tokens=1024,
+            temperature=settings.LLM_TEMPERATURE,
+            max_tokens=settings.LLM_MAX_TOKENS,
         )
 
         _agent = create_react_agent(
@@ -68,7 +68,12 @@ def _build_agent():
             tools=INVENTORY_TOOLS,
         )
         _agent_available = True
-        logger.info("LangGraph ReAct agent initialized (model: llama-3.3-70b-versatile)")
+        logger.info(
+            "LangGraph ReAct agent initialized (model: %s, temp: %.1f, max_tokens: %d)",
+            settings.LLM_MODEL,
+            settings.LLM_TEMPERATURE,
+            settings.LLM_MAX_TOKENS
+        )
 
     except Exception as e:
         logger.error("Failed to initialize LangGraph agent: %s", e)

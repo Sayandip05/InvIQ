@@ -218,6 +218,10 @@ lerna-debug.log*
 pip-log.txt
 pip-delete-this-directory.txt
 
+# Nginx logs
+nginx/logs/
+nginx/*.log
+
 # ═══════════════════════════════════════════════════════════
 # Temporary Files
 # ═══════════════════════════════════════════════════════════
@@ -235,6 +239,7 @@ temp/
 # Documentation (Internal/Generated)
 # ═══════════════════════════════════════════════════════════
 docs/
+extra_docs/
 opencode.md
 .qoder/
 BACKEND_SCAN_REPORT.md

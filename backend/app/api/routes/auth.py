@@ -83,27 +83,30 @@ def _generate_password_reset_token(user_id: int, email: str) -> str:
 
 def _send_email(to_email: str, subject: str, html_content: str) -> bool:
     """Send email via SMTP. Returns True if successful."""
-    smtp_host = os.getenv("SMTP_HOST", "")
-    smtp_port = int(os.getenv("SMTP_PORT", "587"))
-    smtp_user = os.getenv("SMTP_USER", "")
-    smtp_password = os.getenv("SMTP_PASSWORD", "")
-    from_email = os.getenv("SMTP_FROM_EMAIL", smtp_user)
-
-    if not smtp_host or not smtp_user:
+    if not settings.SMTP_ENABLED:
+        logger.info("SMTP disabled - email not sent (to: %s)", to_email)
+        return False
+    
+    if not settings.SMTP_HOST or not settings.SMTP_USER:
         logger.warning("SMTP not configured - email not sent")
         return False
 
     try:
         msg = MIMEMultipart("alternative")
-        msg["From"] = from_email
+        msg["From"] = f"{settings.SMTP_FROM_NAME} <{settings.SMTP_FROM_EMAIL or settings.SMTP_USER}>"
         msg["To"] = to_email
         msg["Subject"] = subject
         msg.attach(MIMEText(html_content, "html"))
 
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
             server.starttls()
-            server.login(smtp_user, smtp_password)
-            server.sendmail(from_email, to_email, msg.as_string())
+            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            server.sendmail(
+                settings.SMTP_FROM_EMAIL or settings.SMTP_USER,
+                to_email,
+                msg.as_string()
+            )
+        logger.info("Email sent successfully to %s", to_email)
         return True
     except Exception as e:
         logger.error(f"Failed to send email to {to_email}: {e}")
@@ -113,8 +116,7 @@ def _send_email(to_email: str, subject: str, html_content: str) -> bool:
 def _send_verification_email(user: User, request: Request) -> bool:
     """Send email verification link to user."""
     token = _generate_verification_token(user.id, user.email)
-    base_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
-    verify_link = f"{base_url}/verify-email?token={token}"
+    verify_link = f"{settings.FRONTEND_URL}/verify-email?token={token}"
 
     html = f"""
     <html>
@@ -135,8 +137,7 @@ def _send_verification_email(user: User, request: Request) -> bool:
 def _send_password_reset_email(user: User) -> bool:
     """Send password reset link to user."""
     token = _generate_password_reset_token(user.id, user.email)
-    base_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
-    reset_link = f"{base_url}/reset-password?token={token}"
+    reset_link = f"{settings.FRONTEND_URL}/reset-password?token={token}"
 
     html = f"""
     <html>
@@ -938,12 +939,10 @@ def google_auth(
     """Authenticate or register user via Google OAuth."""
     import requests
 
-    GOOGLE_VERIFY_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
-
     try:
         # Verify the ID token with Google
         response = requests.get(
-            GOOGLE_VERIFY_URL,
+            settings.GOOGLE_OAUTH_VERIFY_URL,
             headers={"Authorization": f"Bearer {request_body.id_token}"},
             timeout=10,
         )

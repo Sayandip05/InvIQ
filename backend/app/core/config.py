@@ -29,19 +29,38 @@ logger = logging.getLogger("smart_inventory")
 
 
 class Settings:
-    DATABASE_URL = os.getenv("DATABASE_URL", "")  # PostgreSQL (Supabase) — REQUIRED
-    GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-    LANGCHAIN_API_KEY = os.getenv("LANGCHAIN_API_KEY")
-    LANGCHAIN_PROJECT = os.getenv("LANGCHAIN_PROJECT", "smart-inventory-assistant")
-    LANGCHAIN_TRACING_V2 = os.getenv("LANGCHAIN_TRACING_V2", "false")
+    # ── Application ───────────────────────────────────────────────────
     ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+    PROJECT_NAME = "Smart Inventory Assistant"
+    VERSION = "2.0.0"
+    API_V1_PREFIX = "/api"
+    
+    # ── Database ──────────────────────────────────────────────────────
+    DATABASE_URL = os.getenv("DATABASE_URL", "")  # PostgreSQL (Supabase) — REQUIRED
+    
+    # ── Frontend ──────────────────────────────────────────────────────
+    FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
     CORS_ORIGINS = os.getenv(
         "CORS_ORIGINS",
         "http://localhost:3000,http://localhost:5173,http://localhost:5174",
     ).split(",")
-    API_V1_PREFIX = "/api"
-    PROJECT_NAME = "Smart Inventory Assistant"
-    VERSION = "2.0.0"
+    
+    # ── AI / LLM ──────────────────────────────────────────────────────
+    GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+    LLM_MODEL = os.getenv("LLM_MODEL", "llama-3.3-70b-versatile")
+    LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.1"))
+    LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "1024"))
+    
+    # ── LangSmith (Observability) ─────────────────────────────────────
+    LANGCHAIN_API_KEY = os.getenv("LANGCHAIN_API_KEY")
+    LANGCHAIN_PROJECT = os.getenv("LANGCHAIN_PROJECT", "smart-inventory-assistant")
+    LANGCHAIN_TRACING_V2 = os.getenv("LANGCHAIN_TRACING_V2", "false")
+    LANGCHAIN_ENDPOINT = os.getenv("LANGCHAIN_ENDPOINT", "https://api.smith.langchain.com")
+    
+    # ── ChromaDB (Vector Store) ───────────────────────────────────────
+    CHROMADB_ENABLED = os.getenv("CHROMADB_ENABLED", "true").lower() == "true"
+    CHROMADB_PATH = os.getenv("CHROMADB_PATH", "data/chromadb")
+    CHROMADB_COLLECTION = os.getenv("CHROMADB_COLLECTION", "chat_memory")
 
     # ── Auth & Security ───────────────────────────────────────────────
     # REQUIRED: Generate a secure key with: openssl rand -hex 32
@@ -63,12 +82,28 @@ class Settings:
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
     ADMIN_FULL_NAME = os.getenv("ADMIN_FULL_NAME", "System Administrator")
 
-    # ── Redis ─────────────────────────────────────────────────────────
+    # ── Redis (Caching) ───────────────────────────────────────────────
     REDIS_URL = os.getenv("REDIS_URL", "")  # e.g. redis://localhost:6379 or Upstash
+    REDIS_ENABLED = os.getenv("REDIS_ENABLED", "true").lower() == "true"
 
     # ── Rate Limiting ─────────────────────────────────────────────────
     RATE_LIMIT_DEFAULT = os.getenv("RATE_LIMIT_DEFAULT", "60/minute")
     RATE_LIMIT_AUTH = os.getenv("RATE_LIMIT_AUTH", "5/minute")
+    
+    # ── SMTP (Email) ──────────────────────────────────────────────────
+    SMTP_ENABLED = os.getenv("SMTP_ENABLED", "false").lower() == "true"
+    SMTP_HOST = os.getenv("SMTP_HOST", "")
+    SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_USER = os.getenv("SMTP_USER", "")
+    SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+    SMTP_FROM_EMAIL = os.getenv("SMTP_FROM_EMAIL", "")
+    SMTP_FROM_NAME = os.getenv("SMTP_FROM_NAME", "InvIQ Smart Inventory")
+    
+    # ── External APIs ─────────────────────────────────────────────────
+    GOOGLE_OAUTH_VERIFY_URL = os.getenv(
+        "GOOGLE_OAUTH_VERIFY_URL",
+        "https://www.googleapis.com/oauth2/v3/userinfo"
+    )
 
 
 settings = Settings()
@@ -103,7 +138,7 @@ def configure_langsmith():
         os.environ["LANGCHAIN_TRACING_V2"] = "true"
         os.environ["LANGCHAIN_API_KEY"] = settings.LANGCHAIN_API_KEY
         os.environ["LANGCHAIN_PROJECT"] = settings.LANGCHAIN_PROJECT
-        os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
+        os.environ["LANGCHAIN_ENDPOINT"] = settings.LANGCHAIN_ENDPOINT
         logger.info(
             "LangSmith tracing enabled → project: %s", settings.LANGCHAIN_PROJECT
         )

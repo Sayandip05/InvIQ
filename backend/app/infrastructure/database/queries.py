@@ -137,49 +137,4 @@ def get_heatmap_data(db: Session):
         "matrix": matrix,
         "details": stock_health,
     }
-        .filter(InventoryTransaction.date == latest_date)
-        .all()
-    )
 
-    return results
-
-
-def get_critical_alerts(db: Session, severity: str = "CRITICAL"):
-    """Get items with critical or warning stock levels"""
-
-    stock_health = get_latest_stock_health(db)
-
-    alerts = [item for item in stock_health if item.health_status == severity]
-
-    alerts.sort(key=lambda x: x.days_remaining if x.days_remaining != 999 else 0)
-
-    return alerts
-
-
-def get_heatmap_data(db: Session):
-    """Generate heatmap matrix data structure"""
-
-    stock_health = get_latest_stock_health(db)
-
-    locations = sorted(list(set([item.location_name for item in stock_health])))
-    items = sorted(list(set([item.item_name for item in stock_health])))
-
-    lookup = {
-        (item.location_name, item.item_name): item.health_status
-        for item in stock_health
-    }
-
-    matrix = []
-    for item_name in items:
-        row = []
-        for location_name in locations:
-            status = lookup.get((location_name, item_name), "UNKNOWN")
-            row.append(status)
-        matrix.append(row)
-
-    return {
-        "locations": locations,
-        "items": items,
-        "matrix": matrix,
-        "details": stock_health,
-    }

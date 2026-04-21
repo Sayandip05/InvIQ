@@ -13,6 +13,8 @@ from pathlib import Path
 import os
 import logging
 
+from app.core.config import settings
+
 logger = logging.getLogger("smart_inventory.memory")
 
 
@@ -20,9 +22,18 @@ class VectorMemory:
     """ChromaDB-backed semantic memory for the inventory chatbot."""
 
     def __init__(self, persist_dir: str = None):
+        if not settings.CHROMADB_ENABLED:
+            logger.info("ChromaDB disabled via config - running without vector memory")
+            self._available = False
+            return
+            
         if persist_dir is None:
-            base_dir = Path(__file__).resolve().parents[4]
-            persist_dir = str(base_dir / "data" / "chromadb")
+            # Use configured path, resolve relative to project root
+            if os.path.isabs(settings.CHROMADB_PATH):
+                persist_dir = settings.CHROMADB_PATH
+            else:
+                base_dir = Path(__file__).resolve().parents[4]
+                persist_dir = str(base_dir / settings.CHROMADB_PATH)
 
         os.makedirs(persist_dir, exist_ok=True)
 
@@ -32,10 +43,15 @@ class VectorMemory:
                 settings=Settings(anonymized_telemetry=False),
             )
             self._collection = self._client.get_or_create_collection(
-                name="chat_memory",
+                name=settings.CHROMADB_COLLECTION,
                 metadata={"description": "Long-term chat conversation memory"},
             )
             self._available = True
+            logger.info(
+                "ChromaDB initialized → path: %s, collection: %s",
+                persist_dir,
+                settings.CHROMADB_COLLECTION
+            )
         except Exception as e:
             logger.warning("ChromaDB init failed, running without vector memory: %s", e)
             self._available = False
