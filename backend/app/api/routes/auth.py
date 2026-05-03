@@ -100,7 +100,8 @@ def _send_email(to_email: str, subject: str, html_content: str) -> bool:
         msg["Subject"] = subject
         msg.attach(MIMEText(html_content, "html"))
 
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+        # 30-second timeout prevents hanging on slow/unresponsive SMTP servers
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=30) as server:
             server.starttls()
             server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
             server.sendmail(
