@@ -14,7 +14,7 @@ InvIQ uses a modern serverless/managed infrastructure for zero-ops deployment:
 |---------|----------|-----|---------|
 | **Frontend** | Vercel | `https://inviq.vercel.app` | React SPA hosting |
 | **Backend** | Render.com | `https://inviq-api.onrender.com` | FastAPI REST API |
-| **Database** | Supabase | Project: `inviq-production` | PostgreSQL database |
+| **Database** | Neon | Project: `inviq-production` | PostgreSQL database |
 | **Cache** | Upstash Redis | Instance: `inviq-cache` | Distributed cache & rate limiting |
 | **Vector DB** | ChromaDB | Render persistent disk | AI semantic memory |
 
@@ -119,11 +119,11 @@ VITE_WS_URL=wss://inviq-api.onrender.com
 
 ### 1. Setup Infrastructure
 
-#### A. Supabase (Database)
-1. Go to [supabase.com](https://supabase.com)
+#### A. Neon (Database)
+1. Go to [neon.tech](https://neon.tech)
 2. Create new project: `inviq-production`
-3. Copy connection string from Settings → Database
-4. Format: `postgresql://postgres:[password]@[host]:5432/postgres`
+3. Copy connection string from Connection Details
+4. Format: `postgresql://user:[password]@[host]/[database]?sslmode=require`
 
 #### B. Upstash Redis (Cache)
 1. Go to [console.upstash.com](https://console.upstash.com)
@@ -368,7 +368,7 @@ postgresql://user:password@host:port/database
 # Test connection
 psql $DATABASE_URL -c "SELECT 1"
 
-# Check Supabase firewall rules (allow Render IPs)
+# Check Neon firewall rules (usually allows all by default)
 ```
 
 ---
@@ -523,10 +523,10 @@ vercel logs inviq-production
 # Project → Deployments → View Logs
 ```
 
-### Database Logs (Supabase):
+### Database Logs (Neon):
 ```bash
-# In Supabase dashboard:
-# Project → Logs → Postgres Logs
+# In Neon dashboard:
+# Project → Monitoring → Query Stats
 ```
 
 ---
@@ -540,7 +540,7 @@ Before going to production:
 - [ ] Enable HTTPS only (Render/Vercel handle this)
 - [ ] Configure `CORS_ORIGINS` to only allow your frontend
 - [ ] Enable rate limiting with Redis
-- [ ] Set up database backups (Supabase auto-backups)
+- [ ] Set up database backups (Neon auto-backups on paid plans)
 - [ ] Enable audit logging (already implemented)
 - [ ] Review and rotate API keys regularly
 - [ ] Set up monitoring alerts (Render/Vercel dashboards)
@@ -553,19 +553,19 @@ Before going to production:
 
 ### Current Setup (Free Tier):
 - **Render:** 512MB RAM, 0.1 CPU
-- **Supabase:** 500MB database, 2GB bandwidth
+- **Neon:** 500MB database, 2GB bandwidth
 - **Upstash:** 10,000 commands/day
 - **Vercel:** 100GB bandwidth
 
 ### When to Upgrade:
 - **> 100 concurrent users:** Upgrade Render to paid plan (more RAM/CPU)
 - **> 10,000 requests/day:** Upgrade Upstash to paid plan
-- **> 500MB database:** Upgrade Supabase to paid plan
+- **> 500MB database:** Upgrade Neon to paid plan
 - **> 100GB bandwidth:** Upgrade Vercel to paid plan
 
 ### Horizontal Scaling:
 - **Backend:** Render auto-scales with paid plans
-- **Database:** Supabase connection pooling (already configured)
+- **Database:** Neon connection pooling (already configured)
 - **Redis:** Upstash global replication (already configured)
 - **Frontend:** Vercel CDN (already configured)
 

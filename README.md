@@ -31,7 +31,7 @@ Healthcare facilities struggle with manual inventory tracking, leading to critic
 ### Backend
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-4169E1?logo=postgresql&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?logo=postgresql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-Upstash-DC382D?logo=redis&logoColor=white)
 ![LangChain](https://img.shields.io/badge/LangChain-LangGraph-1C3C3C?logo=chainlink&logoColor=white)
 
@@ -63,7 +63,7 @@ Healthcare facilities struggle with manual inventory tracking, leading to critic
 ### Prerequisites
 - Python 3.11+
 - Node.js 18+
-- PostgreSQL (or Supabase account)
+- PostgreSQL (or Neon account)
 - Redis (or Upstash account)
 
 ### Backend Setup
@@ -159,7 +159,7 @@ docker-compose up -d
 │                                                                  │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
 │  │  PostgreSQL  │  │ Upstash Redis│  │  ChromaDB    │         │
-│  │  (Supabase)  │  │  (REST API)  │  │  (Vector DB) │         │
+│  │  (Neon)      │  │  (REST API)  │  │  (Vector DB) │         │
 │  └──────────────┘  └──────────────┘  └──────────────┘         │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -272,7 +272,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **FastAPI** - Modern Python web framework
 - **LangChain/LangGraph** - AI agent orchestration
 - **Groq** - Fast LLM inference
-- **Supabase** - Managed PostgreSQL
+- **Neon** - Managed PostgreSQL
 - **Upstash** - Serverless Redis
 - **ChromaDB** - Vector database for RAG
 

@@ -110,7 +110,7 @@
 │                                                                              │
 │  ┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────┐  │
 │  │  PostgreSQL          │  │  Upstash Redis       │  │  ChromaDB        │  │
-│  │  (Supabase)          │  │  (REST API)          │  │  (Local)         │  │
+│  │  (Neon)              │  │  (REST API)          │  │  (Local)         │  │
 │  │                      │  │                      │  │                  │  │
 │  │  Tables:             │  │  Keys:               │  │  Collections:    │  │
 │  │  - users             │  │  - token_blacklist:* │  │  - chat_memory   │  │

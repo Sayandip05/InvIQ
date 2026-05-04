@@ -74,7 +74,7 @@ Healthcare facilities struggle with manual inventory management, leading to stoc
 │                                                                  │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
 │  │  PostgreSQL  │  │ Upstash Redis│  │  ChromaDB    │         │
-│  │  (Supabase)  │  │  (REST API)  │  │  (Vector DB) │         │
+│  │  (Neon)      │  │  (REST API)  │  │  (Vector DB) │         │
 │  │              │  │              │  │              │         │
 │  │ Transactions │  │ Cache        │  │ Semantic     │         │
 │  │ Users        │  │ Token List   │  │ Memory       │         │
@@ -195,7 +195,7 @@ Frontend shows success/error breakdown
 ### Infrastructure
 | Technology | Why Chosen |
 |------------|-----------|
-| **Supabase** | Managed PostgreSQL, free tier, automatic backups, row-level security |
+| **Neon** | Managed PostgreSQL, free tier, automatic backups, serverless scaling |
 | **Render.com** | Free tier, auto-deploy from GitHub, zero-config SSL |
 | **Docker** | Consistent environments, easy local development |
 
@@ -315,7 +315,7 @@ Frontend shows success/error breakdown
 │  - Auto-deploy from GitHub                                      │
 │  - Health checks                                                │
 │                                                                  │
-│  Database (Supabase)                                            │
+│  Database (Neon)                                                │
 │  - Managed PostgreSQL                                           │
 │  - Automatic backups                                            │
 │  - Connection pooling                                           │

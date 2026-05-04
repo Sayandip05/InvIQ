@@ -16,7 +16,7 @@
 - **Bandwidth:** Unlimited
 - **Current usage:** ~200 hours/month (demo/testing)
 
-### Supabase (Database)
+### Neon (Database)
 - **Plan:** Free Tier
 - **Storage:** 500MB database (currently ~50MB used)
 - **Bandwidth:** 2GB/month (currently ~200MB used)
@@ -74,7 +74,7 @@
 3. **Database Connections** 🟡 (MEDIUM)
    - **Issue:** 60 concurrent connections limit
    - **Symptom:** "Too many connections" errors
-   - **Solution:** Connection pooling (already implemented) + upgrade Supabase
+   - **Solution:** Connection pooling (already implemented) + upgrade Neon
 
 4. **Upstash Redis** 🟢 (LOW)
    - **Issue:** 10,000 commands/day limit
@@ -117,7 +117,7 @@
 
 ### Phase 2: 500-1,000 Users (Month 3-6)
 **Actions:**
-1. Upgrade Supabase to Pro (₹2,100/month)
+1. Upgrade Neon to Pro (₹2,100/month)
    - 8GB database
    - 50GB bandwidth
    - 200 concurrent connections
@@ -154,7 +154,7 @@
    - 3x backend instances (load balanced)
    - Full control over infrastructure
 
-2. Upgrade Supabase to Team (₹8,500/month)
+2. Upgrade Neon to Team (₹8,500/month)
    - 100GB database
    - 250GB bandwidth
    - Point-in-time recovery
@@ -210,7 +210,7 @@
 ## 🎯 Cost Optimization Decisions Made
 
 ### 1. **Serverless/Managed Services**
-**Decision:** Use Render, Supabase, Upstash instead of self-managed  
+**Decision:** Use Render, Neon, Upstash instead of self-managed  
 **Why:** Zero ops overhead, automatic scaling, pay-as-you-grow  
 **Savings:** ~₹25,500/month ($300/month) in DevOps time
 
@@ -270,13 +270,13 @@
 | Metric | Threshold | Action | Cost Impact |
 |--------|-----------|--------|-------------|
 | **Concurrent users** | > 50 | Upgrade Render to Starter | +₹600/month |
-| **Database size** | > 400MB | Upgrade Supabase to Pro | +₹2,100/month |
+| **Database size** | > 400MB | Upgrade Neon to Pro | +₹2,100/month |
 | **Redis commands** | > 8K/day | Upgrade Upstash to paid | +₹850/month |
 | **API requests** | > 100K/day | Add caching layer | ₹0 (optimization) |
 | **Response time** | > 500ms (p95) | Add read replica | +₹2,100/month |
 | **LLM requests** | > 40K/day | Upgrade Groq or self-host | +₹4,250/month |
 | **WebSocket connections** | > 1,000 | Horizontal scaling + Redis pub/sub | +₹4,250/month |
-| **Database connections** | > 50 | Upgrade Supabase tier | +₹2,100/month |
+| **Database connections** | > 50 | Upgrade Neon tier | +₹2,100/month |
 
 ---
 
@@ -304,7 +304,7 @@
 4. **Users > 1,000** with heavy analytics usage
 
 **How:**
-- Supabase Pro tier includes read replicas
+- Neon Pro tier includes read replicas
 - Route analytics queries to replica
 - Keep writes on primary
 - Use connection pooling for both
