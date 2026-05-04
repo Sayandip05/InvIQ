@@ -62,7 +62,7 @@ LOCKOUT_DURATION_MINUTES = settings.LOCKOUT_DURATION_MINUTES
 def _generate_verification_token(user_id: int, email: str) -> str:
     """Generate a signed verification token for email verification."""
     payload = {
-        "sub": user_id,
+        "sub": str(user_id),
         "email": email,
         "type": "email_verification",
         "exp": datetime.now(timezone.utc) + timedelta(hours=24),
@@ -73,7 +73,7 @@ def _generate_verification_token(user_id: int, email: str) -> str:
 def _generate_password_reset_token(user_id: int, email: str) -> str:
     """Generate a signed token for password reset."""
     payload = {
-        "sub": user_id,
+        "sub": str(user_id),
         "email": email,
         "type": "password_reset",
         "exp": datetime.now(timezone.utc) + timedelta(hours=1),
@@ -291,13 +291,13 @@ def login(
 
     access_token = create_access_token(
         {
-            "sub": user.id,
+            "sub": str(user.id),
             "username": user.username,
             "role": user.role,
             "org_id": user.org_id,
         }
     )
-    refresh_token = create_refresh_token({"sub": user.id, "username": user.username})
+    refresh_token = create_refresh_token({"sub": str(user.id), "username": user.username})
 
     # Audit log
     audit = AuditService(db.db)
@@ -414,14 +414,14 @@ def refresh_token(
 
     access_token = create_access_token(
         {
-            "sub": user.id,
+            "sub": str(user.id),
             "username": user.username,
             "role": user.role,
             "org_id": user.org_id,
         }
     )
     new_refresh_token = create_refresh_token(
-        {"sub": user.id, "username": user.username}
+        {"sub": str(user.id), "username": user.username}
     )
 
     return {
@@ -972,14 +972,14 @@ def google_auth(
 
             access_token = create_access_token(
                 {
-                    "sub": user.id,
+                    "sub": str(user.id),
                     "username": user.username,
                     "role": user.role,
                     "org_id": user.org_id,
                 }
             )
             refresh_token = create_refresh_token(
-                {"sub": user.id, "username": user.username}
+                {"sub": str(user.id), "username": user.username}
             )
 
             audit = AuditService(db.db)
@@ -1027,14 +1027,14 @@ def google_auth(
 
         access_token = create_access_token(
             {
-                "sub": user.id,
+                "sub": str(user.id),
                 "username": user.username,
                 "role": user.role,
                 "org_id": user.org_id,
             }
         )
         refresh_token = create_refresh_token(
-            {"sub": user.id, "username": user.username}
+            {"sub": str(user.id), "username": user.username}
         )
 
         audit = AuditService(db.db)

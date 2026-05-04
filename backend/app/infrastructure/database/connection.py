@@ -10,7 +10,7 @@ For development: SQLite is supported (e.g., sqlite:///./database.db)
 
 import logging
 import time
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
@@ -56,7 +56,7 @@ def create_engine_with_retry(url: str, max_retries: int = 3, **kwargs):
             
             # Test connection
             with engine.connect() as conn:
-                conn.execute("SELECT 1")
+                conn.execute(text("SELECT 1"))
             
             logger.info("✅ Database connection established (attempt %d/%d)", attempt, max_retries)
             return engine

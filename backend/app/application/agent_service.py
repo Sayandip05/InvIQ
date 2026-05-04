@@ -132,50 +132,39 @@ def invoke_agent(
     messages.append({"role": "user", "content": question})
 
     try:
-        # Add timeout to prevent hanging on slow LLM API calls
-        import signal
-        
-        def timeout_handler(signum, frame):
-            raise TimeoutError("Agent invocation timed out after 30 seconds")
-        
-        # Set timeout (Unix-like systems)
-        try:
-            signal.signal(signal.SIGALRM, timeout_handler)
-            signal.alarm(30)  # 30 second timeout
-        except (AttributeError, ValueError):
-            # Windows doesn't support SIGALRM, skip timeout
-            logger.warning("Timeout not supported on this platform (Windows)")
-        
-        result = _agent.invoke({"messages": messages})
-        
-        # Cancel timeout
-        try:
-            signal.alarm(0)
-        except (AttributeError, ValueError):
-            pass
+        # Cross-platform 30-second timeout using a thread pool future.
+        # signal.SIGALRM is not available on Windows and is therefore useless here.
+        import concurrent.futures
 
-        # Extract the final assistant message from the agent response
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(_agent.invoke, {"messages": messages})
+            try:
+                result = future.result(timeout=30)
+            except concurrent.futures.TimeoutError:
+                logger.error("Agent invocation timed out after 30s")
+                raise RuntimeError("Agent request timed out — please try again")
+
+        # Extract the final assistant message from the agent response.
         agent_messages = result.get("messages", [])
 
-        # Walk backwards to find the last AI message (not a tool call)
+        # Walk backwards to find the last AI message that is not a tool call.
         for msg in reversed(agent_messages):
-            if hasattr(msg, "content") and msg.content and not hasattr(msg, "tool_calls"):
-                return msg.content
-            # Handle messages with content but empty tool_calls
-            if hasattr(msg, "content") and msg.content:
-                tool_calls = getattr(msg, "tool_calls", None)
-                if not tool_calls:
-                    return msg.content
+            content = getattr(msg, "content", None)
+            if not content:
+                continue
+            tool_calls = getattr(msg, "tool_calls", None)
+            if not tool_calls:
+                return content
 
-        # Fallback: return last message content if available
-        if agent_messages and hasattr(agent_messages[-1], "content"):
-            return agent_messages[-1].content or "I couldn't generate a response. Please try rephrasing."
+        # Fallback: return the last message content if it has any.
+        if agent_messages:
+            last_content = getattr(agent_messages[-1], "content", None)
+            return last_content or "I couldn't generate a response. Please try rephrasing."
 
         return "I couldn't generate a response. Please try rephrasing your question."
 
-    except TimeoutError as e:
-        logger.error("Agent invocation timed out after 30s")
-        raise RuntimeError("Agent request timed out - please try again")
+    except RuntimeError:
+        raise
     except Exception as e:
         logger.error("Agent invocation failed: %s", e, exc_info=True)
         raise RuntimeError(f"Agent error: {str(e)}")
