@@ -1,72 +1,110 @@
 # ── Docker Compose: Local Development Stack ──────────────────────────────
-# Orchestrates FastAPI app and PostgreSQL for local dev.
-# Redis is provided by Upstash (cloud).
+# Orchestrates FastAPI app with cloud services (Neon PostgreSQL + Upstash Redis).
+#
+# Prerequisites:
+#   1. Copy .env.example to .env
+#   2. Set DATABASE_URL to your Neon PostgreSQL connection string
+#   3. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
+#   4. Generate SECRET_KEY: openssl rand -hex 32
+#   5. Set GROQ_API_KEY for AI chatbot
 #
 # Usage:
-#   docker compose up -d          → start all services
+#   docker compose up -d          → start FastAPI app
 #   docker compose logs -f app    → tail the app logs
-#   docker compose down -v        → stop + remove volumes
+#   docker compose down           → stop services
+#   docker compose restart app    → restart app after code changes
 #
 # Architecture:
-#   Client → FastAPI (8000) → PostgreSQL (5432) + Upstash Redis (cloud)
+#   Client → FastAPI (8000) → Neon PostgreSQL (cloud) + Upstash Redis (cloud)
 
 services:
-  # ── PostgreSQL Database ────────────────────────────────────────────────
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-inventory_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-inventory_pass}
-      POSTGRES_DB: smart_inventory
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U inventory_user -d smart_inventory"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - inviq_network
-
   # ── FastAPI Application ────────────────────────────────────────────────
   app:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: inviq_backend
     restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
-      # Database — connects to the 'db' service above
-      DATABASE_URL: postgresql://${POSTGRES_USER:-inventory_user}:${POSTGRES_PASSWORD:-inventory_pass}@db:5432/smart_inventory
-      ENVIRONMENT: production
-
-      # Redis — connects to Upstash Redis (cloud)
-      REDIS_URL: ${REDIS_URL:-}
-
-      # Security — CHANGE THESE for production!
-      SECRET_KEY: ${SECRET_KEY:-change-me-generate-with-openssl-rand-hex-32}
+      # ── Application ──────────────────────────────────────────────────
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      PROJECT_NAME: "Smart Inventory Assistant"
+      
+      # ── Database (Neon PostgreSQL - REQUIRED) ───────────────────────
+      DATABASE_URL: ${DATABASE_URL}
+      
+      # ── Frontend ─────────────────────────────────────────────────────
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173,http://localhost:5174}
+      
+      # ── AI / LLM (Groq) ──────────────────────────────────────────────
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-llama-3.3-70b-versatile}
+      LLM_TEMPERATURE: ${LLM_TEMPERATURE:-0.1}
+      LLM_MAX_TOKENS: ${LLM_MAX_TOKENS:-1024}
+      
+      # ── LangSmith (Optional - AI Observability) ──────────────────────
+      LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY:-}
+      LANGCHAIN_PROJECT: ${LANGCHAIN_PROJECT:-InvIQ}
+      LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2:-false}
+      LANGCHAIN_ENDPOINT: ${LANGCHAIN_ENDPOINT:-https://api.smith.langchain.com}
+      
+      # ── ChromaDB (Vector Store for RAG) ──────────────────────────────
+      CHROMADB_ENABLED: ${CHROMADB_ENABLED:-true}
+      CHROMADB_PATH: ${CHROMADB_PATH:-/app/data/chromadb}
+      CHROMADB_COLLECTION: ${CHROMADB_COLLECTION:-chat_memory}
+      
+      # ── Security (REQUIRED) ──────────────────────────────────────────
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      
+      # ── Login Lockout ────────────────────────────────────────────────
+      MAX_LOGIN_ATTEMPTS: ${MAX_LOGIN_ATTEMPTS:-5}
+      LOCKOUT_DURATION_MINUTES: ${LOCKOUT_DURATION_MINUTES:-15}
+      
+      # ── Admin Accounts ───────────────────────────────────────────────
+      SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL:-admin@example.com}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@inventory.local}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
-
-      # CORS
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173}
-
-      # AI Keys (optional — provide via .env or host env)
-      GROQ_API_KEY: ${GROQ_API_KEY:-}
-    depends_on:
-      db:
-        condition: service_healthy
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      ADMIN_FULL_NAME: ${ADMIN_FULL_NAME:-System Administrator}
+      
+      # ── Upstash Redis (Caching & Rate Limiting) ──────────────────────
+      UPSTASH_REDIS_REST_URL: ${UPSTASH_REDIS_REST_URL:-}
+      UPSTASH_REDIS_REST_TOKEN: ${UPSTASH_REDIS_REST_TOKEN:-}
+      REDIS_ENABLED: ${REDIS_ENABLED:-true}
+      
+      # ── Rate Limiting ────────────────────────────────────────────────
+      RATE_LIMIT_DEFAULT: ${RATE_LIMIT_DEFAULT:-60/minute}
+      RATE_LIMIT_AUTH: ${RATE_LIMIT_AUTH:-5/minute}
+      
+      # ── SMTP (Email Notifications - Optional) ────────────────────────
+      SMTP_ENABLED: ${SMTP_ENABLED:-false}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-InvIQ Smart Inventory}
+      
+      # ── External APIs ────────────────────────────────────────────────
+      GOOGLE_OAUTH_VERIFY_URL: ${GOOGLE_OAUTH_VERIFY_URL:-https://www.googleapis.com/oauth2/v3/userinfo}
+    
+    volumes:
+      # Persist ChromaDB vector store data
+      - chromadb_data:/app/data/chromadb
+    
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       start_period: 10s
       retries: 3
+    
     networks:
       - inviq_network
 
@@ -77,5 +115,6 @@ networks:
 
 # ── Volumes ────────────────────────────────────────────────────────────────
 volumes:
-  postgres_data:
+  chromadb_data:
+    driver: local
 
