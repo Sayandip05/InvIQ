@@ -162,10 +162,20 @@ def _rule_based_response(question: str, past_context: str = "") -> dict:
 
 def _format_result(title: str, payload, question: str, past_context: str = "") -> dict:
     import json
+    from decimal import Decimal
+    from datetime import date, datetime
+
+    def _json_safe(obj):
+        """Custom JSON serializer for types json.dumps() can't handle by default."""
+        if isinstance(obj, Decimal):
+            return float(obj)
+        if isinstance(obj, (date, datetime)):
+            return obj.isoformat()
+        raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
 
     prefix = ""
     if past_context:
-        prefix = f"(Based on past context)\n"
+        prefix = "(Based on past context)\n"
 
     if isinstance(payload, dict):
         if payload.get("error"):
@@ -178,7 +188,7 @@ def _format_result(title: str, payload, question: str, past_context: str = "") -
             return {"success": True, "response": f"{prefix}{payload['info']}", "question": question}
         return {
             "success": True,
-            "response": f"{prefix}{title}:\n{json.dumps(payload, indent=2)}",
+            "response": f"{prefix}{title}:\n{json.dumps(payload, indent=2, default=_json_safe)}",
             "question": question,
         }
 
@@ -200,7 +210,7 @@ def _format_result(title: str, payload, question: str, past_context: str = "") -
             }
         return {
             "success": True,
-            "response": f"{prefix}{title}:\n{json.dumps(payload[:10], indent=2)}",
+            "response": f"{prefix}{title}:\n{json.dumps(payload[:10], indent=2, default=_json_safe)}",
             "question": question,
         }
 
