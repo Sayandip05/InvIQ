@@ -34,7 +34,8 @@ const ROLE_HOME = {
   manager: '/manager/dashboard',
   staff: '/staff',
   vendor: '/vendor',
-  viewer: '/viewer/dashboard',
+  // Viewers use the same /admin layout — they only see read-only pages
+  viewer: '/admin/dashboard',
 };
 
 function RoleRedirect() {
@@ -76,27 +77,31 @@ function App() {
               </Route>
             </Route>
 
-            <Route element={<ProtectedRoute requiredRole="admin" />}>
+            {/*
+              /admin layout is accessible to viewers and above.
+              Admin-only pages (users, audit-logs, reports, requisitions)
+              are guarded by a nested ProtectedRoute inside the layout.
+            */}
+            <Route element={<ProtectedRoute requiredRole="viewer" />}>
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<Navigate to={"/admin/dashboard"} replace />} />
+                {/* Read-only pages — viewers can access */}
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="inventory" element={<Inventory />} />
-                <Route path="requisitions" element={<Requisitions />} />
-                <Route path="users" element={<UserManagement />} />
-                <Route path="audit-logs" element={<AuditLogs />} />
-                <Route path="reports" element={<Reports />} />
                 <Route path="chat" element={<Chatbot />} />
+                {/* Admin-only pages — nested guard blocks viewer access */}
+                <Route element={<ProtectedRoute requiredRole="admin" />}>
+                  <Route path="requisitions" element={<Requisitions />} />
+                  <Route path="users" element={<UserManagement />} />
+                  <Route path="audit-logs" element={<AuditLogs />} />
+                  <Route path="reports" element={<Reports />} />
+                </Route>
               </Route>
             </Route>
 
-            <Route element={<ProtectedRoute requiredRole="viewer" />}>
-              <Route path="/viewer" element={<AdminLayout />}>
-                <Route index element={<Navigate to={"/viewer/dashboard"} replace />} />
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="inventory" element={<Inventory />} />
-                <Route path="chat" element={<Chatbot />} />
-              </Route>
-            </Route>
+            {/* /viewer/* redirects to /admin/* — viewer users now use the shared admin layout */}
+            <Route path="/viewer" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="/viewer/*" element={<Navigate to="/admin/dashboard" replace />} />
 
             <Route element={<ProtectedRoute requiredRole="super_admin" />}>
               <Route path="/superadmin" element={<AdminLayout />}>

@@ -46,7 +46,12 @@ const UserManagement = () => {
             setFormData({ username: '', email: '', full_name: '', role: 'staff', password: '' });
             loadUsers();
         } catch (err) {
-            alert(err.response?.data?.detail || 'Operation failed');
+            // Backend returns { error: { message: "..." } } — not FastAPI's default { detail: "..." }
+            const msg =
+                err.response?.data?.error?.message ||   // custom AppException / ValidationError shape
+                err.response?.data?.detail ||           // fallback for any raw FastAPI 422
+                'Operation failed. Please check your input and try again.';
+            alert(msg);
         } finally {
             setSaving(false);
         }
@@ -201,7 +206,15 @@ const UserManagement = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">{editingUser ? 'New Password (optional)' : 'Password *'}</label>
-                                <input type="password" required={!editingUser} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} />
+                                <input
+                                    type="password"
+                                    required={!editingUser}
+                                    minLength={8}
+                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    value={formData.password}
+                                    onChange={e => setFormData({ ...formData, password: e.target.value })}
+                                />
+                                <p className="text-xs text-slate-400 mt-1">Minimum 8 characters</p>
                             </div>
                             <div className="flex justify-end gap-3 pt-2">
                                 <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition">Cancel</button>

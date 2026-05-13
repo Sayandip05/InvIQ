@@ -14,19 +14,22 @@ const Reports = () => {
         try {
             const params = new URLSearchParams();
             if (locationId) params.append('location_id', locationId);
-            if (dateFrom) params.append('date_from', dateFrom);
-            if (dateTo) params.append('date_to', dateTo);
+            if (dateFrom)   params.append('date_from', dateFrom);
+            if (dateTo)     params.append('date_to', dateTo);
 
+            // Backend streams the PDF directly as a blob — don't parse as JSON
             const response = await admin.generateReport(reportType, params.toString());
-            
-            if (response.data.success) {
-                const link = document.createElement('a');
-                link.href = `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/admin/reports/download/${response.data.filename}`;
-                link.download = response.data.filename;
-                link.click();
-            } else {
-                alert('Failed to generate report');
-            }
+
+            // Create a temporary object URL and trigger browser download
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const url  = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href     = url;
+            link.download = `inviq_${reportType}_report_${new Date().toISOString().slice(0,10)}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
         } catch (err) {
             console.error('Report generation failed', err);
             alert('Failed to generate report. Please try again.');
