@@ -96,6 +96,13 @@ async def websocket_alerts(websocket: WebSocket):
             data = await websocket.receive_text()
             if data == "ping":
                 await websocket.send_json({"type": "pong"})
+            
+            # Broadcast any pending alerts
+            global pending_alerts
+            if pending_alerts:
+                for alert in pending_alerts:
+                    await manager.broadcast(alert)
+                pending_alerts.clear()
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         logger.info("WebSocket user '%s' disconnected", username)
