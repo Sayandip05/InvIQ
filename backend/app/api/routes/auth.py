@@ -194,9 +194,9 @@ def register(
     db: Session = Depends(get_user_repo),
     current_user: User = Depends(require_admin),
 ):
-    if request_body.role not in ["admin", "manager", "staff", "viewer"]:
+    if request_body.role not in ["admin", "manager", "staff", "viewer", "vendor"]:
         raise ValidationError(
-            f"Invalid role: {request_body.role}. Must be admin, manager, staff, or viewer"
+            f"Invalid role: {request_body.role}. Must be admin, manager, staff, viewer, or vendor"
         )
 
     user = db.create(
@@ -538,7 +538,7 @@ def list_users(
     db: Session = Depends(get_user_repo),
     current_user: User = Depends(require_admin),
 ):
-    if role and role not in ["admin", "manager", "staff", "viewer"]:
+    if role and role not in ["admin", "manager", "staff", "viewer", "vendor"]:
         raise ValidationError(f"Invalid role filter: {role}")
     if limit > 100:
         limit = 100  # Cap to prevent abuse
@@ -593,7 +593,7 @@ def update_user_role(
     if not user:
         raise NotFoundError("User", user_id)
 
-    if request_body.role not in ["admin", "manager", "staff", "viewer"]:
+    if request_body.role not in ["admin", "manager", "staff", "viewer", "vendor"]:
         raise ValidationError(f"Invalid role: {request_body.role}")
 
     old_role = user.role
