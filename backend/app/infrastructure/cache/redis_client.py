@@ -27,6 +27,7 @@ logger = logging.getLogger("smart_inventory.redis")
 # ── Module-level singleton ───────────────────────────────────────────────────
 _redis_client = None          # upstash_redis.Redis instance or None
 _redis_available: bool = False
+_import_failed: bool = False  # True once upstash_redis import fails — prevents retry spam
 
 
 def _build_client():
@@ -43,7 +44,11 @@ def get_redis():
     Get the singleton Upstash Redis client.
     Returns None if Redis is unavailable or not configured.
     """
-    global _redis_client, _redis_available
+    global _redis_client, _redis_available, _import_failed
+
+    # Short-circuit: package was already confirmed missing — don't retry.
+    if _import_failed:
+        return None
 
     if _redis_client is not None:
         return _redis_client if _redis_available else None
@@ -65,6 +70,13 @@ def get_redis():
             settings.UPSTASH_REDIS_REST_URL,
         )
         return _redis_client
+    except ImportError as e:
+        # Package missing — log once and never retry
+        logger.warning("Upstash Redis package not available — running without cache: %s", e)
+        _import_failed = True
+        _redis_available = False
+        _redis_client = None
+        return None
     except Exception as e:
         logger.warning("Upstash Redis connection failed — running without cache: %s", e)
         _redis_available = False
