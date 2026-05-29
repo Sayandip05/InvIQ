@@ -89,7 +89,11 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 
 # ── Middleware ─────────────────────────────────────────────────────────────
-app.add_middleware(RequestLoggerMiddleware)
+# NOTE: Starlette add_middleware() wraps in LIFO order — the middleware added
+# LAST runs FIRST. Order here: RequestLoggerMiddleware (runs 1st) → CORSMiddleware (runs 2nd).
+# RequestLoggerMiddleware must run first so it can pass WebSocket upgrade
+# connections straight through (scope["type"] == "websocket") before
+# CORSMiddleware processes them.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -97,6 +101,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(RequestLoggerMiddleware)
 
 # ── Exception Handlers ────────────────────────────────────────────────────
 register_exception_handlers(app)
