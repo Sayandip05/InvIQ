@@ -9,6 +9,8 @@ Architecture:
     chat.py → agent_service.invoke() → LangGraph ReAct → @tool functions → DB
 """
 
+import concurrent.futures
+import contextvars
 import logging
 from typing import Optional
 from datetime import datetime
@@ -134,10 +136,16 @@ def invoke_agent(
     try:
         # Cross-platform 30-second timeout using a thread pool future.
         # signal.SIGALRM is not available on Windows and is therefore useless here.
-        import concurrent.futures
+        #
+        # CRITICAL: contextvars (including the DB session ContextVar set by
+        # set_db_session() in chat.py) are NOT automatically inherited by worker
+        # threads in Python <3.12.  We must capture the current context snapshot
+        # with copy_context() and then run the agent inside that snapshot using
+        # ctx.run(), otherwise _get_db() returns None inside every @tool function.
+        ctx = contextvars.copy_context()
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(_agent.invoke, {"messages": messages})
+            future = executor.submit(ctx.run, _agent.invoke, {"messages": messages})
             try:
                 result = future.result(timeout=30)
             except concurrent.futures.TimeoutError:
