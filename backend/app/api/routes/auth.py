@@ -25,6 +25,7 @@ from app.core.exceptions import AuthenticationError, ValidationError, NotFoundEr
 from app.infrastructure.database.user_repo import UserRepository
 from app.infrastructure.database.models import User
 from app.application.audit_service import AuditService
+from app.application.notification_service import NotificationService
 from app.api.schemas.auth_schemas import (
     UserCreate,
     UserResponse,
@@ -207,6 +208,15 @@ def register(
         role=request_body.role,
     )
 
+    # Send welcome email with credentials
+    email_sent = NotificationService.send_welcome_email(
+        to_email=user.email,
+        username=user.username,
+        password=request_body.password,  # Plain text password (sent only once)
+        role=user.role,
+        full_name=user.full_name,
+    )
+
     # Audit log
     audit = AuditService(db.db)
     audit.log(
@@ -215,13 +225,18 @@ def register(
         resource_type="user",
         resource_id=str(user.id),
         user_id=current_user.id,
-        details={"new_user": user.username, "role": user.role},
+        details={
+            "new_user": user.username,
+            "role": user.role,
+            "email_sent": email_sent,
+        },
         ip_address=_get_client_ip(request),
     )
 
     return {
         "success": True,
-        "message": f"User {user.username} created successfully",
+        "message": f"User {user.username} created successfully"
+        + (" (welcome email sent)" if email_sent else " (email not sent)"),
         "data": _user_dict(user),
     }
 
