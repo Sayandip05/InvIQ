@@ -72,7 +72,7 @@ class InventoryService:
                 # Queue alert for WebSocket broadcast
                 from app.api.routes.websocket import pending_alerts
                 pending_alerts.append({
-                    "type": "stock_alert",
+                    "type": "low_stock_alert",
                     "status": alert_status,
                     "item_name": item.name,
                     "item_id": item_id,
@@ -150,11 +150,20 @@ class InventoryService:
         return latest.closing_stock if latest else None
 
     def get_location_items(self, location_id: int) -> list:
+        """
+        Return stock status for every item at the given location.
+
+        Uses a single batch query (get_latest_stocks_for_location) instead of
+        N+1 individual queries — critical for performance over remote DB connections.
+        """
         items = self.repo.get_all_items()
+
+        # Single query: {item_id: closing_stock} for all items at this location
+        stock_map = self.repo.get_latest_stocks_for_location(location_id)
 
         result = []
         for item in items:
-            latest_stock = self.get_latest_stock(location_id, item.id) or 0
+            latest_stock = stock_map.get(item.id, 0)
 
             if latest_stock <= (item.min_stock * 0.5):
                 status = "CRITICAL"
