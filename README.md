@@ -53,8 +53,11 @@ Healthcare facilities struggle with manual inventory tracking, leading to critic
 - 📊 **Real-Time Analytics** - Dashboard with heatmaps, alerts, and stock health monitoring
 - 🔄 **Requisition Workflow** - Digital approval system for stock requests
 - 📤 **Vendor Integration** - Excel upload with fuzzy item matching (85% accuracy)
-- 🔐 **Multi-Tenancy & RBAC** - 6 roles (Super Admin, Admin, Manager, Staff, Vendor, Viewer)
+- 🔐 **Multi-Tenancy & RBAC** - 5 roles (Super Admin, Admin, Manager, Staff, Vendor)
+- 👥 **Guest Demo Mode** - Preview pages without login; interactive actions automatically prompt to sign in
+- 📧 **Low-Stock Email Alerts** - Automated background notifications sent to managers on critical stock shortages
 - ⚡ **Real-Time Alerts** - WebSocket notifications for critical stock levels
+
 
 ---
 
@@ -233,7 +236,7 @@ InvIQ/
 - **Rate Limiting** - 5-60 req/min based on endpoint sensitivity
 - **Token Blacklist** - Logout invalidation with Redis
 - **Login Lockout** - 5 attempts → 15 min lockout
-- **Role-Based Access Control** - 6-tier role hierarchy
+- **Role-Based Access Control** - 5-tier role hierarchy
 - **Audit Logging** - All write operations tracked
 - **Multi-Tenancy** - Organization-level data isolation
 
