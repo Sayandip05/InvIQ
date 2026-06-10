@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { requisition } from '../../services/api';
-import { ClipboardCheck, ClipboardX, ChevronDown, ChevronUp, AlertTriangle, Clock, CheckCircle2, XCircle, Filter } from 'lucide-react';
+import { ClipboardCheck, ClipboardX, ChevronDown, ChevronUp, AlertTriangle, Clock, CheckCircle2, XCircle, Filter, Lock } from 'lucide-react';
+import { useGuest } from '../../context/GuestContext';
 
 const STATUS_STYLES = {
     PENDING: 'bg-yellow-100 text-yellow-800',
@@ -17,6 +18,7 @@ const URGENCY_STYLES = {
 };
 
 const Requisitions = () => {
+    const { isGuest, showAuthModal } = useGuest();
     const [requests, setRequests] = useState([]);
     const [stats, setStats] = useState(null);
     const [filter, setFilter] = useState('');
@@ -45,6 +47,10 @@ const Requisitions = () => {
     };
 
     const handleApprove = async (id) => {
+        if (isGuest) {
+            showAuthModal('Approving requisitions requires an account with manager access.');
+            return;
+        }
         if (!approverName.trim()) return alert('Enter your name first.');
         setActionLoading(id);
         try {
@@ -58,6 +64,10 @@ const Requisitions = () => {
     };
 
     const handleReject = async (id) => {
+        if (isGuest) {
+            showAuthModal('Rejecting requisitions requires an account with manager access.');
+            return;
+        }
         if (!approverName.trim()) return alert('Enter your name first.');
         if (!rejectReason.trim() || rejectReason.trim().length < 5) return alert('Provide a rejection reason (min 5 chars).');
         setActionLoading(id);
@@ -80,6 +90,13 @@ const Requisitions = () => {
 
     return (
         <div className="space-y-6">
+            {/* Guest preview notice */}
+            {isGuest && (
+                <div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+                    <Lock size={15} className="shrink-0" />
+                    <span>You're in preview mode — browse requisitions freely. Sign in to approve or reject requests.</span>
+                </div>
+            )}
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>

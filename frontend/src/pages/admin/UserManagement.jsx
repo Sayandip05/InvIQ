@@ -76,13 +76,12 @@ const UserManagement = () => {
     const getRoleBadge = (role) => {
         const colors = {
             super_admin: 'bg-purple-100 text-purple-700',
-            admin: 'bg-red-100 text-red-700',
-            manager: 'bg-yellow-100 text-yellow-700',
-            staff: 'bg-blue-100 text-blue-700',
-            vendor: 'bg-green-100 text-green-700',
-            viewer: 'bg-slate-100 text-slate-700',
+            admin:       'bg-red-100 text-red-700',
+            manager:     'bg-yellow-100 text-yellow-700',
+            staff:       'bg-blue-100 text-blue-700',
+            vendor:      'bg-green-100 text-green-700',
         };
-        return <span className={`px-2 py-0.5 rounded text-xs font-medium ${colors[role] || colors.viewer}`}>{role}</span>;
+        return <span className={`px-2 py-0.5 rounded text-xs font-medium ${colors[role] || 'bg-slate-100 text-slate-700'}`}>{role}</span>;
     };
 
     return (
@@ -197,7 +196,6 @@ const UserManagement = () => {
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Role *</label>
                                 <select required className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })}>
-                                    <option value="viewer">Viewer</option>
                                     <option value="staff">Staff</option>
                                     <option value="vendor">Vendor</option>
                                     <option value="manager">Manager</option>

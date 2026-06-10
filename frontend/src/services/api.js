@@ -23,10 +23,13 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error?.response?.status === 401) {
-            // Token expired or invalid → clear storage and redirect to login
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-            if (window.location.pathname !== '/signin') {
+            // Only redirect to /signin if the request carried a token — that
+            // means a real session has expired. Guests (no token) should never
+            // be silently redirected; the UI handles them via AuthGateModal.
+            const hadToken = !!localStorage.getItem('access_token');
+            if (hadToken && window.location.pathname !== '/signin') {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
                 window.location.href = '/signin';
             }
         }

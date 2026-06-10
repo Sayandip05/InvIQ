@@ -101,3 +101,186 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* ── Preview Banner ────────────────────────────────────────────────────────── */
+
+.preview-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.25rem;
+  background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+  color: #1c1917;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+
+.preview-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.preview-banner-icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.preview-banner-label {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.preview-banner-text {
+  opacity: 0.85;
+}
+
+@media (max-width: 480px) {
+  .preview-banner-text {
+    display: none;
+  }
+}
+
+.preview-banner-cta {
+  background: rgba(0,0,0,0.15);
+  border: 1px solid rgba(0,0,0,0.2);
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1c1917;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.preview-banner-cta:hover {
+  background: rgba(0,0,0,0.25);
+}
+
+/* ── Auth Gate Modal ──────────────────────────────────────────────────────── */
+
+.auth-gate-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: agFadeIn 0.2s ease;
+}
+
+@keyframes agFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.auth-gate-modal {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2rem 2rem 1.5rem;
+  width: 100%;
+  max-width: 380px;
+  margin: 1rem;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  text-align: center;
+  animation: agSlideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes agSlideUp {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.auth-gate-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+  margin-bottom: 1rem;
+}
+
+.auth-gate-icon svg {
+  width: 24px;
+  height: 24px;
+  color: #7c3aed;
+}
+
+.auth-gate-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.5rem;
+}
+
+.auth-gate-message {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+
+.auth-gate-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-bottom: 1rem;
+}
+
+.auth-gate-btn {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: filter 0.15s, transform 0.1s;
+}
+
+.auth-gate-btn:hover {
+  filter: brightness(1.06);
+}
+
+.auth-gate-btn:active {
+  transform: scale(0.98);
+}
+
+.auth-gate-btn--primary {
+  background: linear-gradient(135deg, #6366f1, #7c3aed);
+  color: #ffffff;
+}
+
+.auth-gate-btn--secondary {
+  background: #f1f5f9;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+}
+
+.auth-gate-dismiss {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.auth-gate-dismiss:hover {
+  color: #64748b;
+}

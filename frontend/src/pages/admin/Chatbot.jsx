@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { chat } from '../../services/api';
-import { Send, User, Bot, Loader, History, X, MessageSquare, Mic, Square } from 'lucide-react';
+import { Send, User, Bot, Loader, History, X, MessageSquare, Mic, Square, Lock } from 'lucide-react';
+import { useGuest } from '../../context/GuestContext';
 
 const Chatbot = () => {
+    const { isGuest, showAuthModal } = useGuest();
     const [messages, setMessages] = useState([
         { role: 'assistant', content: 'Hello! I am your inventory assistant. How can I help you today?' }
     ]);
@@ -72,6 +74,12 @@ const Chatbot = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!input.trim()) return;
+
+        // Guest action gate — chat requires an account to persist sessions
+        if (isGuest) {
+            showAuthModal('AI chat requires an account to save conversation history. Sign in to get started.');
+            return;
+        }
 
         const userMessage = { role: 'user', content: input };
         setMessages(prev => [...prev, userMessage]);
@@ -159,6 +167,10 @@ const Chatbot = () => {
     };
 
     const handleVoiceClick = () => {
+        if (isGuest) {
+            showAuthModal('Voice input requires an account. Sign in to use AI chat.');
+            return;
+        }
         if (isRecording) {
             stopRecording();
         } else {
@@ -221,6 +233,10 @@ const Chatbot = () => {
                     </div>
                     <button
                         onClick={() => {
+                            if (isGuest) {
+                                showAuthModal('Chat history is saved per account. Sign in to view your conversations.');
+                                return;
+                            }
                             setShowHistory(true);
                             loadHistory();
                         }}
@@ -232,6 +248,13 @@ const Chatbot = () => {
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    {/* Guest info banner */}
+                    {isGuest && (
+                        <div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+                            <Lock size={15} className="shrink-0" />
+                            <span>Sign in to send messages and save your conversation history.</span>
+                        </div>
+                    )}
                     {messages.map((msg, index) => (
                         <div
                             key={index}

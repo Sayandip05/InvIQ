@@ -14,7 +14,7 @@ import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const ROLE_HIERARCHY = { viewer: 1, vendor: 2, staff: 3, manager: 4, admin: 5, super_admin: 6 };
+const ROLE_HIERARCHY = { vendor: 2, staff: 3, manager: 4, admin: 5, super_admin: 6 };
 
 // Maps each role to its correct landing page.
 // Must stay in sync with ROLE_HOME in App.jsx.
@@ -24,7 +24,6 @@ const ROLE_HOME = {
     manager:     '/manager/dashboard',
     staff:       '/staff',
     vendor:      '/vendor',
-    viewer:      '/admin/dashboard', // viewers share the admin layout (read-only pages only)
 };
 
 export default function ProtectedRoute({ requiredRole = null }) {
@@ -51,10 +50,7 @@ export default function ProtectedRoute({ requiredRole = null }) {
         const requiredLevel = ROLE_HIERARCHY[requiredRole] ?? 999;
 
         if (userLevel < requiredLevel) {
-            // Redirect to the correct home for this user's actual role.
-            // Using a hardcoded /admin/dashboard here would send a viewer into
-            // an infinite loop because that path also requires admin level.
-            const home = ROLE_HOME[user?.role] ?? '/signin';
+            const home = ROLE_HOME[user?.role] ?? '/admin/dashboard';
             return <Navigate to={home} replace />;
         }
     }

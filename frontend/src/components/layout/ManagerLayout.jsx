@@ -13,7 +13,6 @@ const ROLE_LABELS = {
     manager: { label: 'Manager', color: 'bg-yellow-900 text-yellow-300' },
     staff: { label: 'Staff', color: 'bg-blue-900 text-blue-300' },
     vendor: { label: 'Vendor', color: 'bg-green-900 text-green-300' },
-    viewer: { label: 'Viewer', color: 'bg-slate-700 text-slate-300' },
 };
 
 const MANAGER_NAV_ITEMS = [
