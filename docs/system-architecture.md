@@ -14,8 +14,8 @@
 │                                                                              │
 │  ┌──────────────────────────────────────────────────────────────────────┐  │
 │  │  React 19 SPA (Vite)                                                 │  │
-│  │  - 6 Role-Based Portals (Super Admin, Admin, Manager, Staff,        │  │
-│  │    Vendor, Viewer)                                                   │  │
+│  │  - 5 Role-Based Portals (Super Admin, Admin, Manager, Staff,        │  │
+│  │    Vendor) + Guest Demo Mode                                         │  │
 │  │  - Landing Page                                                      │  │
 │  │  - WebSocket Client (real-time alerts)                              │  │
 │  │  - Auth Context (JWT token management)                              │  │
@@ -42,7 +42,8 @@
 │  │  │  Authentication & Authorization                                │ │  │
 │  │  │  - JWT token validation (access + refresh)                     │ │  │
 │  │  │  - Token blacklist check (Redis)                               │ │  │
-│  │  │  - Role-based access control (6-tier hierarchy)                │ │  │
+│  │  │  - Role-based access control (5-tier hierarchy)                │ │  │
+│  │  │  - Guest Demo Access (optional JWT validation on GET routes)   │ │  │
 │  │  │  - Multi-tenancy (org_id isolation)                            │ │  │
 │  │  └────────────────────────────────────────────────────────────────┘ │  │
 │  │                                                                      │  │
@@ -353,6 +354,39 @@ Frontend shows toast notification
 
 ---
 
+### 6. Low-Stock Email Alert Flow
+
+```
+Stock level drops below threshold
+         ↓
+Inventory transaction created
+         ↓
+┌────────────────────────────────────────┐
+│  Inventory Service                     │
+│  1. Check if stock <= min_stock        │
+│  2. Query active Admins & Managers     │
+│  3. Spin up background daemon thread   │
+│  4. Return HTTP response immediately   │
+└────────────────────────────────────────┘
+         ↓ (Asynchronous execution in background thread)
+┌────────────────────────────────────────┐
+│  Background Thread: NotificationSvc    │
+│  1. Establish SMTP TLS connection      │
+│  2. Build HTML alert template          │
+│  3. Dispatch email to recipient list   │
+│  4. Mask email PII and log completion  │
+└────────────────────────────────────────┘
+         ↓
+Admins & Managers receive email warning
+```
+
+**Email Alerts Features:**
+- **Zero Latency Impact:** Uses Python `threading.Thread(daemon=True)` to offload SMTP overhead, maintaining high response times.
+- **PII Protection:** Leverages a `mask_email` security helper to ensure no plain-text emails are written to standard logs or diagnostic systems.
+- **Isolated Transactions:** Exceptions raised by the email dispatch are caught at the thread level, meaning network or mail-server outages never rollback or halt inventory updates.
+
+---
+
 ## 🔐 Authentication & Authorization Flow
 
 ### JWT Token Flow
@@ -396,16 +430,17 @@ Frontend shows toast notification
 │  Role-Based Access Control                                      │
 │                                                                  │
 │  Role Hierarchy:                                                │
-│  super_admin (6) > admin (5) > manager (4) >                    │
-│  staff (3) > vendor (2) > viewer (1)                            │
+│  super_admin (5) > admin (4) > manager (3) >                    │
+│  staff (2) > vendor (1)                                         │
 │                                                                  │
 │  Endpoint Protection:                                           │
 │  - /api/superadmin/* → super_admin only                         │
-│  - /api/admin/* → admin+                                        │
-│  - /api/requisition/approve → manager+                          │
+│  - /api/admin/* → admin+ (Management routes require admin auth)  │
+│  - /api/requisition/approve/reject → manager+                   │
 │  - /api/requisition/create → staff+                             │
 │  - /api/vendor/* → vendor+                                      │
-│  - /api/analytics/* → viewer+                                   │
+│  - GET /api/{inventory,requisition,chat,analytics}/* → Guest    │
+│    Permitted (uses optional JWT validation; no 401 raises)      │
 └─────────────────────────────────────────────────────────────────┘
          ↓
 ┌─────────────────────────────────────────────────────────────────┐
@@ -422,32 +457,23 @@ Frontend shows toast notification
 
 ## 🚫 Background Jobs & Task Queues
 
-**Status:** ❌ **NOT IMPLEMENTED**
+**Status:** ⚠️ **Lightweight Async Dispatch (In-Process Threads)**
 
-InvIQ uses a **synchronous request-response** architecture. There are:
-- ❌ No Celery workers
-- ❌ No background job queues
-- ❌ No async task processing
-- ❌ No scheduled cron jobs
+InvIQ prioritizes low latency and simple infrastructure, avoiding heavy external task queues like Celery/RabbitMQ. However, to maintain high responsiveness:
+- **In-Process Background Threads:** Low-stock email notifications are dispatched asynchronously using `threading.Thread(daemon=True)`. This offloads SMTP network latency (which can take 1-3 seconds) from the request-response thread, ensuring the user gets an immediate HTTP response.
+- **No Heavy Queue Infrastructure:**
+  - ❌ No separate Celery workers / worker dynos
+  - ❌ No persistent task queues (RabbitMQ/SQS)
+  - ❌ No scheduled cron job runners (e.g. celery-beat)
 
-**Why No Background Jobs?**
-1. **Simplicity** - Easier to deploy and debug for a resume project
-2. **Real-time requirements** - Users expect immediate responses
-3. **Low volume** - Current scale doesn't require async processing
-4. **WebSocket** - Real-time updates handled via WebSocket, not polling
-5. **Portfolio scope** - Demonstrates core architecture without operational complexity
+**Why This Pragmatic Design?**
+1. **Low Operational Overhead:** No need to manage and pay for separate worker containers or message brokers.
+2. **Zero Request Blocking:** Heavy external API/SMTP calls happen on background threads, maintaining sub-100ms API response times.
+3. **Graceful Failures:** If a background email dispatch thread fails, it logs structured warnings and dies without affecting the active DB transaction.
 
-**When Background Jobs Would Be Needed:**
-- Email sending at scale (currently synchronous, acceptable for demo)
-- Large report generation (PDF exports currently in-request)
-- Batch data imports (vendor uploads currently synchronous)
-- Scheduled analytics (daily/weekly reports)
-- Notification delivery (WhatsApp, SMS - currently placeholders)
-
-**Recommended Implementation (Production):**
-- FastAPI BackgroundTasks (simple, built-in)
-- Celery + Redis (robust, scalable)
-- ARQ (async, Redis-based, Python-native)
+**Recommended Upgrades for True Enterprise Production:**
+- **FastAPI BackgroundTasks:** Standardize simple background execution.
+- **ARQ / Celery + Redis:** If volume scales to tens of thousands of alerts, migrate to a Redis-backed queue to guarantee task delivery across worker instances and prevent message loss on server restart.
 
 ---
 

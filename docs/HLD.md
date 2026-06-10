@@ -39,6 +39,8 @@ Healthcare facilities struggle with manual inventory management, leading to stoc
 4. **Vendor integration** via Excel upload with fuzzy item matching
 5. **Analytics dashboard** with heatmaps and critical alerts
 6. **Multi-tenancy** supporting multiple organizations
+7. **Guest Demo Mode** permitting unauthenticated dashboard and chat access
+8. **Low-stock email alerts** dispatched to managers on critical stock shortages
 
 ---
 
@@ -47,7 +49,7 @@ Healthcare facilities struggle with manual inventory management, leading to stoc
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         CLIENT LAYER                             │
-│  React SPA (6 Role-Based Portals + Landing Page)                │
+│  React SPA (5 Portals + Guest Demo Mode + Landing Page)          │
 └────────────────────────┬────────────────────────────────────────┘
                          │ HTTPS/REST + WebSocket
                          ▼
@@ -87,7 +89,7 @@ Healthcare facilities struggle with manual inventory management, leading to stoc
 
 | Component | Responsibility |
 |-----------|---------------|
-| **React Frontend** | User interface, 6 role-based portals (Super Admin, Admin, Manager, Staff, Vendor, Viewer) + Landing page, real-time WebSocket updates |
+| **React Frontend** | User interface, 5 role-based portals (Super Admin, Admin, Manager, Staff, Vendor) + Guest Demo Mode, real-time WebSocket updates |
 | **FastAPI Backend** | REST API (56 endpoints), authentication, business logic orchestration |
 | **AI Agent Service** | LangGraph ReAct agent with 7 inventory tools, natural language processing |
 | **Analytics Service** | Dashboard stats, heatmaps, critical alerts with Redis caching |
@@ -230,8 +232,8 @@ Frontend shows success/error breakdown
 - AI-powered natural language queries
 - Requisition approval workflow
 - Vendor Excel upload integration
-- Real-time stock alerts (WebSocket)
-- Role-based access control (6 roles: super_admin, admin, manager, staff, vendor, viewer)
+- Real-time stock alerts (WebSocket) & Low-stock email alerts (SMTP)
+- Role-based access control (5 roles: super_admin, admin, manager, staff, vendor) + Guest Demo Mode
 - Analytics dashboard with caching
 - Multi-tenancy (organization isolation)
 - Audit logging for compliance
