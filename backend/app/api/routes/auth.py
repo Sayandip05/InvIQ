@@ -20,6 +20,7 @@ from app.core.security import (
     create_refresh_token,
     verify_refresh_token,
     hash_password,
+    mask_email,
 )
 from app.core.exceptions import AuthenticationError, ValidationError, NotFoundError
 from app.infrastructure.database.user_repo import UserRepository
@@ -85,7 +86,7 @@ def _generate_password_reset_token(user_id: int, email: str) -> str:
 def _send_email(to_email: str, subject: str, html_content: str) -> bool:
     """Send email via SMTP. Returns True if successful."""
     if not settings.SMTP_ENABLED:
-        logger.info("SMTP disabled - email not sent (to: %s)", to_email)
+        logger.info("SMTP disabled - email not sent (to: %s)", mask_email(to_email))
         return False
 
     if not settings.SMTP_HOST or not settings.SMTP_USER:
@@ -110,10 +111,10 @@ def _send_email(to_email: str, subject: str, html_content: str) -> bool:
                 to_email,
                 msg.as_string(),
             )
-        logger.info("Email sent successfully to %s", to_email)
+        logger.info("Email sent successfully to %s", mask_email(to_email))
         return True
     except Exception as e:
-        logger.error(f"Failed to send email to {to_email}: {e}")
+        logger.error(f"Failed to send email to {mask_email(to_email)}: {e}")
         return False
 
 
@@ -195,9 +196,9 @@ def register(
     db: Session = Depends(get_user_repo),
     current_user: User = Depends(require_admin),
 ):
-    if request_body.role not in ["admin", "manager", "staff", "viewer", "vendor"]:
+    if request_body.role not in ["admin", "manager", "staff", "vendor"]:
         raise ValidationError(
-            f"Invalid role: {request_body.role}. Must be admin, manager, staff, viewer, or vendor"
+            f"Invalid role: {request_body.role}. Must be admin, manager, staff, or vendor"
         )
 
     user = db.create(
@@ -553,7 +554,7 @@ def list_users(
     db: Session = Depends(get_user_repo),
     current_user: User = Depends(require_admin),
 ):
-    if role and role not in ["admin", "manager", "staff", "viewer", "vendor"]:
+    if role and role not in ["admin", "manager", "staff", "vendor"]:
         raise ValidationError(f"Invalid role filter: {role}")
     if limit > 100:
         limit = 100  # Cap to prevent abuse
@@ -608,7 +609,7 @@ def update_user_role(
     if not user:
         raise NotFoundError("User", user_id)
 
-    if request_body.role not in ["admin", "manager", "staff", "viewer", "vendor"]:
+    if request_body.role not in ["admin", "manager", "staff", "vendor"]:
         raise ValidationError(f"Invalid role: {request_body.role}")
 
     old_role = user.role

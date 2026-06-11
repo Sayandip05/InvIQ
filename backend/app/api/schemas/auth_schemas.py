@@ -78,7 +78,7 @@ class PasswordChangeRequest(BaseModel):
 
 
 class RoleUpdate(BaseModel):
-    role: str = Field(..., pattern="^(admin|manager|staff|viewer|vendor)$")
+    role: str = Field(..., pattern="^(admin|manager|staff|vendor)$")
 
 
 class VerifyEmailRequest(BaseModel):
