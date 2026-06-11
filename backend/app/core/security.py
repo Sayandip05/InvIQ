@@ -148,14 +148,13 @@ def verify_refresh_token(token: str) -> Dict[str, Any]:
 
 # ── Role hierarchy ────────────────────────────────────────────────────────
 
-ALLOWED_ROLES = {"super_admin", "admin", "manager", "staff", "vendor", "viewer"}
+ALLOWED_ROLES = {"super_admin", "admin", "manager", "staff", "vendor"}
 ROLE_HIERARCHY = {
     "super_admin": 6,
     "admin": 5,
     "manager": 4,
     "staff": 3,
     "vendor": 2,
-    "viewer": 1,
 }
 
 
@@ -164,4 +163,21 @@ def check_role_permission(user_role: str, required_role: str) -> bool:
     if user_role not in ALLOWED_ROLES or required_role not in ALLOWED_ROLES:
         return False
     return ROLE_HIERARCHY.get(user_role, 0) >= ROLE_HIERARCHY.get(required_role, 0)
+
+
+def mask_email(email: str) -> str:
+    """
+    Mask email address to protect PII in logs.
+    Example: sayandip@inviq.io -> s***p@inviq.io
+    """
+    if not email or "@" not in email:
+        return email
+    try:
+        local, domain = email.split("@", 1)
+        if len(local) <= 2:
+            return f"{local[0]}*@{domain}"
+        return f"{local[0]}***{local[-1]}@{domain}"
+    except Exception:
+        return email
+
 

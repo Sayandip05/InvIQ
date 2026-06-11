@@ -20,6 +20,7 @@ from app.core.security import (
     check_role_permission,
     ROLE_HIERARCHY,
     ALLOWED_ROLES,
+    mask_email,
 )
 from app.core.exceptions import AuthenticationError
 from app.core.config import settings
@@ -222,3 +223,25 @@ class TestRoleHierarchy:
         assert check_role_permission("viewer", "viewer") is True
         assert check_role_permission("viewer", "staff") is False
         assert check_role_permission("viewer", "admin") is False
+
+
+class TestEmailMasking:
+    """Test utility function for masking emails to protect PII."""
+
+    def test_mask_email_standard(self):
+        """Standard email should mask local part leaving first and last chars visible."""
+        assert mask_email("sayandip@inviq.io") == "s***p@inviq.io"
+        assert mask_email("admin@inventory.local") == "a***n@inventory.local"
+        assert mask_email("johndoe@example.com") == "j***e@example.com"
+
+    def test_mask_email_short_local(self):
+        """Short local parts (<=2 chars) should mask cleanly without raising index errors."""
+        assert mask_email("ab@example.com") == "a*@example.com"
+        assert mask_email("a@example.com") == "a*@example.com"
+
+    def test_mask_email_invalid_or_none(self):
+        """Invalid inputs should fall back gracefully returning the original value."""
+        assert mask_email(None) is None
+        assert mask_email("") == ""
+        assert mask_email("notanemail") == "notanemail"
+
