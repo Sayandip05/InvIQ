@@ -69,7 +69,8 @@ class InventoryService:
                     "Stock alert [%s]: %s at location %d — stock=%d, min=%d",
                     alert_status, item.name, location_id, closing_stock, item.min_stock,
                 )
-                # Queue alert for WebSocket broadcast
+
+                # Queue alert for real-time WebSocket broadcast
                 from app.api.routes.websocket import pending_alerts
                 pending_alerts.append({
                     "type": "low_stock_alert",
@@ -80,6 +81,57 @@ class InventoryService:
                     "current_stock": closing_stock,
                     "min_stock": item.min_stock,
                 })
+
+                # ── Email alert to admins & managers ───────────────────
+                # Resolve location name and recipient emails, then
+                # dispatch in a background thread so SMTP latency never
+                # blocks the HTTP transaction response.
+                try:
+                    from threading import Thread
+                    from app.infrastructure.database.models import User
+                    from app.application.notification_service import NotificationService
+
+                    # Fetch email addresses for active admins and managers
+                    recipient_emails: list[str] = [
+                        u.email
+                        for u in self.repo.db.query(User)
+                        .filter(
+                            User.role.in_(["admin", "super_admin", "manager"]),
+                            User.is_active.is_(True),
+                            User.email.isnot(None),
+                        )
+                        .all()
+                    ]
+
+                    # Resolve location name for the email body
+                    location = self.repo.get_location_by_id(location_id)
+                    location_name = location.name if location else f"Location #{location_id}"
+
+                    if recipient_emails:
+                        # Capture all loop variables for the thread closure
+                        thread = Thread(
+                            target=NotificationService.send_low_stock_alert,
+                            kwargs={
+                                "recipients":    recipient_emails,
+                                "item_name":     item.name,
+                                "item_id":       item_id,
+                                "location_id":   location_id,
+                                "current_stock": closing_stock,
+                                "min_stock":     item.min_stock,
+                                "alert_status":  alert_status,
+                                "location_name": location_name,
+                            },
+                            daemon=True,  # dies with the main process — no leak
+                            name=f"low-stock-email-{item_id}-{location_id}",
+                        )
+                        thread.start()
+                        logger.info(
+                            "Low-stock email dispatched (background) for %s @ %s to %d recipient(s)",
+                            item.name, location_name, len(recipient_emails),
+                        )
+                except Exception as email_err:
+                    # Email failure must never affect the inventory transaction
+                    logger.error("Failed to dispatch low-stock email alert: %s", str(email_err))
 
             return {
                 "success": True,
