@@ -11,8 +11,8 @@ This wires up the Swagger /docs "Authorize" button automatically.
 Route handlers use Depends() to receive pre-validated user objects.
 """
 
-from typing import Annotated
-from fastapi import Depends, HTTPException, status
+from typing import Annotated, Optional
+from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.infrastructure.database.connection import get_db
@@ -126,6 +126,54 @@ def get_current_user(
         raise credentials_exception
 
 
+async def get_optional_user(
+    request: Request,
+    db: Session = Depends(get_db),
+) -> Optional[User]:
+    """
+    Optional authentication dependency for Guest Demo Mode endpoints.
+
+    Reads the Authorization header and attempts JWT validation.
+    Returns the authenticated User object if the token is valid, or
+    None (silently) when:
+      - No Authorization header / token is present
+      - Token is expired, malformed, or on the blacklist
+      - The referenced user no longer exists or is inactive
+
+    Unlike get_current_user(), this dependency NEVER raises HTTP 401.
+    Use it on GET endpoints that should be readable by unauthenticated
+    guests while still identifying authenticated callers if present.
+    """
+    from app.infrastructure.cache.token_blacklist import is_token_blacklisted
+
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return None
+
+    token = auth_header[7:]
+    if not token:
+        return None
+
+    try:
+        if is_token_blacklisted(token):
+            return None
+
+        payload = verify_access_token(token)
+        user_id = payload.get("sub")
+        if not user_id:
+            return None
+
+        user_repo = UserRepository(db)
+        user = user_repo.get_by_id(user_id)
+        if user is None or not user.is_active:
+            return None
+
+        return user
+    except Exception:
+        # Any JWT or DB failure → silently treat caller as guest
+        return None
+
+
 # ── Active user shorthand ──────────────────────────────────────────────────
 
 
@@ -171,12 +219,6 @@ def require_manager(
 
 def require_staff(
     current_user: Annotated[User, Depends(require_role("staff"))],
-) -> User:
-    return current_user
-
-
-def require_viewer(
-    current_user: Annotated[User, Depends(require_role("viewer"))],
 ) -> User:
     return current_user
 

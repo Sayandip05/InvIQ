@@ -7,11 +7,13 @@ No direct DB queries here — everything goes through the service layer.
 
 from fastapi import APIRouter, Depends, Request
 from app.core.rate_limiter import limiter
+from typing import Optional
 
 from app.core.dependencies import (
     get_inventory_service,
     get_inventory_repo,
     get_current_user,
+    get_optional_user,
     require_staff,
 )
 from app.core.exceptions import (
@@ -37,7 +39,7 @@ router = APIRouter(prefix="/inventory", tags=["Inventory"])
 @router.get("/locations")
 def get_all_locations(
     repo: InventoryRepository = Depends(get_inventory_repo),
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_user),
 ):
     locations = repo.get_all_locations()
     return {
@@ -52,7 +54,7 @@ def get_all_locations(
 @router.get("/items")
 def get_all_items(
     repo: InventoryRepository = Depends(get_inventory_repo),
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_user),
 ):
     items = repo.get_all_items()
     return {
@@ -74,7 +76,7 @@ def get_location_items(
     location_id: int,
     repo: InventoryRepository = Depends(get_inventory_repo),
     service: InventoryService = Depends(get_inventory_service),
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_user),
 ):
     location = repo.get_location_by_id(location_id)
     if not location:
@@ -93,7 +95,7 @@ def get_current_stock(
     location_id: int,
     item_id: int,
     service: InventoryService = Depends(get_inventory_service),
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_user),
 ):
     stock = service.get_latest_stock(location_id, item_id)
 
