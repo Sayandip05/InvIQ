@@ -41,7 +41,7 @@ def get_platform_overview(
 
     # Role breakdown
     role_counts = {}
-    for role in ["admin", "manager", "staff", "viewer"]:
+    for role in ["admin", "manager", "staff", "vendor"]:
         role_counts[role] = user_repo.count_filtered(role=role)
 
     # Recent signups (last 7 days)

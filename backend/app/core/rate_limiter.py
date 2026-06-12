@@ -116,6 +116,26 @@ def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse
         app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
     """
     retry_after = getattr(exc, "retry_after", 60)
+    
+    # Extract details for diagnostic logging
+    ip = request.client.host if request.client else "unknown"
+    path = request.url.path
+    method = request.method
+    
+    user_info = ""
+    user = getattr(request.state, "user", None)
+    if user and hasattr(user, "username"):
+        user_info = f" (user: {user.username})"
+        
+    logger.warning(
+        "Rate limit exceeded: %s %s from IP %s%s. Retry after %d seconds.",
+        method,
+        path,
+        ip,
+        user_info,
+        retry_after,
+    )
+    
     return JSONResponse(
         status_code=429,
         headers={"Retry-After": str(retry_after)},
