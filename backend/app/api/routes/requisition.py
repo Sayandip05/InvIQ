@@ -11,9 +11,11 @@ from app.core.rate_limiter import limiter
 from app.core.dependencies import (
     get_requisition_service,
     get_current_user,
+    get_optional_user,
     require_staff,
     require_manager,
 )
+from typing import Optional
 from app.core.exceptions import NotFoundError
 from app.application.requisition_service import RequisitionService
 from app.infrastructure.database.models import User
@@ -58,7 +60,7 @@ def list_requisitions(
     skip: int = 0,
     limit: int = 20,
     service: RequisitionService = Depends(get_requisition_service),
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_user),
 ):
     if limit > 100:
         limit = 100
@@ -82,7 +84,7 @@ def list_requisitions(
 @router.get("/stats")
 def get_requisition_stats(
     service: RequisitionService = Depends(get_requisition_service),
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_user),
 ):
     stats = service.get_stats()
     return {"success": True, "data": stats}
@@ -92,7 +94,7 @@ def get_requisition_stats(
 def get_requisition(
     requisition_id: int,
     service: RequisitionService = Depends(get_requisition_service),
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_user),
 ):
     data = service.get_requisition(requisition_id)
     if not data:
