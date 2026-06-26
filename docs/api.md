@@ -1,15 +1,24 @@
 # InvIQ API Documentation
 
-This document provides a comprehensive, production-grade reference for the InvIQ backend REST API and WebSocket interfaces. It details authentication rules, rate limits, caching behavior, and Guest Demo Mode interactions.
+This document provides a comprehensive, production-grade reference for the InvIQ backend REST API, GraphQL analytics interface, and WebSocket layer. It details authentication rules, rate limits, caching behavior, and Guest Demo Mode interactions.
 
 ---
 
 ## ── Architecture Overview ───────────────────────────────────────────────────
 
-- **Protocol:** REST over HTTPS & WebSockets (for real-time stock alerts)
-- **Base URL:** `http://localhost:8000/api` (Local) / `/api` (Production relative)
+InvIQ uses a **REST + GraphQL hybrid** — the industry-standard pattern:
+
+- **REST** handles all **mutations** (create, update, delete) and complex transactional endpoints.
+- **GraphQL** (Strawberry) handles all **analytics reads** — zero over-fetching, flexible field selection, role-aware data masking.
+
+| Layer | Protocol | Base URL | Purpose |
+|-------|----------|----------|---------|
+| REST API | HTTPS | `/api` | All mutations + auth + chat + vendor |
+| GraphQL | HTTPS | `/graphql/analytics` | Analytics reads (dashboard, heatmap, alerts, summary, stock health) |
+| WebSocket | WSS | `/ws` | Real-time stock alert push |
+
 - **Data Format:** UTF-8 JSON requests and responses
-- **Standard Success Response Envelope:**
+- **Standard REST Success Response Envelope:**
   ```json
   {
     "success": true,
@@ -17,7 +26,7 @@ This document provides a comprehensive, production-grade reference for the InvIQ
     "data": { ... }
   }
   ```
-- **Standard Error Response Envelope:**
+- **Standard REST Error Response Envelope:**
   ```json
   {
     "success": false,
@@ -42,15 +51,18 @@ This document provides a comprehensive, production-grade reference for the InvIQ
 
 ### 2. Authorization Scopes (5-Tier RBAC)
 The system supports a 5-tier role hierarchy. Permissions are cumulative (higher roles inherit lower permissions):
-1. **`super_admin` (5):** Cross-tenant platform management, organization provisioning.
-2. **`admin` (4):** Tenant-level administration, audit logs, user provisioning, reports.
-3. **`manager` (3):** Requisition approval/rejection, stock overrides.
-4. **`staff` (2):** Basic inventory transactions (issue/receipt), requisition creation.
-5. **`vendor` (1):** Excel manifest uploads, inventory ingestion.
+1. **`super_admin` (6):** Cross-tenant platform management, organization provisioning.
+2. **`admin` (5):** Tenant-level administration, audit logs, user provisioning, reports.
+3. **`manager` (4):** Requisition approval/rejection, stock overrides. Full GraphQL privileged fields.
+4. **`staff` (3):** Basic inventory transactions (issue/receipt), requisition creation.
+5. **`vendor` (2):** Excel manifest uploads, inventory ingestion.
+
+> **GraphQL field masking:** `manager`, `admin`, and `super_admin` callers receive full values for `avgDailyUsage`, `daysRemaining`, and `leadTimeDays`. Guest and Vendor callers receive `null` for these operational forecasting fields.
 
 ### 3. Guest Demo Mode (Unauthenticated Access)
 To allow visitors to preview the application without sign-up, the API utilizes a custom dependency: `get_optional_user()`.
-- **GET Endpoints:** Relaxed authentication. If an invalid or missing token is detected, the API silently treats the caller as a **Guest (anonymous)** and serves the requested data (read-only).
+- **GET REST Endpoints:** Relaxed authentication. If an invalid or missing token is detected, the API silently treats the caller as a **Guest (anonymous)** and serves the requested data (read-only).
+- **GraphQL Endpoint:** Same model — unauthenticated callers are served all non-privileged fields; operational forecasting fields are masked to `null`.
 - **POST/PUT/DELETE Endpoints:** Strict authentication. If a guest attempts a write, approval, or chat interaction, the frontend intercepts the request and redirects the user to `/signin`.
 - **401 Interceptor:** The client interceptor only triggers a redirect to `/signin` if the request originally carried a token (session expired). Guests are never forced to redirect while browsing.
 
@@ -59,16 +71,25 @@ Handled by `slowapi` with Redis state storage:
 - **Authentication Endpoints (`/api/auth/*`):** 5 requests/minute (brute-force defense).
 - **Chat Endpoints (`/api/chat/*`):** 20 requests/minute (capping LLM API token costs).
 - **Default Endpoints:** 60 requests/minute.
+- **GraphQL (`/graphql/analytics`):** No Slowapi rate limiter — GraphQL is query-complexity-bounded by field selection depth.
 
 ### 5. Caching System
-Analytics and dashboard statistics are cached in Redis to prevent heavy database aggregation overhead:
-- **analytics:dashboard_stats:** Cached for 2-5 minutes.
-- **analytics:summary:** Cached for 5 minutes.
+Analytics and dashboard statistics are cached in Redis to prevent heavy database aggregation overhead. **The REST and GraphQL layers share the same cache keys** — a REST warm cache is immediately available to GraphQL callers and vice versa.
+
+| Cache Key | TTL | Shared By |
+|-----------|-----|-----------|
+| `cache:analytics:dashboard_stats` | 2 min | REST + GraphQL |
+| `cache:analytics:heatmap` | 5 min | REST + GraphQL |
+| `cache:analytics:alerts:CRITICAL` | 5 min | REST + GraphQL |
+| `cache:analytics:alerts:WARNING` | 5 min | REST + GraphQL |
+| `cache:analytics:summary` | 5 min | REST + GraphQL |
+
 - **Invalidation:** Automatically flushed whenever write transactions (`/api/inventory/transaction`, `/api/requisition/{id}/approve`) are successfully committed.
+- **`stockHealth` GraphQL query:** Not cached — designed for ad-hoc reporting with server-side filter arguments.
 
 ---
 
-## ── API Endpoints Directory ───────────────────────────────────────────────
+## ── REST API Endpoints Directory ─────────────────────────────────────────────
 
 ### 1. Authentication (`/api/auth`)
 
@@ -271,16 +292,16 @@ Queries to the AI Chatbot feed into a LangGraph ReAct agent.
 
 ---
 
-### 5. Analytics Dashboard (`/api/analytics`)
+### 5. Analytics Dashboard — REST (`/api/analytics`)
 
-Analytics endpoints are cached in Redis to maintain fast, scalable sub-100ms response times.
+Analytics endpoints are cached in Redis to maintain fast, scalable sub-100ms response times. For flexible, field-level analytics queries, use the [GraphQL analytics endpoint](#-graphql-analytics-api) instead.
 
 | Endpoint | Method | Auth Scope | Rate Limit | Description |
 |---|---|---|---|---|
-| `/analytics/dashboard/stats` | **GET** | Guest Permitted| 30/min | High-level metrics for dashboard (cached 2-5m). |
-| `/analytics/heatmap` | **GET** | Guest Permitted| 30/min | Grid data representing item stock health per location. |
-| `/analytics/alerts` | **GET** | Guest Permitted| 30/min | List of critical/warning stock alerts across all locations. |
-| `/analytics/summary` | **GET** | Guest Permitted| 30/min | Natural language diagnostic overview summary (cached 5m). |
+| `/analytics/dashboard/stats` | **GET** | Guest Permitted| 30/min | High-level metrics for dashboard (cached 2 min). |
+| `/analytics/heatmap` | **GET** | Guest Permitted| 30/min | Grid data representing item stock health per location (cached 5 min). |
+| `/analytics/alerts` | **GET** | Guest Permitted| 30/min | List of critical/warning stock alerts across all locations (cached 5 min). |
+| `/analytics/summary` | **GET** | Guest Permitted| 30/min | Aggregate inventory health overview (cached 5 min). |
 
 ---
 
@@ -322,6 +343,218 @@ Requires `super_admin` role (global scope, skips tenant constraints).
 | `/superadmin/organizations/{org_id}`|**DELETE**| `super_admin` | 5/min | Delete organization (soft delete). |
 | `/superadmin/organizations/{org_id}/admin`|**POST**| `super_admin` | 10/min | Provision tenant admin user for an organization. |
 | `/superadmin/users` | **GET** | `super_admin` | Default | List all users across all organizations on the platform. |
+
+---
+
+## 🔷 GraphQL Analytics API
+
+**Endpoint:** `POST /graphql/analytics`  
+**Playground (dev only):** `GET /graphql/analytics`
+
+The GraphQL layer is a read-only analytics interface built with **Strawberry** (code-first Python GraphQL). It exposes the same underlying `AnalyticsService` as the REST layer but with:
+- **Zero over-fetching** — clients request exactly the fields they need
+- **Server-side filtering** on `stockHealth` (location, item name, status)
+- **Role-aware field masking** (see RBAC section above)
+- **Shared Redis cache** — warm REST cache is immediately reused
+
+### Authentication
+
+GraphQL uses the same JWT Bearer token as REST. Pass it in the `Authorization` header:
+
+```
+Authorization: Bearer <access_token>
+```
+
+Unauthenticated (Guest) requests are accepted — privileged fields return `null`.
+
+---
+
+### Query: `dashboardStats`
+
+Returns high-level chart data for the analytics dashboard. Cached for 2 minutes.
+
+```graphql
+query DashboardStats {
+  dashboardStats {
+    categoryDistribution { name value }
+    lowStockItems { name stock minStock shortage }
+    locationStock { name value }
+    statusDistribution { name value color }
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "data": {
+    "dashboardStats": {
+      "categoryDistribution": [
+        { "name": "Medication", "value": 42 },
+        { "name": "Equipment", "value": 18 }
+      ],
+      "lowStockItems": [
+        { "name": "Paracetamol 500mg", "stock": 5, "minStock": 100, "shortage": 95 }
+      ],
+      "locationStock": [
+        { "name": "Main Pharmacy", "value": 2840 }
+      ],
+      "statusDistribution": [
+        { "name": "CRITICAL", "value": 8, "color": "#ef4444" },
+        { "name": "WARNING",  "value": 14, "color": "#f59e0b" },
+        { "name": "HEALTHY",  "value": 38, "color": "#22c55e" }
+      ]
+    }
+  }
+}
+```
+
+---
+
+### Query: `heatmap`
+
+Returns the full inventory heatmap grid (locations × items). Cached for 5 minutes.
+
+```graphql
+query Heatmap {
+  heatmap {
+    locations
+    items
+    matrix        # JSON scalar — list[list[{stock, status, daysRemaining}]]
+    details {
+      locationName
+      itemName
+      currentStock
+      healthStatus
+      color
+      avgDailyUsage   # null for Guest/Vendor
+      daysRemaining   # null for Guest/Vendor
+      leadTimeDays    # null for Guest/Vendor
+    }
+  }
+}
+```
+
+---
+
+### Query: `alerts`
+
+Returns critical or warning stock alerts with recommended reorder quantities. Cached for 5 minutes per severity level.
+
+**Arguments:**
+
+| Argument | Type | Default | Values |
+|----------|------|---------|--------|
+| `severity` | `String` | `"CRITICAL"` | `"CRITICAL"` \| `"WARNING"` |
+
+```graphql
+query Alerts($severity: String = "CRITICAL") {
+  alerts(severity: $severity) {
+    severity
+    count
+    alerts {
+      itemName
+      locationName
+      currentStock
+      healthStatus
+      recommendedReorder
+      avgDailyUsage   # null for Guest/Vendor
+      leadTimeDays    # null for Guest/Vendor
+    }
+  }
+}
+```
+
+---
+
+### Query: `summary`
+
+Returns aggregate inventory health overview — item counts, health breakdown, and per-category stats. Cached for 5 minutes.
+
+```graphql
+query Summary {
+  summary {
+    overview {
+      totalLocations
+      totalItems
+      totalRecords
+    }
+    healthSummary {
+      critical
+      warning
+      healthy
+    }
+    categories {
+      name
+      total
+      critical
+      warning
+      healthy
+    }
+  }
+}
+```
+
+---
+
+### Query: `stockHealth`
+
+Flexible ad-hoc stock health query with server-side filtering. **Not cached** — designed for on-demand reporting.
+
+**Arguments:**
+
+| Argument | Type | Default | Description |
+|----------|------|---------|-------------|
+| `location` | `String` | `""` | Case-insensitive substring match on location name |
+| `item` | `String` | `""` | Case-insensitive substring match on item name |
+| `statusFilter` | `String` | `""` | Exact match: `""` \| `"CRITICAL"` \| `"WARNING"` \| `"HEALTHY"` |
+
+```graphql
+query StockHealth(
+  $location: String = "",
+  $item: String = "",
+  $statusFilter: String = "CRITICAL"
+) {
+  stockHealth(location: $location, item: $item, statusFilter: $statusFilter) {
+    locationName
+    itemName
+    category
+    currentStock
+    healthStatus
+    color
+    lastUpdated
+    avgDailyUsage   # null for Guest/Vendor
+    daysRemaining   # null for Guest/Vendor
+    leadTimeDays    # null for Guest/Vendor
+  }
+}
+```
+
+**Example — all critical items at any Warehouse:**
+```graphql
+{ stockHealth(location: "Warehouse", statusFilter: "CRITICAL") {
+    itemName locationName currentStock
+} }
+```
+
+---
+
+### GraphQL Error Handling
+
+GraphQL errors are returned in the standard `errors` array. The HTTP status code is always `200` for GraphQL responses (per the spec).
+
+```json
+{
+  "data": null,
+  "errors": [
+    {
+      "message": "severity must be 'CRITICAL' or 'WARNING'",
+      "locations": [{ "line": 2, "column": 3 }],
+      "path": ["alerts"]
+    }
+  ]
+}
+```
 
 ---
 

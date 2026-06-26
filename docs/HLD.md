@@ -1,7 +1,7 @@
 # High-Level Design (HLD) - InvIQ Smart Inventory Assistant
 
-**Version:** 3.0  
-**Last Updated:** June 11, 2026  
+**Version:** 4.0  
+**Last Updated:** June 26, 2026  
 **Author:** Sayandip Bar
 
 ---
@@ -38,9 +38,10 @@ Healthcare facilities struggle with manual inventory management, leading to stoc
 3. **Requisition workflow** with approval/rejection system
 4. **Vendor integration** via Excel upload with fuzzy item matching
 5. **Analytics dashboard** with heatmaps and critical alerts
-6. **Multi-tenancy** supporting multiple organizations
-7. **Guest Demo Mode** permitting unauthenticated dashboard and chat access
-8. **Low-stock email alerts** dispatched to managers on critical stock shortages
+6. **GraphQL analytics layer** via Strawberry — role-aware resolvers at `/graphql/analytics`
+7. **Multi-tenancy** supporting multiple organizations
+8. **Guest Demo Mode** permitting unauthenticated dashboard and chat access
+9. **Low-stock email alerts** dispatched to managers on critical stock shortages
 
 ---
 
@@ -95,7 +96,7 @@ Healthcare facilities struggle with manual inventory management, leading to stoc
 │                           API GATEWAY LAYER                                  │
 │                                                                              │
 │  ┌──────────────────────────────────────────────────────────────────────┐  │
-│  │  FastAPI Application (Python 3.11)                                   │  │
+│  │  FastAPI Application (Python 3.11+)                                  │  │
 │  │  ┌────────────────────────────────────────────────────────────────┐ │  │
 │  │  │  Middleware Stack                                              │ │  │
 │  │  │  1. CORS (allow origins)                                       │ │  │
@@ -113,15 +114,28 @@ Healthcare facilities struggle with manual inventory management, leading to stoc
 │  │  └────────────────────────────────────────────────────────────────┘ │  │
 │  │                                                                      │  │
 │  │  ┌────────────────────────────────────────────────────────────────┐ │  │
-│  │  │  API Routes (56 endpoints)                                     │ │  │
+│  │  │  REST API Routes (56 endpoints)                                │ │  │
 │  │  │  /api/auth/*        - Authentication (21 endpoints)            │ │  │
 │  │  │  /api/inventory/*   - Inventory management (9 endpoints)       │ │  │
 │  │  │  /api/requisition/* - Requisition workflow (8 endpoints)       │ │  │
 │  │  │  /api/chat/*        - AI chatbot (5 endpoints)                 │ │  │
-│  │  │  /api/analytics/*   - Dashboard analytics (2 endpoints)        │ │  │
+│  │  │  /api/analytics/*   - Analytics REST reads (4 endpoints)       │ │  │
 │  │  │  /api/vendor/*      - Vendor uploads (3 endpoints)             │ │  │
 │  │  │  /api/superadmin/*  - Super admin (6 endpoints)                │ │  │
 │  │  │  /ws                - WebSocket (2 endpoints)                  │ │  │
+│  │  └────────────────────────────────────────────────────────────────┘ │  │
+│  │                                                                      │  │
+│  │  ┌────────────────────────────────────────────────────────────────┐ │  │
+│  │  │  GraphQL Analytics (Strawberry — read-only)                    │ │  │
+│  │  │  /graphql/analytics — 5 queries                                │ │  │
+│  │  │  · dashboardStats   - Chart data (cached 2 min)                │ │  │
+│  │  │  · heatmap          - Location×item grid (cached 5 min)        │ │  │
+│  │  │  · alerts(severity) - Critical/warning list (cached 5 min)     │ │  │
+│  │  │  · summary          - Health overview (cached 5 min)           │ │  │
+│  │  │  · stockHealth(...) - Ad-hoc filtered read (not cached)        │ │  │
+│  │  │  Role-aware field masking: privileged fields null for          │ │  │
+│  │  │  Guest/Vendor callers                                          │ │  │
+│  │  │  Shared Redis cache keys with REST layer                       │ │  │
 │  │  └────────────────────────────────────────────────────────────────┘ │  │
 │  └──────────────────────────────────────────────────────────────────────┘  │
 └────────────────────────────┬─────────────────────────────────────────────────┘
@@ -207,8 +221,9 @@ Healthcare facilities struggle with manual inventory management, leading to stoc
 |-----------|---------------|
 | **React Frontend** | User interface, 5 role-based portals (Super Admin, Admin, Manager, Staff, Vendor) + Guest Demo Mode, real-time WebSocket updates |
 | **FastAPI Backend** | REST API (56 endpoints), authentication, business logic orchestration |
+| **GraphQL Layer (Strawberry)** | Read-only analytics API at `/graphql/analytics` — 5 queries, role-aware field masking, shared Redis cache with REST |
 | **AI Agent Service** | LangGraph ReAct agent with 7 inventory tools, natural language processing |
-| **Analytics Service** | Dashboard stats, heatmaps, critical alerts with Redis caching |
+| **Analytics Service** | Dashboard stats, heatmaps, critical alerts with Redis caching — shared by REST and GraphQL |
 | **Inventory Service** | Stock tracking, transaction management, reorder calculations |
 | **Requisition Service** | Approval workflow, status management, inventory updates |
 | **Vendor Service** | Excel parsing, fuzzy item matching, bulk transaction creation |
@@ -517,6 +532,7 @@ Admins & Managers receive email warning
 | Technology | Why Chosen |
 |------------|-----------|
 | **FastAPI** | Async support, automatic OpenAPI docs, fast performance, Python ecosystem |
+| **Strawberry GraphQL** | Code-first GraphQL for Python — integrates natively with FastAPI, supports role-aware resolvers and field-level nullable masking |
 | **PostgreSQL** | ACID compliance, complex queries, JSON support, production-ready |
 | **Upstash Redis** | Serverless Redis, REST API (no TCP), pay-per-request, global replication |
 | **ChromaDB** | Vector database for semantic search and RAG context storage |
@@ -543,12 +559,12 @@ Admins & Managers receive email warning
 | Characteristic | Value | Notes |
 |----------------|-------|-------|
 | **Architecture** | Modular Monolith | Clean boundaries, ready for extraction |
-| **API Style** | REST + WebSocket | 56 REST endpoints, 2 WebSocket endpoints |
+| **API Style** | REST + GraphQL + WebSocket | 56 REST endpoints, 5 GraphQL queries, 2 WebSocket endpoints |
 | **Database** | PostgreSQL (ACID) | Single source of truth |
-| **Caching** | Redis (Upstash) | 2-5 min TTL, pattern-based invalidation |
+| **Caching** | Redis (Upstash) | 2-5 min TTL, pattern-based invalidation, shared between REST and GraphQL |
 | **AI** | LangGraph ReAct | 7 tools, 30s timeout |
 | **Auth** | JWT (HS256) | 30 min access, 7 days refresh |
-| **Rate Limiting** | slowapi | 5-60 req/min, Redis-backed |
+| **Rate Limiting** | slowapi | 5-60 req/min, Redis-backed (REST only) |
 | **Real-time** | WebSocket | Location-based broadcasting |
 | **Deployment** | Single instance | Render.com free tier |
 | **Scaling** | Vertical | Add RAM/CPU to single instance |
@@ -645,8 +661,9 @@ Queries dynamically filter by `org_id` in the database query layer rather than a
 | **Dependency Injection** | FastAPI `Depends()` | Promotes loose coupling, facilitates unit testing through mock dependencies, and controls connection scopes |
 | **Service Layer** | Business logic files | Isolates transactional orchestrations from routing logic |
 | **ReAct Agent** | Chat system (`agent_service`) | Powers an LLM reasoning-action loop to execute multi-step tools based on prompt contexts |
-| **CQRS (Light)** | Dashboard analytics | Isolates write operations from read-heavy analytics calculations which are served via Redis |
+| **CQRS (Light)** | Dashboard analytics — REST + GraphQL reads separated from writes | Isolates write operations from read-heavy analytics calculations served via REST and the GraphQL layer |
 | **Event-driven** | WebSocket modules | Pushes live notifications to active frontends without polling overhead |
+| **Role-aware Resolvers** | GraphQL analytics layer | Field-level null masking enforces RBAC at the data layer — Guest/Vendor see stock status but not operational forecasting fields |
 
 ---
 
@@ -667,14 +684,20 @@ Queries dynamically filter by `org_id` in the database query layer rather than a
 
 ### 13.1 Data Flow Patterns
 
-#### Read-Heavy (Analytics)
+#### Read-Heavy (Analytics — REST)
 ```
 Request → Check Redis cache → If miss, query DB → Cache result → Return
 ```
 
+#### Read-Heavy (Analytics — GraphQL)
+```
+Request → JWT optional auth → Check Redis (shared keys) → If miss, call AnalyticsService
+       → Apply role-aware field masking → Return typed Strawberry objects
+```
+
 #### Write-Heavy (Inventory Transactions)
 ```
-Request → Validate → Write to DB → Invalidate cache → Audit log → WebSocket broadcast
+Request → Validate → Write to DB → Invalidate cache (analytics:*) → Audit log → WebSocket broadcast
 ```
 
 #### AI Query (RAG)
@@ -726,5 +749,5 @@ Event → WebSocket manager → Broadcast to location → All clients receive
 ---
 
 **Document Status:** ✅ Complete  
-**Last Reviewed:** June 11, 2026  
+**Last Reviewed:** June 26, 2026  
 **Next Review:** Every 3 months

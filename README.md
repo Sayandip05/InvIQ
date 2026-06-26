@@ -18,19 +18,12 @@ Healthcare facilities struggle with manual inventory tracking, leading to critic
 
 ---
 
-## 📸 Demo
-
-![InvIQ Dashboard](https://via.placeholder.com/800x400/4F46E5/FFFFFF?text=InvIQ+Dashboard+Screenshot)
-
-*Replace with actual screenshot*
-
----
-
 ## 🛠️ Tech Stack
 
 ### Backend
-![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.104-009688?logo=fastapi&logoColor=white)
+![GraphQL](https://img.shields.io/badge/GraphQL-Strawberry-E10098?logo=graphql&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?logo=postgresql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-Upstash-DC382D?logo=redis&logoColor=white)
 ![LangChain](https://img.shields.io/badge/LangChain-LangGraph-1C3C3C?logo=chainlink&logoColor=white)
@@ -51,13 +44,13 @@ Healthcare facilities struggle with manual inventory tracking, leading to critic
 
 - 🤖 **AI Chatbot** - Ask questions in plain English: *"What items are critical right now?"*
 - 📊 **Real-Time Analytics** - Dashboard with heatmaps, alerts, and stock health monitoring
+- 🔷 **GraphQL Analytics API** - Flexible, zero-over-fetch read layer at `/graphql/analytics` — query exactly the fields you need with role-aware field masking
 - 🔄 **Requisition Workflow** - Digital approval system for stock requests
 - 📤 **Vendor Integration** - Excel upload with fuzzy item matching (85% accuracy)
 - 🔐 **Multi-Tenancy & RBAC** - 5 roles (Super Admin, Admin, Manager, Staff, Vendor)
 - 👥 **Guest Demo Mode** - Preview pages without login; interactive actions automatically prompt to sign in
 - 📧 **Low-Stock Email Alerts** - Automated background notifications sent to managers on critical stock shortages
 - ⚡ **Real-Time Alerts** - WebSocket notifications for critical stock levels
-
 
 ---
 
@@ -81,14 +74,14 @@ python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
-cd backend
-pip install -r requirements-dev.txt
+pip install -r requirements.txt
 
 # Configure environment
 cp .env.example .env
 # Edit .env with your database, Redis, and API keys
 
 # Initialize database
+cd backend
 python -c "from app.infrastructure.database.connection import init_db; init_db()"
 
 # Run development server
@@ -123,9 +116,10 @@ cp .env.example .env
 docker-compose up -d
 
 # Access application
-# Frontend: http://localhost:5173
-# Backend: http://localhost:8000
-# API Docs: http://localhost:8000/docs
+# Frontend:      http://localhost:5173
+# Backend:       http://localhost:8000
+# API Docs:      http://localhost:8000/docs
+# GraphQL:       http://localhost:8000/graphql/analytics
 ```
 
 ---
@@ -137,29 +131,30 @@ docker-compose up -d
 │                         CLIENT LAYER                             │
 │  React SPA (6 Role-Based Portals + Landing Page)                │
 └────────────────────────┬────────────────────────────────────────┘
-                         │ HTTPS/REST + WebSocket
+                         │ HTTPS/REST + WebSocket + GraphQL
                          ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                      API GATEWAY LAYER                           │
-│  FastAPI (56 endpoints) + Rate Limiting + JWT Auth              │
+│  FastAPI  ─  REST (56 endpoints)  +  WebSocket                  │
+│           ─  GraphQL  /graphql/analytics  (Strawberry)          │
+│  Rate Limiting + JWT Auth + CORS Middleware                      │
 └────────────────────────┬────────────────────────────────────────┘
                          │
-        ┌────────────────┼────────────────┐
-        ▼                ▼                ▼
-┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│   Business   │  │  AI Agent    │  │  Analytics   │
-│   Logic      │  │  Service     │  │  Service     │
-│              │  │              │  │              │
-│ Inventory    │  │ LangGraph    │  │ Dashboard    │
-│ Requisition  │  │ 7 Tools      │  │ Heatmap      │
-│ Vendor       │  │ ChromaDB RAG │  │ Alerts       │
-└──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+        ┌────────────────┼────────────────────┐
+        ▼                ▼                    ▼
+┌──────────────┐  ┌──────────────┐  ┌─────────────────────┐
+│   Business   │  │  AI Agent    │  │  Analytics Service   │
+│   Logic      │  │  Service     │  │                      │
+│              │  │              │  │  REST  /api/analytics │
+│ Inventory    │  │ LangGraph    │  │  GQL   /graphql/      │
+│ Requisition  │  │ 7 Tools      │  │        analytics     │
+│ Vendor       │  │ ChromaDB RAG │  │  (shared Redis cache) │
+└──────┬───────┘  └──────┬───────┘  └──────┬──────────────┘
        │                 │                 │
        └─────────────────┼─────────────────┘
                          ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                    INFRASTRUCTURE LAYER                          │
-│                                                                  │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
 │  │  PostgreSQL  │  │ Upstash Redis│  │  ChromaDB    │         │
 │  │  (Neon)      │  │  (REST API)  │  │  (Vector DB) │         │
@@ -169,15 +164,60 @@ docker-compose up -d
 
 ---
 
+## 🔷 GraphQL Analytics API
+
+InvIQ uses a **REST + GraphQL hybrid** — the industry-standard pattern. REST handles all mutations (create/update/delete). GraphQL handles analytics reads with zero over-fetching.
+
+**Endpoint:** `POST /graphql/analytics`  
+**Playground (dev):** `GET /graphql/analytics`
+
+### Available Queries
+
+```graphql
+# Dashboard chart data
+{ dashboardStats {
+    categoryDistribution { name value }
+    lowStockItems { name stock minStock shortage }
+    statusDistribution { name value color }
+} }
+
+# Full heatmap grid
+{ heatmap { locations items matrix
+    details { itemName currentStock healthStatus }
+} }
+
+# Stock alerts with filter
+{ alerts(severity: "CRITICAL") {
+    count alerts { itemName currentStock recommendedReorder }
+} }
+
+# Aggregate summary
+{ summary {
+    healthSummary { critical warning healthy }
+    categories { name total critical }
+} }
+
+# Flexible ad-hoc query with server-side filters
+{ stockHealth(location: "Warehouse", statusFilter: "CRITICAL") {
+    itemName currentStock avgDailyUsage daysRemaining
+} }
+```
+
+### Role-Aware Field Masking
+
+| Caller | `avgDailyUsage` | `daysRemaining` | `leadTimeDays` |
+|--------|:---:|:---:|:---:|
+| Guest / Vendor | `null` | `null` | `null` |
+| Manager / Admin / Super Admin | ✅ | ✅ | ✅ |
+
+---
+
 ## 📚 Documentation
 
 For detailed documentation, see the `/docs` folder:
 
 - **[High-Level Design (HLD)](docs/HLD.md)** - System overview, architecture, tech stack decisions
-- **[Low-Level Design (LLD)](docs/LLD.md)** - Database schema, API specs, component details
-- **[Deployment Guide](docs/deployment.md)** - Production deployment instructions
-- **[System Architecture](docs/system-architecture.md)** - Detailed architecture diagrams
-- **[Scaling & Cost](docs/scaling-and-cost.md)** - Scalability strategies and cost analysis
+- **[API Reference](docs/api.md)** - REST + GraphQL endpoint reference
 
 ---
 
@@ -195,8 +235,6 @@ pytest --cov=app --cov-report=html
 pytest tests/test_inventory_service.py -v
 ```
 
-**Test Coverage:** 80% (18 test files, 200+ tests)
-
 ---
 
 ## 📦 Project Structure
@@ -205,24 +243,26 @@ pytest tests/test_inventory_service.py -v
 InvIQ/
 ├── backend/
 │   ├── app/
-│   │   ├── api/              # FastAPI routes
-│   │   ├── application/      # Business logic services
-│   │   ├── core/             # Config, security, middleware
-│   │   ├── domain/           # Business domain logic
-│   │   └── infrastructure/   # Database, cache, vector store
-│   ├── tests/                # Test suite
+│   │   ├── api/
+│   │   │   ├── routes/           # REST routes (analytics, auth, inventory…)
+│   │   │   └── graphql/          # Strawberry GraphQL (types, context, resolvers, schema)
+│   │   ├── application/          # Business logic services
+│   │   ├── core/                 # Config, security, middleware
+│   │   ├── domain/               # Business domain logic
+│   │   └── infrastructure/       # Database, cache, vector store
+│   ├── tests/                    # Test suite
 │   └── requirements-dev.txt
 ├── frontend/
 │   ├── src/
-│   │   ├── components/       # React components
-│   │   ├── pages/            # Portal pages
-│   │   ├── context/          # Auth & WebSocket context
-│   │   └── utils/            # Helper functions
+│   │   ├── components/           # React components
+│   │   ├── pages/                # Portal pages
+│   │   ├── context/              # Auth & WebSocket context
+│   │   └── utils/                # Helper functions
 │   └── package.json
 ├── database/
-│   ├── schema.sql            # Database schema
-│   └── seed_data.py          # Sample data
-├── docs/                     # Documentation
+│   ├── schema.sql                # Database schema
+│   └── seed_data.py              # Sample data
+├── docs/                         # Documentation
 ├── docker-compose.yml
 └── README.md
 ```
@@ -236,7 +276,7 @@ InvIQ/
 - **Rate Limiting** - 5-60 req/min based on endpoint sensitivity
 - **Token Blacklist** - Logout invalidation with Redis
 - **Login Lockout** - 5 attempts → 15 min lockout
-- **Role-Based Access Control** - 5-tier role hierarchy
+- **Role-Based Access Control** - 5-tier role hierarchy with GraphQL field masking
 - **Audit Logging** - All write operations tracked
 - **Multi-Tenancy** - Organization-level data isolation
 
@@ -273,6 +313,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - **FastAPI** - Modern Python web framework
+- **Strawberry GraphQL** - Code-first GraphQL for Python
 - **LangChain/LangGraph** - AI agent orchestration
 - **Groq** - Fast LLM inference
 - **Neon** - Managed PostgreSQL
