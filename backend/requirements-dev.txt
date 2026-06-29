@@ -17,7 +17,7 @@ faker==22.0.0                # Test data generation
 # ── Code Quality & Linting ─────────────────────────────────────────────────
 pylint==3.0.3                # Additional linting
 bandit==1.7.6                # Security vulnerability scanner
-safety==2.3.5                # Dependency security checker
+# safety==2.3.5                # Dependency security checker
 
 # ── Type Checking ──────────────────────────────────────────────────────────
 types-redis==4.6.0.11
