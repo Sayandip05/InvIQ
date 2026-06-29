@@ -14,6 +14,7 @@ from app.api.routes import analytics, chat, inventory, requisition, auth, admin
 from app.api.routes import superadmin as superadmin_routes
 from app.api.routes import vendor as vendor_routes
 from app.api.routes.websocket import router as ws_router
+from app.api.graphql.schema import graphql_router
 from app.core.config import settings
 from app.infrastructure.database.connection import Base, engine
 from app.core.logging_config import setup_logging
@@ -65,7 +66,7 @@ async def lifespan(app: FastAPI):
     seed_admin_user()
     get_redis()  # Initialize Redis connection (logs status)
     logger.info(
-        "[START] %s v%s — %d route groups loaded",
+        "[START] %s v%s — %d route groups loaded (+ GraphQL at /graphql/analytics)",
         settings.PROJECT_NAME,
         settings.VERSION,
         6,
@@ -116,6 +117,9 @@ app.include_router(admin.router, prefix=settings.API_V1_PREFIX)
 app.include_router(superadmin_routes.router, prefix=settings.API_V1_PREFIX)
 app.include_router(vendor_routes.router, prefix=settings.API_V1_PREFIX)
 app.include_router(ws_router)
+
+# ── GraphQL (analytics reads only — REST handles all mutations) ────────────
+app.include_router(graphql_router, prefix="/graphql/analytics")
 
 
 @app.get("/")
