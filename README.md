@@ -250,8 +250,7 @@ InvIQ/
 │   │   ├── core/                 # Config, security, middleware
 │   │   ├── domain/               # Business domain logic
 │   │   └── infrastructure/       # Database, cache, vector store
-│   ├── tests/                    # Test suite
-│   └── requirements-dev.txt
+│   └── tests/                    # Test suite
 ├── frontend/
 │   ├── src/
 │   │   ├── components/           # React components

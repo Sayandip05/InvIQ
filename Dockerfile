@@ -37,8 +37,6 @@ COPY --from=builder /install /usr/local
 COPY backend/app ./backend/app
 COPY requirements.txt .
 
-# Create directory for ChromaDB vector store persistence
-RUN mkdir -p /app/data/chromadb && chmod 755 /app/data/chromadb
 
 # Set Python path so `from app.xxx` imports resolve correctly
 ENV PYTHONPATH=/app/backend

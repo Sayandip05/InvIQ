@@ -51,10 +51,11 @@ services:
       LANGCHAIN_TRACING_V2: ${LANGCHAIN_TRACING_V2:-false}
       LANGCHAIN_ENDPOINT: ${LANGCHAIN_ENDPOINT:-https://api.smith.langchain.com}
       
-      # ── ChromaDB (Vector Store for RAG) ──────────────────────────────
-      CHROMADB_ENABLED: ${CHROMADB_ENABLED:-true}
-      CHROMADB_PATH: ${CHROMADB_PATH:-/app/data/chromadb}
-      CHROMADB_COLLECTION: ${CHROMADB_COLLECTION:-chat_memory}
+      # ── Qdrant Cloud (Vector Store for RAG) ───────────────────
+      QDRANT_ENABLED: ${QDRANT_ENABLED:-true}
+      QDRANT_URL: ${QDRANT_URL:-}
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-}
+      QDRANT_COLLECTION: ${QDRANT_COLLECTION:-chat_memory}
       
       # ── Security (REQUIRED) ──────────────────────────────────────────
       SECRET_KEY: ${SECRET_KEY}
@@ -94,10 +95,7 @@ services:
       # ── External APIs ────────────────────────────────────────────────
       GOOGLE_OAUTH_VERIFY_URL: ${GOOGLE_OAUTH_VERIFY_URL:-https://www.googleapis.com/oauth2/v3/userinfo}
     
-    volumes:
-      # Persist ChromaDB vector store data
-      - chromadb_data:/app/data/chromadb
-    
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -115,6 +113,3 @@ networks:
 
 # ── Volumes ────────────────────────────────────────────────────────────────
 volumes:
-  chromadb_data:
-    driver: local
-
