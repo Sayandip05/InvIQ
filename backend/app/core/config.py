@@ -57,10 +57,11 @@ class Settings:
     LANGCHAIN_TRACING_V2 = os.getenv("LANGCHAIN_TRACING_V2", "false")
     LANGCHAIN_ENDPOINT = os.getenv("LANGCHAIN_ENDPOINT", "https://api.smith.langchain.com")
     
-    # ── ChromaDB (Vector Store) ───────────────────────────────────────
-    CHROMADB_ENABLED = os.getenv("CHROMADB_ENABLED", "true").lower() == "true"
-    CHROMADB_PATH = os.getenv("CHROMADB_PATH", "data/chromadb")
-    CHROMADB_COLLECTION = os.getenv("CHROMADB_COLLECTION", "chat_memory")
+    # ── Qdrant Cloud (Vector Store for RAG) ──────────────────────────
+    QDRANT_ENABLED = os.getenv("QDRANT_ENABLED", "true").lower() == "true"
+    QDRANT_URL = os.getenv("QDRANT_URL", "")
+    QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", "")
+    QDRANT_COLLECTION = os.getenv("QDRANT_COLLECTION", "chat_memory")
 
     # ── Auth & Security ───────────────────────────────────────────────
     # REQUIRED: Generate a secure key with: openssl rand -hex 32
