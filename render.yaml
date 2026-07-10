@@ -42,9 +42,15 @@ services:
       - key: GROQ_API_KEY
         sync: false          # set manually in dashboard
 
-      # ── RAG — disabled on free tier (no persistent disk) ──
-      - key: CHROMADB_ENABLED
-        value: "false"
+      # ── RAG (Qdrant Cloud — works on free tier) ──
+      - key: QDRANT_ENABLED
+        value: "true"
+
+      - key: QDRANT_URL
+        sync: false          # set your cluster URL in dashboard
+
+      - key: QDRANT_API_KEY
+        sync: false          # set your API key in dashboard
 
       # ── Admin seed credentials ──
       - key: ADMIN_EMAIL
