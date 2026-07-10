@@ -1,70 +1,96 @@
 """
-Vector Memory Store using ChromaDB.
+Vector Memory Store using Qdrant Cloud.
 
 Provides long-term semantic memory across all chat sessions.
-Messages are embedded and stored so the agent can recall relevant
-facts from past conversations via similarity search.
+Messages are embedded (sentence-transformers) and stored in Qdrant Cloud
+so the agent can recall relevant facts from past conversations via
+cosine-similarity search.
 """
 
-import chromadb
-from chromadb.config import Settings
 from datetime import datetime
-from pathlib import Path
-import os
 import logging
+import uuid
+
+from qdrant_client import QdrantClient
+from qdrant_client.models import (
+    Distance,
+    PointStruct,
+    VectorParams,
+    Filter,
+    FieldCondition,
+    MatchValue,
+)
+from sentence_transformers import SentenceTransformer
 
 from app.core.config import settings
 
 logger = logging.getLogger("smart_inventory.memory")
 
+# Embedding model — 384-dim, fast, runs CPU-only
+_EMBED_MODEL = "all-MiniLM-L6-v2"
+_VECTOR_DIM = 384
+
 
 class VectorMemory:
-    """ChromaDB-backed semantic memory for the inventory chatbot."""
+    """Qdrant Cloud-backed semantic memory for the inventory chatbot."""
 
-    def __init__(self, persist_dir: str = None):
+    def __init__(self):
         # Initialize as unavailable by default
         self._available = False
-        self._client = None
-        self._collection = None
-        
-        if not settings.CHROMADB_ENABLED:
-            logger.info("ChromaDB disabled via config - running without vector memory")
-            return
-            
-        if persist_dir is None:
-            # Use configured path, resolve relative to project root
-            if os.path.isabs(settings.CHROMADB_PATH):
-                persist_dir = settings.CHROMADB_PATH
-            else:
-                base_dir = Path(__file__).resolve().parents[4]
-                persist_dir = str(base_dir / settings.CHROMADB_PATH)
+        self._client: QdrantClient | None = None
+        self._encoder: SentenceTransformer | None = None
+        self._collection: str = settings.QDRANT_COLLECTION
 
-        try:
-            os.makedirs(persist_dir, exist_ok=True)
-        except Exception as e:
-            logger.warning("Failed to create ChromaDB directory: %s", e)
+        if not settings.QDRANT_ENABLED:
+            logger.info("Qdrant disabled via config — running without vector memory")
+            return
+
+        if not settings.QDRANT_URL or not settings.QDRANT_API_KEY:
+            logger.warning(
+                "QDRANT_URL or QDRANT_API_KEY not set — running without vector memory"
+            )
             return
 
         try:
-            self._client = chromadb.PersistentClient(
-                path=persist_dir,
-                settings=Settings(anonymized_telemetry=False),
+            self._client = QdrantClient(
+                url=settings.QDRANT_URL,
+                api_key=settings.QDRANT_API_KEY,
+                timeout=10,
             )
-            self._collection = self._client.get_or_create_collection(
-                name=settings.CHROMADB_COLLECTION,
-                metadata={"description": "Long-term chat conversation memory"},
-            )
+            self._encoder = SentenceTransformer(_EMBED_MODEL)
+            self._ensure_collection()
             self._available = True
             logger.info(
-                "ChromaDB initialized → path: %s, collection: %s",
-                persist_dir,
-                settings.CHROMADB_COLLECTION
+                "Qdrant initialized → cluster: %s, collection: %s",
+                settings.QDRANT_URL,
+                self._collection,
             )
         except Exception as e:
-            logger.warning("ChromaDB init failed, running without vector memory: %s", e)
+            logger.warning("Qdrant init failed, running without vector memory: %s", e)
             self._available = False
             self._client = None
-            self._collection = None
+            self._encoder = None
+
+    # ── Internal helpers ──────────────────────────────────────────────────
+
+    def _ensure_collection(self) -> None:
+        """Create the collection if it does not already exist."""
+        existing = {c.name for c in self._client.get_collections().collections}
+        if self._collection not in existing:
+            self._client.create_collection(
+                collection_name=self._collection,
+                vectors_config=VectorParams(
+                    size=_VECTOR_DIM,
+                    distance=Distance.COSINE,
+                ),
+            )
+            logger.info("Qdrant collection created: %s", self._collection)
+
+    def _embed(self, text: str) -> list[float]:
+        """Return a normalised embedding vector for the given text."""
+        return self._encoder.encode(text, normalize_embeddings=True).tolist()
+
+    # ── Public API (unchanged from ChromaDB version) ──────────────────────
 
     @property
     def is_available(self) -> bool:
@@ -83,19 +109,31 @@ class VectorMemory:
         if timestamp is None:
             timestamp = datetime.now()
 
-        doc_id = f"{session_id}_{role}_{timestamp.strftime('%Y%m%d%H%M%S%f')}"
         ts_str = timestamp.strftime("%Y-%m-%d %H:%M")
+        # Use a deterministic UUID derived from session+role+timestamp so
+        # repeated upserts are idempotent (same behaviour as ChromaDB upsert).
+        point_id = str(
+            uuid.uuid5(
+                uuid.NAMESPACE_URL,
+                f"{session_id}_{role}_{timestamp.strftime('%Y%m%d%H%M%S%f')}",
+            )
+        )
 
         try:
-            self._collection.upsert(
-                ids=[doc_id],
-                documents=[content],
-                metadatas=[
-                    {
-                        "session_id": session_id,
-                        "role": role,
-                        "timestamp": ts_str,
-                    }
+            vector = self._embed(content)
+            self._client.upsert(
+                collection_name=self._collection,
+                points=[
+                    PointStruct(
+                        id=point_id,
+                        vector=vector,
+                        payload={
+                            "session_id": session_id,
+                            "role": role,
+                            "timestamp": ts_str,
+                            "content": content,
+                        },
+                    )
                 ],
             )
         except Exception as e:
@@ -108,31 +146,41 @@ class VectorMemory:
             return []
 
         try:
-            results = self._collection.query(
-                query_texts=[query],
-                n_results=n_results * 2,
+            vector = self._embed(query)
+
+            # Build an optional filter to exclude the current session
+            query_filter = None
+            if exclude_session:
+                # Qdrant doesn't support "not-equal" directly in free tier filters;
+                # we fetch more results and filter client-side instead.
+                pass
+
+            response = self._client.query_points(
+                collection_name=self._collection,
+                query=vector,
+                limit=n_results * 2 if exclude_session else n_results,
+                with_payload=True,
             )
 
             matches = []
-            if results and results["documents"] and results["documents"][0]:
-                for i, doc in enumerate(results["documents"][0]):
-                    meta = results["metadatas"][0][i] if results["metadatas"] else {}
-                    sid = meta.get("session_id", "")
+            for hit in response.points:
+                payload = hit.payload or {}
+                sid = payload.get("session_id", "")
 
-                    if exclude_session and sid == exclude_session:
-                        continue
+                if exclude_session and sid == exclude_session:
+                    continue
 
-                    matches.append(
-                        {
-                            "content": doc,
-                            "role": meta.get("role", "unknown"),
-                            "timestamp": meta.get("timestamp", "unknown"),
-                            "session_id": sid,
-                        }
-                    )
+                matches.append(
+                    {
+                        "content": payload.get("content", ""),
+                        "role": payload.get("role", "unknown"),
+                        "timestamp": payload.get("timestamp", "unknown"),
+                        "session_id": sid,
+                    }
+                )
 
-                    if len(matches) >= n_results:
-                        break
+                if len(matches) >= n_results:
+                    break
 
             return matches
 
@@ -145,9 +193,12 @@ class VectorMemory:
             return {"available": False, "count": 0}
 
         try:
+            info = self._client.get_collection(self._collection)
+            # vectors_count was renamed to points_count in qdrant-client >=1.10
+            count = getattr(info, "points_count", None) or getattr(info, "vectors_count", 0) or 0
             return {
                 "available": True,
-                "count": self._collection.count(),
+                "count": count,
             }
         except Exception:
             return {"available": False, "count": 0}
