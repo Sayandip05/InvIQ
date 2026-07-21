@@ -75,6 +75,7 @@ services:
       ADMIN_FULL_NAME: ${ADMIN_FULL_NAME:-System Administrator}
       
       # ── Upstash Redis (Caching & Rate Limiting) ──────────────────────
+      REDIS_URL: ${REDIS_URL:-}
       UPSTASH_REDIS_REST_URL: ${UPSTASH_REDIS_REST_URL:-}
       UPSTASH_REDIS_REST_TOKEN: ${UPSTASH_REDIS_REST_TOKEN:-}
       REDIS_ENABLED: ${REDIS_ENABLED:-true}
@@ -96,6 +97,9 @@ services:
       GOOGLE_OAUTH_VERIFY_URL: ${GOOGLE_OAUTH_VERIFY_URL:-https://www.googleapis.com/oauth2/v3/userinfo}
     
 
+    volumes:
+      - ./logs:/app/logs
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -111,5 +115,9 @@ networks:
   inviq_network:
     driver: bridge
 
-# ── Volumes ────────────────────────────────────────────────────────────────
-volumes:
+# ── Notes ──────────────────────────────────────────────────────────────────
+# All persistent storage is cloud-hosted:
+#   Database → Neon PostgreSQL
+#   Cache    → Upstash Redis
+#   Vectors  → Qdrant Cloud
+# Local logs are mounted at ./logs:/app/logs (see app service above)

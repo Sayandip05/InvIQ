@@ -61,7 +61,7 @@ backend/*.sqlite
 backend/*.sqlite3
 
 # ═══════════════════════════════════════════════════════════
-# Vector Store / ChromaDB
+# Vector Store / ChromaDB  (local Qdrant dirs are deleted)
 # ═══════════════════════════════════════════════════════════
 data/
 chroma_data/
@@ -208,7 +208,10 @@ docker-compose.override.yml
 # ═══════════════════════════════════════════════════════════
 # Logs
 # ═══════════════════════════════════════════════════════════
-logs/
+# Keep the logs/ directory (tracked via logs/.gitkeep),
+# but never commit the actual log files.
+logs/*.log
+logs/*.log.*
 *.log
 npm-debug.log*
 yarn-debug.log*

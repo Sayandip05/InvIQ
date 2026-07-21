@@ -18,13 +18,18 @@ from fastapi.testclient import TestClient
 from app.infrastructure.database.connection import Base
 from app.main import app
 from app.infrastructure.database.connection import get_db
+from app.core.rate_limiter import limiter
+
+# Disable rate limiting for functional testing to prevent login 429 errors
+limiter.enabled = False
 from app.core.security import hash_password
 from app.infrastructure.database.models import User
 
 
-TEST_DATABASE_URL = "sqlite:///:memory:"
+TEST_DATABASE_URL = "sqlite:///test_temp.db"
 test_engine = create_engine(
-    TEST_DATABASE_URL, connect_args={"check_same_thread": False}
+    TEST_DATABASE_URL,
+    connect_args={"check_same_thread": False},
 )
 TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
@@ -42,9 +47,48 @@ app.dependency_overrides[get_db] = override_get_db
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_database():
+    import os
+    # Clean up any leftover database file
+    if os.path.exists("test_temp.db"):
+        try:
+            os.remove("test_temp.db")
+        except Exception:
+            pass
+
     Base.metadata.create_all(bind=test_engine)
     yield
     Base.metadata.drop_all(bind=test_engine)
+    
+    # Final cleanup of the temporary database file
+    if os.path.exists("test_temp.db"):
+        try:
+            os.remove("test_temp.db")
+        except Exception:
+            pass
+
+
+@pytest.fixture(scope="function", autouse=True)
+def clean_blacklists():
+    """Clear both in-memory and Redis token blacklists before each test to ensure isolation."""
+    try:
+        from app.infrastructure.cache.token_blacklist import _memory_blacklist
+        _memory_blacklist.clear()
+    except Exception:
+        pass
+
+    try:
+        from app.infrastructure.cache.redis_client import get_redis
+        r = get_redis()
+        if r:
+            cursor = 0
+            while True:
+                cursor, keys = r.scan(cursor=cursor, match="blacklist:*", count=100)
+                if keys:
+                    r.delete(*keys)
+                if cursor == 0:
+                    break
+    except Exception:
+        pass
 
 
 @pytest.fixture(scope="function")
@@ -77,6 +121,11 @@ def test_user(db):
         db.add(user)
         db.commit()
         db.refresh(user)
+    else:
+        # Reset lockout state between tests to prevent accumulation
+        user.login_attempts = 0
+        user.locked_until = None
+        db.commit()
     return {"username": "testuser", "password": "testpass123", "user": user}
 
 

@@ -1,0 +1,24 @@
+name: InvIQ CD (Continuous Deployment)
+
+on:
+  workflow_run:
+    workflows: ["InvIQ CI (Continuous Integration)"]
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to Render
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Trigger Render Deploy
+        run: |
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" \
+            --fail \
+            --silent \
+            --show-error
+          echo "Render deployment triggered successfully"

@@ -1,14 +1,15 @@
-# 🏥 InvIQ - AI-Powered Smart Inventory Assistant
+# 🏥 InvIQ - AI-Powered Smart Wholesale Pharmacy & Warehouse Assistant
 
-**AI-powered inventory management for healthcare facilities with natural language queries and intelligent automation**
+**AI-powered inventory management for wholesale pharmacies and central warehouses with natural language queries and intelligent automation**
 
 ---
 
 ## 🎯 Problem It Solves
 
-Healthcare facilities struggle with manual inventory tracking, leading to critical stockouts, expired medications, and inefficient procurement. Staff waste hours on spreadsheets without real-time visibility or predictive insights. **InvIQ automates inventory management with AI-powered analytics, natural language queries, and intelligent shortage predictions.**
+Wholesale pharmacies and central distributors struggle to manage large bulks of pharmaceutical products across warehouses and client retail outlets, leading to critical stockouts, expired medications, and cold-chain compliance breaches. **InvIQ automates this inventory with AI-powered analytics, natural language queries, proactive batch expiry tracking, and cold-chain monitoring.**
 
 ---
+
 
 ## 🚀 Live Demo
 
@@ -42,10 +43,11 @@ Healthcare facilities struggle with manual inventory tracking, leading to critic
 
 ## ✨ Key Features
 
-- 🤖 **AI Chatbot** - Ask questions in plain English: *"What items are critical right now?"*
+- 🤖 **AI Chatbot** - Ask questions in plain English: *"What items are critical right now?"* or *"Show all vaccines expiring this month"*
 - 📊 **Real-Time Analytics** - Dashboard with heatmaps, alerts, and stock health monitoring
 - 🔷 **GraphQL Analytics API** - Flexible, zero-over-fetch read layer at `/graphql/analytics` — query exactly the fields you need with role-aware field masking
 - 🔄 **Requisition Workflow** - Digital approval system for stock requests
+- 📦 **Pharmacy Specialization** - Built-in tracking for drug batches, expiration dates, and cold-chain compliance
 - 📤 **Vendor Integration** - Excel upload with fuzzy item matching (85% accuracy)
 - 🔐 **Multi-Tenancy & RBAC** - 5 roles (Super Admin, Admin, Manager, Staff, Vendor)
 - 👥 **Guest Demo Mode** - Preview pages without login; interactive actions automatically prompt to sign in
@@ -147,7 +149,7 @@ docker-compose up -d
 │   Logic      │  │  Service     │  │                      │
 │              │  │              │  │  REST  /api/analytics │
 │ Inventory    │  │ LangGraph    │  │  GQL   /graphql/      │
-│ Requisition  │  │ 7 Tools      │  │        analytics     │
+│ Requisition  │  │ 9 Tools      │  │        analytics     │
 │ Vendor       │  │ ChromaDB RAG │  │  (shared Redis cache) │
 └──────┬───────┘  └──────┬───────┘  └──────┬──────────────┘
        │                 │                 │

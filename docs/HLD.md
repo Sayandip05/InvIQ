@@ -222,7 +222,7 @@ Healthcare facilities struggle with manual inventory management, leading to stoc
 | **React Frontend** | User interface, 5 role-based portals (Super Admin, Admin, Manager, Staff, Vendor) + Guest Demo Mode, real-time WebSocket updates |
 | **FastAPI Backend** | REST API (56 endpoints), authentication, business logic orchestration |
 | **GraphQL Layer (Strawberry)** | Read-only analytics API at `/graphql/analytics` — 5 queries, role-aware field masking, shared Redis cache with REST |
-| **AI Agent Service** | LangGraph ReAct agent with 7 inventory tools, natural language processing |
+| **AI Agent Service** | LangGraph ReAct agent with 9 tools (7 core + 2 pharmacy-specific), natural language processing |
 | **Analytics Service** | Dashboard stats, heatmaps, critical alerts with Redis caching — shared by REST and GraphQL |
 | **Inventory Service** | Stock tracking, transaction management, reorder calculations |
 | **Requisition Service** | Approval workflow, status management, inventory updates |
@@ -562,7 +562,7 @@ Admins & Managers receive email warning
 | **API Style** | REST + GraphQL + WebSocket | 56 REST endpoints, 5 GraphQL queries, 2 WebSocket endpoints |
 | **Database** | PostgreSQL (ACID) | Single source of truth |
 | **Caching** | Redis (Upstash) | 2-5 min TTL, pattern-based invalidation, shared between REST and GraphQL |
-| **AI** | LangGraph ReAct | 7 tools, 30s timeout |
+| **AI** | LangGraph ReAct | 9 tools, 30s timeout |
 | **Auth** | JWT (HS256) | 30 min access, 7 days refresh |
 | **Rate Limiting** | slowapi | 5-60 req/min, Redis-backed (REST only) |
 | **Real-time** | WebSocket | Location-based broadcasting |
