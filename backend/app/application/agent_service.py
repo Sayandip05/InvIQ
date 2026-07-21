@@ -83,6 +83,7 @@ def _build_agent():
 
     except Exception as e:
         logger.error("Failed to initialize LangGraph agent: %s", e)
+        _agent = None
         _agent_available = False
 
 
@@ -113,7 +114,7 @@ def invoke_agent(
     Raises:
         RuntimeError: If agent is not available (caller should fallback)
     """
-    global _agent
+    global _agent, _agent_available
 
     if not is_agent_available():
         raise RuntimeError("LLM agent not available")
@@ -178,5 +179,15 @@ def invoke_agent(
     except RuntimeError:
         raise
     except Exception as e:
+        # Detect Groq 401 / expired key — reset the singleton so the next
+        # request rebuilds the agent with the current key from settings.
+        err_str = str(e)
+        if "401" in err_str or "invalid_api_key" in err_str or "expired_api_key" in err_str or "AuthenticationError" in type(e).__name__:
+            _agent = None
+            _agent_available = False
+            logger.warning(
+                "Groq API key rejected (401) — agent reset. Update GROQ_API_KEY and retry."
+            )
+            raise RuntimeError("Groq API key is invalid or expired — please update GROQ_API_KEY")
         logger.error("Agent invocation failed: %s", e, exc_info=True)
         raise RuntimeError(f"Agent error: {str(e)}")

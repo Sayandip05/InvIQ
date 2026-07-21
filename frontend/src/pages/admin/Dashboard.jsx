@@ -121,12 +121,22 @@ const Dashboard = () => {
                 {/* Category Distribution */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                     <h3 className="text-lg font-semibold text-slate-700 mb-4">Inventory by Category</h3>
-                    <div className="h-64">
+                    <div className="h-72">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={category_distribution} layout="vertical">
+                            <BarChart
+                                data={category_distribution}
+                                layout="vertical"
+                                margin={{ top: 0, right: 16, left: 5, bottom: 0 }}
+                            >
                                 <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                                <XAxis type="number" />
-                                <YAxis dataKey="name" type="category" width={100} />
+                                <XAxis type="number" tick={{ fontSize: 12 }} />
+                                <YAxis
+                                    dataKey="name"
+                                    type="category"
+                                    width={145}
+                                    interval={0}
+                                    tick={{ fontSize: 12 }}
+                                />
                                 <Tooltip />
                                 <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} />
                             </BarChart>
@@ -152,20 +162,40 @@ const Dashboard = () => {
 
                 {/* Top Critical Items */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h3 className="text-lg font-semibold text-slate-700 mb-4">Top Critical Shortages</h3>
-                    <div className="space-y-4">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-slate-700">Top Critical Shortages</h3>
+                        <span className="text-xs font-medium bg-red-100 text-red-700 px-2 py-1 rounded-full">
+                            {low_stock_items.length} Critical
+                        </span>
+                    </div>
+                    <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
                         {low_stock_items.length === 0 ? (
                             <p className="text-slate-400 text-sm text-center py-8">No critical shortages found.</p>
                         ) : (
                             low_stock_items.map((item, index) => (
-                                <div key={index} className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-100">
-                                    <div>
-                                        <p className="font-medium text-slate-800">{item.name}</p>
-                                        <p className="text-xs text-red-600">Shortage: -{item.shortage}</p>
+                                <div key={index} className="p-3 bg-red-50 rounded-lg border border-red-100">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex-1 min-w-0 mr-3">
+                                            <p className="font-medium text-slate-800 text-sm truncate">{item.name}</p>
+                                            <p className="text-xs text-slate-500 mt-0.5 truncate">{item.location}</p>
+                                        </div>
+                                        <div className="text-right shrink-0">
+                                            <p className="text-sm font-bold text-red-600">
+                                                {item.days_remaining != null ? `${item.days_remaining}d left` : 'N/A'}
+                                            </p>
+                                            <p className="text-xs text-slate-500">{item.stock} in stock</p>
+                                        </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-sm font-bold text-slate-700">{item.stock} / {item.min_stock}</p>
-                                        <p className="text-xs text-slate-500">Current / Min</p>
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <div className="flex-1 bg-red-200 rounded-full h-1.5">
+                                            <div
+                                                className="bg-red-500 h-1.5 rounded-full"
+                                                style={{ width: `${Math.min(100, item.min_stock > 0 ? (item.stock / item.min_stock) * 100 : 0)}%` }}
+                                            />
+                                        </div>
+                                        <span className="text-xs text-slate-400 shrink-0">
+                                            {item.stock}/{item.min_stock} min
+                                        </span>
                                     </div>
                                 </div>
                             ))

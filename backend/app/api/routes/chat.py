@@ -91,23 +91,39 @@ def _get_vector_context(question: str, conversation_id: str = "") -> str:
         return ""
 
 
+def _is_greeting(text: str) -> bool:
+    """Return True if the message is conversational rather than an inventory question."""
+    text_lower = text.lower().strip()
+    greeting_keywords = [
+        "hi", "hello", "hey", "hii", "helo",
+        "good morning", "good afternoon", "good evening",
+        "how are you", "who are you", "what can you do",
+        "my name is", "i am ", "i'm ", "thanks", "thank you",
+        "bye", "goodbye", "ok", "okay", "cool", "great",
+    ]
+    return any(text_lower.startswith(kw) or kw in text_lower for kw in greeting_keywords)
+
+
 def _build_agent_response(
     question: str, db: Session, conversation_id: Optional[str] = None
 ) -> dict:
     """Try LLM agent first, fall back to rule-based if unavailable."""
     set_db_session(db)
 
-    # Check if inventory has data
-    overview = get_inventory_overview.invoke({})
-    if isinstance(overview, dict) and not overview.get("has_data"):
-        return {
-            "success": True,
-            "response": (
-                "Inventory data is empty. Add locations, items, and transactions from "
-                "the Data Entry page first."
-            ),
-            "question": question,
-        }
+    # ── Bypass empty-DB check for greetings / small-talk ──────────────────
+    # Only check DB content for actual inventory questions.
+    if not _is_greeting(question):
+        overview = get_inventory_overview.invoke({})
+        if isinstance(overview, dict) and not overview.get("has_data"):
+            return {
+                "success": True,
+                "response": (
+                    "Your inventory database is currently empty. "
+                    "Please add locations, items, and stock transactions from the "
+                    "**Data Entry** page first, then I can help you analyse them."
+                ),
+                "question": question,
+            }
 
     # Gather context
     past_context = _get_vector_context(question, conversation_id or "")
@@ -133,6 +149,7 @@ def _build_agent_response(
 
     # ── Rule-based fallback ────────────────────────────────────────────
     return _rule_based_response(question, past_context)
+
 
 
 def _rule_based_response(question: str, past_context: str = "") -> dict:

@@ -36,7 +36,8 @@ Wholesale pharmacies and central distributors struggle to manage large bulks of 
 
 ### AI & Infrastructure
 ![Groq](https://img.shields.io/badge/Groq-LLaMA_3.3_70B-FF6B00?logo=ai&logoColor=white)
-![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector_DB-FF6F00?logo=database&logoColor=white)
+![Sarvam AI](https://img.shields.io/badge/Sarvam_AI-Saaras_v3_STT-7C3AED?logo=google&logoColor=white)
+![Qdrant](https://img.shields.io/badge/Qdrant-Cloud_Vector_DB-DC2626?logo=database&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
 
 ---
@@ -44,6 +45,8 @@ Wholesale pharmacies and central distributors struggle to manage large bulks of 
 ## ✨ Key Features
 
 - 🤖 **AI Chatbot** - Ask questions in plain English: *"What items are critical right now?"* or *"Show all vaccines expiring this month"*
+- 🎙️ **Voice AI Input** - Multilingual speech-to-text powered by Sarvam AI (`saaras:v3`) with auto-language detection for Indian languages
+- 🧠 **Vector Memory RAG** - Long-term conversation recall powered by Qdrant Cloud vector database (768-dim embeddings)
 - 📊 **Real-Time Analytics** - Dashboard with heatmaps, alerts, and stock health monitoring
 - 🔷 **GraphQL Analytics API** - Flexible, zero-over-fetch read layer at `/graphql/analytics` — query exactly the fields you need with role-aware field masking
 - 🔄 **Requisition Workflow** - Digital approval system for stock requests
@@ -53,6 +56,7 @@ Wholesale pharmacies and central distributors struggle to manage large bulks of 
 - 👥 **Guest Demo Mode** - Preview pages without login; interactive actions automatically prompt to sign in
 - 📧 **Low-Stock Email Alerts** - Automated background notifications sent to managers on critical stock shortages
 - ⚡ **Real-Time Alerts** - WebSocket notifications for critical stock levels
+
 
 ---
 

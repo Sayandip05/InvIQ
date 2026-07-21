@@ -307,16 +307,17 @@ Frontend → POST /api/chat/query
 ┌────────────────────────────────────────┐
 │  Save Response                         │
 │  1. Save to chat_messages table        │
-│  2. Save to ChromaDB (vector store)    │
+│  2. Save to Qdrant Cloud (vector store)│
 │  3. Return response to user            │
 └────────────────────────────────────────┘
          ↓
 Frontend displays answer + suggested actions
 ```
 **Performance:**
-- Vector search: < 50ms
-- LLM inference: 1-3 seconds (Groq)
-- Total response time: 2-4 seconds
+- Vector search (Qdrant Cloud): < 40ms
+- LLM inference (Groq Llama-3.3-70b): 1-2 seconds
+- Voice STT (Sarvam AI saaras:v3): < 1.5 seconds
+- Total response time: 2-3 seconds
 
 ### 6.3 Requisition Approval Flow
 ```

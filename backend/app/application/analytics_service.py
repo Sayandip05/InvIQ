@@ -129,21 +129,27 @@ class AnalyticsService:
                 {"name": cat, "value": count} for cat, count in category_counts.items()
             ]
 
-            low_stock_items = [
-                item for item in stock_health if item.current_stock < item.min_stock
+            # "Top Critical Shortages" shows items with CRITICAL health status
+            # (days_remaining < 3), not just stock < min_stock.
+            # Sort by days_remaining so the most urgent items appear first.
+            critical_items = [
+                item for item in stock_health if item.health_status == "CRITICAL"
             ]
-            low_stock_items.sort(
-                key=lambda x: x.current_stock / x.min_stock if x.min_stock > 0 else 1
+            critical_items.sort(
+                key=lambda x: x.days_remaining if x.days_remaining is not None else 0
             )
 
             low_stock_data = [
                 {
                     "name": item.item_name,
+                    "location": item.location_name,
                     "stock": item.current_stock,
                     "min_stock": item.min_stock,
-                    "shortage": item.min_stock - item.current_stock,
+                    "days_remaining": round(item.days_remaining, 1) if item.days_remaining is not None else None,
+                    "daily_usage": round(item.avg_daily_usage, 1) if item.avg_daily_usage is not None else None,
+                    "shortage": max(0, item.min_stock - item.current_stock),
                 }
-                for item in low_stock_items[:5]
+                for item in critical_items[:10]
             ]
 
             location_stock = {}

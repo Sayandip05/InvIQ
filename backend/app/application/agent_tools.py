@@ -10,19 +10,24 @@ from app.infrastructure.database.queries import (
 from app.infrastructure.database.models import Location, Item, InventoryTransaction
 from app.domain.calculations import calculate_reorder_quantity
 
-import threading
+import contextvars
 
-_thread_local = threading.local()
+# ContextVar is the correct mechanism here: copy_context() in agent_service.py
+# propagates ContextVars into the ThreadPoolExecutor worker thread.
+# threading.local does NOT cross thread boundaries, so tools would get db=None.
+_db_session_var: contextvars.ContextVar = contextvars.ContextVar(
+    "db_session", default=None
+)
 
 
 def set_db_session(db: Session):
-    """Set the database session for tools to use (thread-safe request-scoped storage)."""
-    _thread_local.db = db
+    """Bind the current DB session into the context so agent @tool functions can access it."""
+    _db_session_var.set(db)
 
 
 def _get_db() -> Optional[Session]:
-    """Get the current thread-scoped database session."""
-    return getattr(_thread_local, "db", None)
+    """Return the DB session for the current context (works across threads via copy_context)."""
+    return _db_session_var.get()
 
 
 

@@ -259,12 +259,25 @@ Queries to the AI Chatbot feed into a LangGraph ReAct agent.
 | Endpoint | Method | Auth Scope | Rate Limit | Description |
 |---|---|---|---|---|
 | `/chat/query` | **POST** | Authenticated | 20/min | Submit a natural language question. Generates tool actions or text. |
+| `/chat/transcribe` | **POST** | Authenticated | 15/min | Upload voice audio (WAV/MP3/M4A/WEBM) for Sarvam AI STT (`saaras:v3`) transcription. |
 | `/chat/sessions` | **GET** | Authenticated | Default | Get list of user's active/past chat sessions. |
 | `/chat/history/{conversation_id}` | **GET** | Authenticated | Default | Get historical messages from a specific chat session. |
 | `/chat/history/{conversation_id}` | **DELETE**| Authenticated | 10/min | Clear/delete a chat session history. |
 | `/chat/suggestions` | **GET** | Guest Permitted| Default | Returns a list of default recommended prompts. |
 
 #### Request/Response Samples:
+**POST `/api/chat/transcribe`**
+- **Content-Type:** `multipart/form-data`
+- **Form Body:** `file` (binary audio blob)
+- **Response (200 OK):**
+  ```json
+  {
+    "success": true,
+    "transcript": "What are the critical stock alerts in Delhi warehouse?",
+    "language": "hi-IN"
+  }
+  ```
+
 **POST `/api/chat/query`**
 - **Body:**
   ```json
@@ -289,6 +302,7 @@ Queries to the AI Chatbot feed into a LangGraph ReAct agent.
     ]
   }
   ```
+
 
 ---
 

@@ -1,13 +1,38 @@
-import React, { useState } from 'react';
-import { admin } from '../../services/api';
-import { Download, FileText, Calendar, Filter } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { admin, inventory } from '../../services/api';
+import { Download, FileText, MapPin, Calendar } from 'lucide-react';
+
+const LOCATION_TYPE_LABELS = {
+    central_warehouse: '🏭 Warehouse',
+    retail_pharmacy:   '💊 Retail Pharmacy',
+    hospital_client:   '🏥 Hospital',
+};
 
 const Reports = () => {
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading]       = useState(false);
     const [reportType, setReportType] = useState('inventory');
     const [locationId, setLocationId] = useState('');
-    const [dateFrom, setDateFrom] = useState('');
-    const [dateTo, setDateTo] = useState('');
+    const [dateFrom, setDateFrom]     = useState('');
+    const [dateTo, setDateTo]         = useState('');
+    const [locations, setLocations]   = useState([]);
+    const [locLoading, setLocLoading] = useState(true);
+
+    // ── Fetch real locations from the database ────────────────────────────────
+    useEffect(() => {
+        const fetchLocations = async () => {
+            try {
+                const res = await inventory.getLocations();
+                const data = res.data?.data ?? res.data ?? [];
+                // Support both array and paginated {items:[]} shapes
+                setLocations(Array.isArray(data) ? data : (data.items ?? []));
+            } catch (err) {
+                console.error('Failed to load locations', err);
+            } finally {
+                setLocLoading(false);
+            }
+        };
+        fetchLocations();
+    }, []);
 
     const handleDownload = async () => {
         setLoading(true);
@@ -39,11 +64,19 @@ const Reports = () => {
     };
 
     const reportTypes = [
-        { value: 'inventory', label: 'Inventory Report', desc: 'Current stock levels across all locations' },
-        { value: 'transactions', label: 'Transaction Report', desc: 'All stock movements and transactions' },
-        { value: 'requisitions', label: 'Requisition Report', desc: 'All requisitions and approvals' },
-        { value: 'low_stock', label: 'Low Stock Report', desc: 'Items below minimum threshold' },
+        { value: 'inventory',     label: 'Inventory Report',    desc: 'Current stock levels across all locations' },
+        { value: 'transactions',  label: 'Transaction Report',  desc: 'All stock movements and transactions' },
+        { value: 'requisitions',  label: 'Requisition Report',  desc: 'All requisitions and approvals' },
+        { value: 'low_stock',     label: 'Low Stock Report',    desc: 'Items below minimum threshold' },
     ];
+
+    // Group locations by type for the optgroup dropdown
+    const grouped = locations.reduce((acc, loc) => {
+        const key = loc.location_type || loc.type || 'other';
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(loc);
+        return acc;
+    }, {});
 
     return (
         <div className="space-y-6">
@@ -54,8 +87,9 @@ const Reports = () => {
 
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                 <h3 className="text-lg font-semibold text-slate-800 mb-4">Generate Report</h3>
-                
+
                 <div className="space-y-4">
+                    {/* Report Type */}
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">Report Type</label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -77,33 +111,55 @@ const Reports = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Location dropdown — fetched from DB */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Location (optional)</label>
+                            <label className="flex items-center gap-1 text-sm font-medium text-slate-700 mb-1">
+                                <MapPin size={13} /> Location (optional)
+                            </label>
                             <select
-                                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
                                 value={locationId}
                                 onChange={(e) => setLocationId(e.target.value)}
+                                disabled={locLoading}
                             >
-                                <option value="">All Locations</option>
-                                <option value="1">Main Warehouse</option>
-                                <option value="2">Clinic A</option>
-                                <option value="3">Clinic B</option>
+                                <option value="">
+                                    {locLoading ? 'Loading locations…' : 'All Locations'}
+                                </option>
+
+                                {Object.entries(grouped).map(([type, locs]) => (
+                                    <optgroup
+                                        key={type}
+                                        label={LOCATION_TYPE_LABELS[type] ?? type}
+                                    >
+                                        {locs.map(loc => (
+                                            <option key={loc.id} value={loc.id}>
+                                                {loc.name}
+                                            </option>
+                                        ))}
+                                    </optgroup>
+                                ))}
                             </select>
                         </div>
+
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">From Date</label>
+                            <label className="flex items-center gap-1 text-sm font-medium text-slate-700 mb-1">
+                                <Calendar size={13} /> From Date
+                            </label>
                             <input
                                 type="date"
-                                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
                                 value={dateFrom}
                                 onChange={(e) => setDateFrom(e.target.value)}
                             />
                         </div>
+
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">To Date</label>
+                            <label className="flex items-center gap-1 text-sm font-medium text-slate-700 mb-1">
+                                <Calendar size={13} /> To Date
+                            </label>
                             <input
                                 type="date"
-                                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
                                 value={dateTo}
                                 onChange={(e) => setDateTo(e.target.value)}
                             />
@@ -116,11 +172,11 @@ const Reports = () => {
                         className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
                     >
                         {loading ? (
-                            <span className="animate-pulse">Generating...</span>
+                            <span className="animate-pulse">Generating PDF…</span>
                         ) : (
                             <>
                                 <Download size={18} />
-                                Generate & Download PDF
+                                Generate &amp; Download PDF
                             </>
                         )}
                     </button>
