@@ -3,28 +3,28 @@
 # ==========================================================================
 
 # -- Web Framework ---------------------------------------------------------
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-gunicorn==21.2.0
-python-multipart==0.0.6
+fastapi>=0.104.1,<1.0.0
+uvicorn[standard]>=0.24.0,<1.0.0
+gunicorn>=21.2.0
+python-multipart>=0.0.20
 
 # -- GraphQL -----------------------------------------------------------------
 strawberry-graphql[fastapi]>=0.235.0
 
 # -- Database --------------------------------------------------------------
-sqlalchemy==2.0.23
-psycopg2-binary==2.9.10
-alembic==1.12.1
+sqlalchemy>=2.0.23,<3.0.0
+psycopg2-binary>=2.9.0
+alembic>=1.12.0
 
 # -- Security & Auth -------------------------------------------------------
-pyjwt==2.8.0
-pwdlib[argon2]==0.2.0
-email-validator==2.1.0
+pyjwt>=2.8.0
+pwdlib[argon2]>=0.2.0
+email-validator>=2.1.0
 
 # -- Caching & Rate Limiting -----------------------------------------------
-redis==5.0.1
-upstash-redis==1.1.0
-slowapi==0.1.9
+redis>=5.0.1
+upstash-redis>=1.1.0
+slowapi>=0.1.9
 
 # -- AI & LLM -------------------------------------------------------------
 langchain>=1.2.15
@@ -36,46 +36,51 @@ langsmith>=0.7.37
 langgraph>=1.1.10
 qdrant-client>=1.9.0
 sentence-transformers>=3.0.0
+sarvamai>=0.1.28                # Sarvam AI — voice transcription (saaras:v3 STT)
 
 # -- Data Processing -------------------------------------------------------
 pydantic>=2.7.4
 pydantic-settings>=2.1.0
-openpyxl==3.1.2
+openpyxl>=3.1.2
 
 # -- PDF Generation --------------------------------------------------------
-reportlab==4.0.7
+reportlab>=4.0.7
 
 # -- HTTP & Observability --------------------------------------------------
-httpx==0.25.2
+httpx>=0.25.2
 requests>=2.31.0
 
 # -- WebSocket -------------------------------------------------------------
-websockets==12.0
+websockets>=14,<16           # uvicorn needs >=10.4; langgraph-sdk needs >=14,<16
 
 # -- Utilities -------------------------------------------------------------
-python-dotenv==1.0.0
+python-dotenv>=1.0.0
 
-# -- Testing (Development Only) --------------------------------------------
-pytest==7.4.3
-pytest-asyncio==0.21.1
-pytest-cov==4.1.0
+# -- Testing ---------------------------------------------------------------
+pytest>=7.4.3
+pytest-asyncio>=0.21.1
+pytest-cov>=4.1.0
+pytest-xdist>=3.5.0
+pytest-mock>=3.12.0
+pytest-timeout>=2.2.0
+faker>=22.0.0
 
-# -- Code Quality (Development Only) ---------------------------------------
-ruff==0.1.8
-black==23.12.1
-mypy==1.7.1
+# -- Code Quality ----------------------------------------------------------
+ruff>=0.1.8
+black>=23.12.1
+mypy>=1.7.1
+pylint>=3.0.3
+bandit>=1.7.6
 
-# -- Additional Development & Testing Tools (Combined) --------------------
-pytest-xdist==3.5.0          # Parallel test execution
-pytest-mock==3.12.0          # Enhanced mocking
-pytest-timeout==2.2.0        # Test timeout enforcement
-faker==22.0.0                # Test data generation
-pylint==3.0.3                # Additional linting
-bandit==1.7.6                # Security vulnerability scanner
-types-redis==4.6.0.11
-types-requests==2.31.0.10
-mkdocs==1.5.3                # Documentation generator
-mkdocs-material==9.5.3       # Material theme for docs
-ipython==8.19.0              # Enhanced Python shell
-ipdb==0.13.13                # IPython debugger
-memory-profiler==0.61.0      # Memory usage profiling
+# -- Type Stubs ------------------------------------------------------------
+types-redis>=4.6.0
+types-requests>=2.31.0
+
+# -- Documentation ---------------------------------------------------------
+mkdocs>=1.5.3
+mkdocs-material>=9.5.3
+
+# -- Debugging & Profiling -------------------------------------------------
+ipython>=8.19.0
+ipdb>=0.13.13
+memory-profiler>=0.61.0

@@ -52,21 +52,21 @@ class VectorMemory:
             return
 
         try:
+            self._encoder = SentenceTransformer(_EMBED_MODEL)
             self._client = QdrantClient(
                 url=settings.QDRANT_URL,
                 api_key=settings.QDRANT_API_KEY,
                 timeout=10,
             )
-            self._encoder = SentenceTransformer(_EMBED_MODEL)
             self._ensure_collection()
             self._available = True
             logger.info(
-                "Qdrant initialized → cluster: %s, collection: %s",
+                "Qdrant Cloud initialized → cluster: %s, collection: %s",
                 settings.QDRANT_URL,
                 self._collection,
             )
         except Exception as e:
-            logger.warning("Qdrant init failed, running without vector memory: %s", e)
+            logger.warning("Qdrant Cloud unavailable — vector memory disabled: %s", e)
             self._available = False
             self._client = None
             self._encoder = None

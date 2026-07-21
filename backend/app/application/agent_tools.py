@@ -1,5 +1,4 @@
-from contextvars import ContextVar
-from datetime import timedelta
+from datetime import timedelta, date
 from typing import Optional, List, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -11,17 +10,19 @@ from app.infrastructure.database.queries import (
 from app.infrastructure.database.models import Location, Item, InventoryTransaction
 from app.domain.calculations import calculate_reorder_quantity
 
-_db_session_var: ContextVar[Optional[Session]] = ContextVar("_db_session_var", default=None)
+import threading
+
+_thread_local = threading.local()
 
 
 def set_db_session(db: Session):
-    """Set the database session for tools to use (request-scoped via contextvars)."""
-    _db_session_var.set(db)
+    """Set the database session for tools to use (thread-safe request-scoped storage)."""
+    _thread_local.db = db
 
 
 def _get_db() -> Optional[Session]:
-    """Get the current request-scoped database session."""
-    return _db_session_var.get()
+    """Get the current thread-scoped database session."""
+    return getattr(_thread_local, "db", None)
 
 
 
@@ -324,3 +325,103 @@ def get_consumption_trends(
     except Exception as e:
         return {"error": str(e)}
 
+
+# ── Pharmacy-Specific Tools ────────────────────────────────────────────────────
+
+@tool
+def get_near_expiry_items(days: int = 60) -> List[Dict[str, Any]]:
+    """
+    List all medication batches expiring within the specified number of days.
+    Batch numbers and expiry dates are tracked per-delivery on inventory transactions.
+    Returns item name, category, batch number, expiry date, location, and days remaining.
+    """
+    db = _get_db()
+    if not db:
+        return [{"error": "Database not connected"}]
+
+    try:
+        cutoff = date.today() + timedelta(days=days)
+        rows = (
+            db.query(InventoryTransaction)
+            .join(Item, InventoryTransaction.item_id == Item.id)
+            .join(Location, InventoryTransaction.location_id == Location.id)
+            .filter(
+                InventoryTransaction.expiry_date != None,
+                InventoryTransaction.expiry_date <= cutoff,
+                InventoryTransaction.received > 0,  # Only inbound batches
+            )
+            .order_by(InventoryTransaction.expiry_date.asc())
+            .limit(50)
+            .all()
+        )
+
+        if not rows:
+            return [{"info": f"No batches expiring within {days} days."}]
+
+        return [
+            {
+                "item_name": row.item.name,
+                "category": row.item.category,
+                "batch_number": row.batch_number,
+                "expiry_date": str(row.expiry_date),
+                "days_remaining": (row.expiry_date - date.today()).days,
+                "location": row.location.name,
+                "storage_temp": row.item.storage_temp,
+                "received_qty": row.received,
+            }
+            for row in rows
+        ]
+    except Exception as e:
+        return [{"error": str(e)}]
+
+
+@tool
+def get_cold_chain_items(location: str = "") -> List[Dict[str, Any]]:
+    """
+    List all cold-chain medications and vaccines (require refrigerated storage).
+    Optionally filter by location name. Returns item name, category, latest batch number,
+    nearest expiry date from the latest transaction, and current stock level.
+    """
+    db = _get_db()
+    if not db:
+        return [{"error": "Database not connected"}]
+
+    try:
+        items = (
+            db.query(Item)
+            .filter(Item.storage_temp == "cold_chain")
+            .order_by(Item.category.asc(), Item.name.asc())
+            .limit(50)
+            .all()
+        )
+
+        if not items:
+            return [{"info": "No cold-chain items found in the database."}]
+
+        results = []
+        for item in items:
+            tx_query = (
+                db.query(InventoryTransaction)
+                .join(Location)
+                .filter(InventoryTransaction.item_id == item.id)
+            )
+            if location and location.strip():
+                tx_query = tx_query.filter(Location.name.ilike(f"%{location.strip()}%"))
+
+            # Latest transaction = current stock level + most recent batch info
+            latest_tx = tx_query.order_by(InventoryTransaction.date.desc()).first()
+
+            results.append({
+                "item_name": item.name,
+                "category": item.category,
+                "storage_temp": item.storage_temp,
+                "latest_batch": latest_tx.batch_number if latest_tx else None,
+                "batch_expiry": str(latest_tx.expiry_date) if latest_tx and latest_tx.expiry_date else None,
+                "days_to_expiry": (latest_tx.expiry_date - date.today()).days if latest_tx and latest_tx.expiry_date else None,
+                "current_stock": latest_tx.closing_stock if latest_tx else "No data",
+                "location": latest_tx.location.name if latest_tx else "N/A",
+            })
+
+        return results
+    except Exception as e:
+        return [{"error": str(e)}]

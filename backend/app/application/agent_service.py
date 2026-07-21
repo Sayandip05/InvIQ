@@ -25,11 +25,13 @@ from app.application.agent_tools import (
     get_location_summary,
     get_category_analysis,
     get_consumption_trends,
+    get_near_expiry_items,
+    get_cold_chain_items,
 )
 
 logger = logging.getLogger("smart_inventory.agent")
 
-# ── All 7 inventory tools ──────────────────────────────────────────────────
+# ── All 9 inventory tools (7 core + 2 pharmacy-specific) ──────────────────────
 INVENTORY_TOOLS = [
     get_inventory_overview,
     get_critical_items,
@@ -38,6 +40,8 @@ INVENTORY_TOOLS = [
     get_location_summary,
     get_category_analysis,
     get_consumption_trends,
+    get_near_expiry_items,
+    get_cold_chain_items,
 ]
 
 # ── Lazy-initialized agent singleton ───────────────────────────────────────

@@ -38,6 +38,21 @@ def _mock_vector_memory():
     )
 
 
+def _mock_inventory_has_data(has_data: bool = True):
+    """Mock get_inventory_overview tool in the chat router namespace to report that DB has data."""
+    mock_tool = MagicMock()
+    mock_tool.invoke.return_value = {
+        "has_data": has_data,
+        "locations": 1,
+        "items": 1,
+        "transactions": 1,
+    }
+    return patch(
+        "app.api.routes.chat.get_inventory_overview",
+        new=mock_tool,
+    )
+
+
 # ── /api/chat/query ───────────────────────────────────────────────────────
 
 class TestChatQuery:
@@ -67,7 +82,7 @@ class TestChatQuery:
 
     def test_query_returns_response_with_agent(self, client, test_user):
         headers = get_auth_header(client, test_user["username"], test_user["password"])
-        with _mock_agent_available(True), _mock_agent_response(), _mock_vector_memory():
+        with _mock_agent_available(True), _mock_agent_response(), _mock_vector_memory(), _mock_inventory_has_data():
             response = client.post(
                 "/api/chat/query",
                 json={"question": "What items are critical?"},
@@ -81,7 +96,7 @@ class TestChatQuery:
 
     def test_query_creates_new_conversation_id(self, client, test_user):
         headers = get_auth_header(client, test_user["username"], test_user["password"])
-        with _mock_agent_available(True), _mock_agent_response(), _mock_vector_memory():
+        with _mock_agent_available(True), _mock_agent_response(), _mock_vector_memory(), _mock_inventory_has_data():
             response = client.post(
                 "/api/chat/query",
                 json={"question": "Show me the stock levels"},
@@ -96,7 +111,7 @@ class TestChatQuery:
         headers = get_auth_header(client, test_user["username"], test_user["password"])
 
         # First message — create conversation
-        with _mock_agent_available(True), _mock_agent_response("Here is the summary."), _mock_vector_memory():
+        with _mock_agent_available(True), _mock_agent_response("Here is the summary."), _mock_vector_memory(), _mock_inventory_has_data():
             r1 = client.post(
                 "/api/chat/query",
                 json={"question": "Give me the inventory summary"},
@@ -106,7 +121,7 @@ class TestChatQuery:
         conv_id = r1.json()["conversation_id"]
 
         # Second message — continue conversation
-        with _mock_agent_available(True), _mock_agent_response("Continuing the conversation."), _mock_vector_memory():
+        with _mock_agent_available(True), _mock_agent_response("Continuing the conversation."), _mock_vector_memory(), _mock_inventory_has_data():
             r2 = client.post(
                 "/api/chat/query",
                 json={"question": "What about warning items?", "conversation_id": conv_id},
@@ -132,7 +147,8 @@ class TestChatQuery:
         headers = get_auth_header(client, test_user["username"], test_user["password"])
         with _mock_agent_available(True), \
              _mock_agent_response("You should order more paracetamol."), \
-             _mock_vector_memory():
+             _mock_vector_memory(), \
+             _mock_inventory_has_data():
             response = client.post(
                 "/api/chat/query",
                 json={"question": "What should I order today?"},

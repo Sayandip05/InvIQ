@@ -9,7 +9,7 @@ Provides AI-powered chat for inventory queries with:
 - Chat session ownership enforcement
 """
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, UploadFile, File
 from app.core.rate_limiter import limiter
 from app.core.exceptions import (
     ValidationError,
@@ -427,4 +427,53 @@ def get_chat_sessions(
             )
 
     return {"success": True, "sessions": sessions}
+
+
+@router.post("/transcribe")
+@limiter.limit("20/minute")
+async def transcribe_audio(
+    request: Request,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Transcribe spoken audio to text using Sarvam AI (saaras:v3).
+
+    Supports English and all 22 scheduled Indian languages.
+    Audio is auto-detected to allow users to speak in any language.
+    """
+    if not settings.SARVAM_API_KEY:
+        raise ValidationError("Sarvam AI API key is not configured on the server")
+
+    try:
+        from sarvamai import SarvamAI
+
+        content = await file.read()
+
+        client = SarvamAI(api_subscription_key=settings.SARVAM_API_KEY)
+
+        response = client.speech_to_text.transcribe(
+            file=(file.filename or "audio.webm", content, file.content_type or "audio/webm"),
+            model="saaras:v3",
+            mode="transcribe",
+            language_code="unknown",   # auto-detect — user may speak English or any Indian language
+            input_audio_codec="webm",
+        )
+
+        transcribed_text = (response.transcript or "").strip()
+
+        logger.info(
+            "Sarvam transcription complete for user=%s length=%d",
+            current_user.username,
+            len(transcribed_text),
+        )
+
+        return {
+            "success": True,
+            "text": transcribed_text,
+        }
+
+    except Exception as e:
+        logger.error("Sarvam STT error user=%s: %s", current_user.username, str(e))
+        raise ValidationError(f"Transcription failed: {str(e)}")
 
