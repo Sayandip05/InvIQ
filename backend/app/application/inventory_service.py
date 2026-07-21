@@ -12,12 +12,52 @@ from typing import Dict, Any, Optional
 from app.infrastructure.database.inventory_repo import InventoryRepository
 from app.core.exceptions import InsufficientStockError, ValidationError, DatabaseError
 
+import threading
+import time
+
 logger = logging.getLogger("smart_inventory.service.inventory")
 
 
 class InventoryService:
+    # Thread-safe class-level cache for admin/manager email lists to avoid DB queries in loops
+    _recipients_cache: list[str] = []
+    _recipients_cache_expiry: float = 0.0
+    _recipients_cache_lock = threading.Lock()
+
     def __init__(self, repo: InventoryRepository):
         self.repo = repo
+
+    def _get_recipient_emails(self) -> list[str]:
+        """Fetch emails of active admins/managers, cached for 60 seconds to avoid querying in loops."""
+        now = time.time()
+        # Fast path without lock
+        if now < InventoryService._recipients_cache_expiry:
+            return list(InventoryService._recipients_cache)
+
+        with InventoryService._recipients_cache_lock:
+            # Double check under lock
+            if now < InventoryService._recipients_cache_expiry:
+                return list(InventoryService._recipients_cache)
+
+            try:
+                from app.infrastructure.database.models import User
+                recipients = [
+                    u.email
+                    for u in self.repo.db.query(User)
+                    .filter(
+                        User.role.in_(["admin", "super_admin", "manager"]),
+                        User.is_active.is_(True),
+                        User.email.isnot(None),
+                    )
+                    .all()
+                ]
+                InventoryService._recipients_cache = recipients
+                InventoryService._recipients_cache_expiry = now + 60.0  # cache for 60 seconds
+                return list(recipients)
+            except Exception as e:
+                logger.error("Failed to query user recipient emails: %s", e)
+                # Return cached value even if stale as fallback
+                return list(InventoryService._recipients_cache)
 
     def add_transaction(
         self,
@@ -29,6 +69,8 @@ class InventoryService:
         notes: Optional[str] = None,
         entered_by: str = "staff",
         flush_only: bool = False,
+        batch_number: Optional[str] = None,
+        expiry_date: Optional[date] = None,
     ) -> Dict[str, Any]:
         try:
             previous = self.repo.get_previous_transaction(
@@ -59,6 +101,8 @@ class InventoryService:
                 closing_stock=closing_stock,
                 notes=notes,
                 entered_by=entered_by,
+                batch_number=batch_number,
+                expiry_date=expiry_date,
             )
 
             # ── Stock alert detection ───────────────────────────────────
@@ -70,9 +114,9 @@ class InventoryService:
                     alert_status, item.name, location_id, closing_stock, item.min_stock,
                 )
 
-                # Queue alert for real-time WebSocket broadcast
-                from app.api.routes.websocket import pending_alerts
-                pending_alerts.append({
+                # Queue alert for real-time WebSocket broadcast safely
+                from app.api.routes.websocket import queue_websocket_alert
+                queue_websocket_alert({
                     "type": "low_stock_alert",
                     "status": alert_status,
                     "item_name": item.name,
@@ -88,20 +132,10 @@ class InventoryService:
                 # blocks the HTTP transaction response.
                 try:
                     from threading import Thread
-                    from app.infrastructure.database.models import User
                     from app.application.notification_service import NotificationService
 
-                    # Fetch email addresses for active admins and managers
-                    recipient_emails: list[str] = [
-                        u.email
-                        for u in self.repo.db.query(User)
-                        .filter(
-                            User.role.in_(["admin", "super_admin", "manager"]),
-                            User.is_active.is_(True),
-                            User.email.isnot(None),
-                        )
-                        .all()
-                    ]
+                    # Fetch email addresses using cached helper
+                    recipient_emails = self._get_recipient_emails()
 
                     # Resolve location name for the email body
                     location = self.repo.get_location_by_id(location_id)
@@ -174,6 +208,8 @@ class InventoryService:
                     issued=item_data.get("issued", 0),
                     notes=item_data.get("notes"),
                     entered_by=entered_by,
+                    batch_number=item_data.get("batch_number"),
+                    expiry_date=item_data.get("expiry_date"),
                 )
 
                 if result["success"]:

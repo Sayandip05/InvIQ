@@ -25,10 +25,10 @@ schema = strawberry.Schema(
 )
 
 # GraphiQL playground is exposed in development only.
-_graphiql = settings.ENVIRONMENT != "production"
+_graphql_ide = "graphiql" if settings.ENVIRONMENT != "production" else None
 
 graphql_router = GraphQLRouter(
     schema,
-    graphiql=_graphiql,
+    graphql_ide=_graphql_ide,
     context_getter=get_graphql_context,
 )

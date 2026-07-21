@@ -20,40 +20,47 @@ class TestCacheService:
 
     def test_cache_get_no_redis(self):
         """Cache get without Redis should return None."""
-        with patch('app.application.cache_service.redis_get_json', return_value=None):
+        with patch('app.application.cache_service.get_redis', return_value=None):
             result = cache_get("test_key")
             assert result is None
 
     def test_cache_set_no_redis(self):
         """Cache set without Redis should return False."""
-        with patch('app.application.cache_service.redis_set_json', return_value=False):
+        with patch('app.application.cache_service.get_redis', return_value=None):
             result = cache_set("test_key", {"data": "value"}, ttl=60)
             assert result is False
 
     def test_cache_delete_no_redis(self):
-        """Cache delete without Redis should return False."""
-        with patch('app.application.cache_service.redis_delete', return_value=False):
-            result = cache_delete("test_key")
-            assert result is False
+        """Cache delete without Redis should complete silently."""
+        with patch('app.application.cache_service.get_redis', return_value=None):
+            cache_delete("test_key")
 
     def test_cache_get_with_data(self):
         """Cache get with data should return cached value."""
-        with patch('app.application.cache_service.redis_get_json', return_value={"cached": "data"}):
+        mock_client = Mock()
+        mock_client.get.return_value = '{"cached": "data"}'
+        with patch('app.application.cache_service.get_redis', return_value=mock_client):
             result = cache_get("test_key")
             assert result == {"cached": "data"}
+            mock_client.get.assert_called_with("cache:test_key")
 
     def test_cache_set_success(self):
         """Cache set should return True on success."""
-        with patch('app.application.cache_service.redis_set_json', return_value=True):
+        mock_client = Mock()
+        with patch('app.application.cache_service.get_redis', return_value=mock_client):
             result = cache_set("test_key", {"data": "value"}, ttl=60)
             assert result is True
+            mock_client.setex.assert_called_with("cache:test_key", 60, '{"data": "value"}')
 
     def test_cache_invalidate_pattern(self):
-        """Cache invalidate pattern should delete matching keys."""
-        with patch('app.application.cache_service.get_redis') as mock_redis:
-            mock_client = Mock()
-            mock_client.keys.return_value = ["analytics:heatmap", "analytics:summary"]
-            mock_redis.return_value = mock_client
-            
-            cache_invalidate_pattern("analytics:*")
-            mock_client.delete.assert_called()
+        """Cache invalidate pattern should scan and delete matching keys."""
+        mock_client = Mock()
+        mock_client.scan.side_effect = [
+            (1, ["cache:analytics:heatmap"]),
+            (0, ["cache:analytics:summary"]),
+        ]
+        
+        with patch('app.application.cache_service.get_redis', return_value=mock_client):
+            deleted_count = cache_invalidate_pattern("analytics:*")
+            assert deleted_count == 2
+            assert mock_client.delete.call_count == 2

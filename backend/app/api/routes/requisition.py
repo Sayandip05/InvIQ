@@ -15,7 +15,6 @@ from app.core.dependencies import (
     require_staff,
     require_manager,
 )
-from typing import Optional
 from app.core.exceptions import NotFoundError
 from app.application.requisition_service import RequisitionService
 from app.infrastructure.database.models import User

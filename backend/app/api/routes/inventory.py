@@ -159,6 +159,7 @@ def create_item(
         unit=body.unit.strip().lower(),
         lead_time_days=body.lead_time_days,
         min_stock=body.min_stock,
+        storage_temp=body.storage_temp or "ambient",
     )
 
     return {
@@ -171,6 +172,7 @@ def create_item(
             "unit": item.unit,
             "lead_time_days": item.lead_time_days,
             "min_stock": item.min_stock,
+            "storage_temp": item.storage_temp,
         },
     }
 
@@ -225,6 +227,8 @@ def add_single_transaction(
         issued=body.issued,
         notes=body.notes,
         entered_by=str(current_user.username),
+        batch_number=body.batch_number,
+        expiry_date=body.expiry_date,
     )
     cache_invalidate_pattern("analytics:*")
     return result
@@ -248,6 +252,8 @@ def add_bulk_transactions(
             "received": item.received,
             "issued": item.issued,
             "notes": item.notes,
+            "batch_number": item.batch_number,
+            "expiry_date": item.expiry_date,
         }
         for item in body.items
     ]

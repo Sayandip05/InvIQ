@@ -84,6 +84,13 @@ class Item(Base):
     unit = Column(String(50), nullable=False)
     lead_time_days = Column(Integer, nullable=False)
     min_stock = Column(Integer, nullable=False)
+
+    # ── Pharmacy-specific field ───────────────────────────────────────────
+    # storage_temp is a PRODUCT-level attribute (Insulin is always cold_chain).
+    # batch_number and expiry_date are BATCH-level — they belong on the
+    # InventoryTransaction where each inbound delivery records its own batch.
+    storage_temp = Column(String(20), nullable=False, default="ambient")  # ambient | cold_chain
+
     created_at = Column(TIMESTAMP, server_default=func.now())
     updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
 
@@ -104,6 +111,13 @@ class InventoryTransaction(Base):
     closing_stock = Column(Integer, nullable=False)
     notes = Column(Text)
     entered_by = Column(String(100), default="system")
+
+    # ── Batch-level pharmacy fields ──────────────────────────────────────
+    # Each inbound delivery (received > 0) records which batch arrived and when
+    # it expires — enabling multi-batch tracking per product.
+    batch_number = Column(String(50), nullable=True, index=True)   # e.g. "BT-25-4821"
+    expiry_date = Column(Date, nullable=True, index=True)           # expiry of this batch
+
     created_at = Column(TIMESTAMP, server_default=func.now())
 
     location = relationship("Location", back_populates="transactions")

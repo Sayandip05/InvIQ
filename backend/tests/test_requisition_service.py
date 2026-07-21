@@ -159,6 +159,16 @@ class TestRequisitionService:
         mock_latest_tx.closing_stock = 50
         mock_inv_repo.get_latest_transaction.return_value = mock_latest_tx
 
+        # add_transaction uses get_previous_transaction for opening stock
+        mock_prev_tx = Mock()
+        mock_prev_tx.closing_stock = 50  # explicit int so arithmetic works
+        mock_inv_repo.get_previous_transaction.return_value = mock_prev_tx
+
+        mock_item_obj = Mock()
+        mock_item_obj.min_stock = 20
+        mock_item_obj.name = "Test Item"
+        mock_inv_repo.get_item_by_id.return_value = mock_item_obj
+
         mock_new_tx = Mock()
         mock_new_tx.id = 100
         mock_inv_repo.create_transaction.return_value = mock_new_tx

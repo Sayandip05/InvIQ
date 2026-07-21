@@ -66,3 +66,34 @@ class TestVendorService:
         assert len(uploads) == 1
         assert uploads[0]["filename"] == "test.xlsx"
         assert uploads[0]["success_rows"] == 8
+
+
+class TestHasLocationAccess:
+    """Test _has_location_access helper in vendor routes."""
+
+    def test_location_access_unrestricted(self):
+        from app.api.routes.vendor import _has_location_access
+        user = Mock(location_ids=None)
+        assert _has_location_access(user, 1) is True
+
+        user_empty = Mock(location_ids=[])
+        assert _has_location_access(user_empty, 1) is True
+
+    def test_location_access_list_of_ints(self):
+        from app.api.routes.vendor import _has_location_access
+        user = Mock(location_ids=[1, 2, 5])
+        assert _has_location_access(user, 1) is True
+        assert _has_location_access(user, 3) is False
+
+    def test_location_access_list_of_strings(self):
+        from app.api.routes.vendor import _has_location_access
+        user = Mock(location_ids=["1", "2", "5"])
+        assert _has_location_access(user, 1) is True
+        assert _has_location_access(user, 3) is False
+
+    def test_location_access_json_string(self):
+        from app.api.routes.vendor import _has_location_access
+        user = Mock(location_ids='[1, 2, 5]')
+        assert _has_location_access(user, 2) is True
+        assert _has_location_access(user, 4) is False
+

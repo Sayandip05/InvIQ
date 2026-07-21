@@ -28,6 +28,36 @@ def _require_vendor_role(current_user: User) -> None:
         raise AuthorizationError("Vendor access required")
 
 
+def _has_location_access(user: User, target_location_id: int) -> bool:
+    """
+    Safely check if a user has access to target_location_id.
+    Handles None, empty list/string, Python list of ints or strings, or raw JSON string.
+    """
+    raw = user.location_ids
+    if not raw:
+        return True  # None or empty means no restriction
+
+    if isinstance(raw, str):
+        import json
+        try:
+            raw = json.loads(raw)
+        except Exception:
+            raw = [raw]
+
+    if isinstance(raw, (list, set, tuple)):
+        allowed_ids = set()
+        for item in raw:
+            try:
+                allowed_ids.add(int(item))
+            except (ValueError, TypeError):
+                pass
+        if not allowed_ids:
+            return True
+        return target_location_id in allowed_ids
+
+    return True
+
+
 # ── POST /vendor/upload-delivery ───────────────────────────────────────────
 
 @router.post("/upload-delivery")
@@ -56,8 +86,8 @@ def upload_delivery(
     if not location:
         raise ValidationError(f"Location {location_id} not found")
 
-    # Check vendor location access (if location_ids is set)
-    if current_user.location_ids and location_id not in current_user.location_ids:
+    # Check vendor location access safely
+    if not _has_location_access(current_user, location_id):
         raise AuthorizationError("You don't have access to this location")
 
     # Read file

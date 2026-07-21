@@ -33,26 +33,25 @@ def seed_admin_user():
     try:
         from app.infrastructure.database.connection import SessionLocal
 
-        db = SessionLocal()
-        existing_admin = db.query(User).filter(User.role == "admin").first()
-        if not existing_admin:
-            admin_user = User(
-                email=settings.ADMIN_EMAIL,
-                username=settings.ADMIN_USERNAME,
-                hashed_password=hash_password(settings.ADMIN_PASSWORD),
-                full_name=settings.ADMIN_FULL_NAME,
-                role="admin",
-                is_active=True,
-                is_verified=True,
-            )
-            db.add(admin_user)
-            db.commit()
-            logger.info(
-                "Default admin user created (username: %s)", settings.ADMIN_USERNAME
-            )
-        else:
-            logger.info("Admin user already exists")
-        db.close()
+        with SessionLocal() as db:
+            existing_admin = db.query(User).filter(User.role == "admin").first()
+            if not existing_admin:
+                admin_user = User(
+                    email=settings.ADMIN_EMAIL,
+                    username=settings.ADMIN_USERNAME,
+                    hashed_password=hash_password(settings.ADMIN_PASSWORD),
+                    full_name=settings.ADMIN_FULL_NAME,
+                    role="admin",
+                    is_active=True,
+                    is_verified=True,
+                )
+                db.add(admin_user)
+                db.commit()
+                logger.info(
+                    "Default admin user created (username: %s)", settings.ADMIN_USERNAME
+                )
+            else:
+                logger.info("Admin user already exists")
     except Exception as e:
         logger.warning("Could not seed admin user: %s", str(e))
 

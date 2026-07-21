@@ -50,6 +50,60 @@ class TestInventoryService:
         assert result["data"]["opening_stock"] == 100
         assert result["data"]["closing_stock"] == 150
 
+    def test_add_transaction_passes_batch_info(self, service, mock_repo):
+        """batch_number and expiry_date should be forwarded to create_transaction."""
+        mock_repo.get_previous_transaction.return_value = None
+        mock_item = Mock()
+        mock_item.min_stock = 200
+        mock_item.name = "Vaccine Item"
+        mock_repo.get_item_by_id.return_value = mock_item
+
+        mock_tx = Mock()
+        mock_tx.id = 5
+        mock_repo.create_transaction.return_value = mock_tx
+
+        expiry = date(2027, 6, 30)
+        service.add_transaction(
+            location_id=1,
+            item_id=1,
+            transaction_date=date(2026, 4, 1),
+            received=100,
+            issued=0,
+            batch_number="BT-25-4821",
+            expiry_date=expiry,
+        )
+
+        # Verify create_transaction was called with the batch fields
+        call_kwargs = mock_repo.create_transaction.call_args[1]
+        assert call_kwargs["batch_number"] == "BT-25-4821"
+        assert call_kwargs["expiry_date"] == expiry
+
+    def test_add_transaction_no_batch_on_outbound(self, service, mock_repo):
+        """Outbound (issued-only) transactions pass None batch fields."""
+        mock_prev = Mock()
+        mock_prev.closing_stock = 200
+        mock_repo.get_previous_transaction.return_value = mock_prev
+        mock_item = Mock()
+        mock_item.min_stock = 50
+        mock_item.name = "Outbound Item"
+        mock_repo.get_item_by_id.return_value = mock_item
+
+        mock_tx = Mock()
+        mock_tx.id = 6
+        mock_repo.create_transaction.return_value = mock_tx
+
+        service.add_transaction(
+            location_id=1,
+            item_id=1,
+            transaction_date=date(2026, 4, 2),
+            received=0,
+            issued=30,
+        )
+
+        call_kwargs = mock_repo.create_transaction.call_args[1]
+        assert call_kwargs.get("batch_number") is None
+        assert call_kwargs.get("expiry_date") is None
+
     def test_add_transaction_with_previous(self, service, mock_repo):
         """Transaction should use previous closing as opening."""
         mock_prev = Mock()
@@ -132,42 +186,35 @@ class TestInventoryService:
         assert stock is None
 
     def test_get_location_items(self, service, mock_repo):
-        """Get location items should return formatted item list."""
+        """Get location items should return formatted item list with stock status."""
         mock_item1 = Mock()
         mock_item1.id = 1
         mock_item1.name = "Item A"
         mock_item1.category = "medicine"
         mock_item1.unit = "box"
-        mock_item1.min_stock = 50
+        mock_item1.min_stock = 50  # explicit int
 
         mock_item2 = Mock()
         mock_item2.id = 2
         mock_item2.name = "Item B"
         mock_item2.category = "supplies"
         mock_item2.unit = "pack"
-        mock_item2.min_stock = 100
+        mock_item2.min_stock = 100  # explicit int
 
         mock_repo.get_all_items.return_value = [mock_item1, mock_item2]
 
-        # Mock latest transactions
-        mock_tx1 = Mock()
-        mock_tx1.closing_stock = 20  # Below min (50) → WARNING
-        mock_tx2 = Mock()
-        mock_tx2.closing_stock = 150  # Above min (100) → HEALTHY
-
-        def mock_get_latest(loc_id, item_id):
-            if item_id == 1:
-                return mock_tx1
-            return mock_tx2
-
-        mock_repo.get_latest_transaction.side_effect = mock_get_latest
+        # get_location_items uses batch query: {item_id: closing_stock}
+        mock_repo.get_latest_stocks_for_location.return_value = {
+            1: 30,    # 30 > min(50)*0.5=25 → WARNING (below min but above critical)
+            2: 150,   # 150 > min(100) → HEALTHY
+        }
 
         items = service.get_location_items(location_id=1)
 
         assert len(items) == 2
         assert items[0]["name"] == "Item A"
-        assert items[0]["status"] == "WARNING"
-        assert items[0]["current_stock"] == 20
+        assert items[0]["status"] == "WARNING"  # 25 < stock(30) <= min(50)
+        assert items[0]["current_stock"] == 30
         assert items[1]["name"] == "Item B"
         assert items[1]["status"] == "HEALTHY"
         assert items[1]["current_stock"] == 150

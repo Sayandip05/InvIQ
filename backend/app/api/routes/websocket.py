@@ -49,13 +49,21 @@ class ConnectionManager:
                 self.active_connections.remove(conn)
 
 
+import threading
+
 # Singleton manager — importable by inventory routes for broadcasting
 manager = ConnectionManager()
 
 # ── Pending alerts queue (sync → async bridge) ────────────────────────────
-# inventory_service.py (sync) appends to this list.
-# The WebSocket loop drains it during each ping cycle.
+# inventory_service.py (sync) queues alerts here via queue_websocket_alert.
+_alerts_lock = threading.Lock()
 pending_alerts: list = []
+
+
+def queue_websocket_alert(alert: dict) -> None:
+    """Queue an alert for real-time broadcast in a thread-safe manner."""
+    with _alerts_lock:
+        pending_alerts.append(alert)
 
 
 @router.websocket("/ws/alerts")
@@ -97,12 +105,15 @@ async def websocket_alerts(websocket: WebSocket):
             if data == "ping":
                 await websocket.send_json({"type": "pong"})
             
-            # Broadcast any pending alerts
-            global pending_alerts
-            if pending_alerts:
-                for alert in pending_alerts:
-                    await manager.broadcast(alert)
-                pending_alerts.clear()
+            # Broadcast any pending alerts safely (avoiding race conditions)
+            alerts_to_send = []
+            with _alerts_lock:
+                if pending_alerts:
+                    alerts_to_send = list(pending_alerts)
+                    pending_alerts.clear()
+
+            for alert in alerts_to_send:
+                await manager.broadcast(alert)
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         logger.info("WebSocket user '%s' disconnected", username)
