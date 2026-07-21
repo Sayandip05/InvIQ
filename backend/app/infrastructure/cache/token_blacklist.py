@@ -13,11 +13,23 @@ from app.core.config import settings
 
 logger = logging.getLogger("smart_inventory.token_blacklist")
 
+import time
+
 # ── In-memory fallback (only for dev without Redis) ────────────────────────
-_memory_blacklist: set[str] = set()
+# Stores token -> expiration epoch timestamp to prevent unbounded leaks.
+_memory_blacklist: dict[str, float] = {}
 
 # Redis key prefix
 _PREFIX = "blacklist:"
+
+
+def _purge_expired_memory_tokens() -> None:
+    """Remove expired tokens from in-memory fallback store to prevent memory leaks."""
+    now = time.time()
+    expired = [t for t, exp in _memory_blacklist.items() if exp < now]
+    for t in expired:
+        _memory_blacklist.pop(t, None)
+
 
 
 def blacklist_token(token: str, expires_in_minutes: int = None) -> None:
@@ -34,9 +46,10 @@ def blacklist_token(token: str, expires_in_minutes: int = None) -> None:
     r = get_redis()
     if r and is_redis_available():
         try:
+            ttl_seconds = int(timedelta(minutes=expires_in_minutes).total_seconds())
             r.setex(
                 f"{_PREFIX}{token}",
-                timedelta(minutes=expires_in_minutes),
+                ttl_seconds,
                 "1",
             )
             return
@@ -44,7 +57,9 @@ def blacklist_token(token: str, expires_in_minutes: int = None) -> None:
             logger.warning("Redis blacklist write failed: %s", e)
 
     # Fallback to in-memory
-    _memory_blacklist.add(token)
+    _purge_expired_memory_tokens()
+    expiry_epoch = time.time() + (expires_in_minutes * 60)
+    _memory_blacklist[token] = expiry_epoch
     logger.debug("Token blacklisted (in-memory fallback)")
 
 
@@ -58,6 +73,7 @@ def is_token_blacklisted(token: str) -> bool:
             logger.warning("Redis blacklist read failed: %s", e)
 
     # Fallback to in-memory
+    _purge_expired_memory_tokens()
     return token in _memory_blacklist
 
 

@@ -84,10 +84,19 @@ class AuthorizationError(AppException):
 
 
 class DatabaseError(AppException):
-    """Database operation failed (500)."""
+    """Database operation failed (500). Sanitizes error details to prevent info leakage to clients."""
 
     status_code = 500
     error_code = "DATABASE_ERROR"
 
-    def __init__(self, message: str = "A database error occurred"):
-        super().__init__(message)
+    def __init__(self, message: str = "A database error occurred", orig_cause: Exception = None):
+        self.internal_detail = message
+        if orig_cause:
+            self.internal_detail = f"{message} | Cause: {orig_cause}"
+
+        # Strip raw SQL / DB driver error text after colon if present
+        client_message = message
+        if ":" in message:
+            client_message = message.split(":", 1)[0].strip()
+
+        super().__init__(client_message)

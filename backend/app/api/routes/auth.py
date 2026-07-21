@@ -383,31 +383,19 @@ def logout(
 @limiter.limit("10/minute")
 def refresh_token(
     request: Request,
+    body_data: RefreshTokenRequest,
     db: Session = Depends(get_user_repo),
 ):
     """
     Refresh access token. Implements token rotation:
     the old refresh token is blacklisted after use (one-time use only).
-
-    Accepts refresh_token in request body.
     """
     from app.infrastructure.cache.token_blacklist import (
         blacklist_refresh_token as bl_refresh,
         is_token_blacklisted,
     )
-    import json
 
-    # Parse request body manually to get refresh_token
-    try:
-        body = (
-            json.loads(request._body.decode())
-            if hasattr(request, "_body") and request._body
-            else {}
-        )
-    except:
-        body = {}
-
-    refresh_token_str = body.get("refresh_token") if body else None
+    refresh_token_str = body_data.refresh_token
 
     if not refresh_token_str:
         raise AuthenticationError("refresh_token is required")

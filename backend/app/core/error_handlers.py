@@ -26,12 +26,21 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(AppException)
     async def app_exception_handler(_request: Request, exc: AppException):
-        logger.warning(
-            "AppException: %s [%s] — %s",
-            exc.error_code,
-            exc.status_code,
-            exc.message,
-        )
+        log_detail = getattr(exc, "internal_detail", exc.message)
+        if exc.status_code >= 500:
+            logger.error(
+                "AppException: %s [%s] — %s",
+                exc.error_code,
+                exc.status_code,
+                log_detail,
+            )
+        else:
+            logger.warning(
+                "AppException: %s [%s] — %s",
+                exc.error_code,
+                exc.status_code,
+                log_detail,
+            )
         return JSONResponse(
             status_code=exc.status_code,
             content={

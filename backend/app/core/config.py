@@ -84,9 +84,40 @@ class Settings:
     ADMIN_FULL_NAME = os.getenv("ADMIN_FULL_NAME", "System Administrator")
 
     # ── Upstash Redis (Caching) ───────────────────────────────────────
+    REDIS_URL = os.getenv("REDIS_URL", "")
     UPSTASH_REDIS_REST_URL = os.getenv("UPSTASH_REDIS_REST_URL", "")
     UPSTASH_REDIS_REST_TOKEN = os.getenv("UPSTASH_REDIS_REST_TOKEN", "")
     REDIS_ENABLED = os.getenv("REDIS_ENABLED", "true").lower() == "true"
+
+    @property
+    def redis_storage_uri(self) -> str:
+        """
+        Build the storage URI for rate-limiting.
+        If ENVIRONMENT is "testing", always return "memory://" to isolate tests.
+        If REDIS_URL is explicitly set, use it.
+        Otherwise, auto-construct the standard TCP/TLS Redis URL from Upstash REST credentials.
+        Falls back to 'memory://' if no credentials are configured.
+        """
+        if self.ENVIRONMENT == "testing":
+            return "memory://"
+
+        if self.REDIS_URL:
+            return self.REDIS_URL
+
+        # Auto-construct from Upstash credentials if present
+        if self.UPSTASH_REDIS_REST_URL and self.UPSTASH_REDIS_REST_TOKEN:
+            try:
+                # Strip https:// and trailing slashes/paths
+                host = self.UPSTASH_REDIS_REST_URL.replace("https://", "").replace("http://", "").split("/")[0].split(":")[0]
+                # Upstash standard Redis uses TLS (rediss://) on port 6379.
+                # ssl_cert_reqs=none skips cert verification on macOS local dev
+                # (Python's SSL store isn't linked to the system keychain there).
+                # In production Linux containers CA certs are present so this is harmless.
+                return f"rediss://default:{self.UPSTASH_REDIS_REST_TOKEN}@{host}:6379?ssl_cert_reqs=none"
+            except Exception:
+                pass
+
+        return "memory://"
 
     # ── Rate Limiting ─────────────────────────────────────────────────
     RATE_LIMIT_DEFAULT = os.getenv("RATE_LIMIT_DEFAULT", "60/minute")
@@ -106,6 +137,7 @@ class Settings:
         "GOOGLE_OAUTH_VERIFY_URL",
         "https://www.googleapis.com/oauth2/v3/userinfo"
     )
+    SARVAM_API_KEY = os.getenv("SARVAM_API_KEY", "")
 
 
 settings = Settings()

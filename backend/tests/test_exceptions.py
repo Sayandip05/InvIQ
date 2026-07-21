@@ -152,6 +152,12 @@ class TestDatabaseError:
         exc = DatabaseError("Connection timeout")
         assert exc.message == "Connection timeout"
 
+    def test_database_error_sanitizes_sql_details(self):
+        """DatabaseError should strip raw SQL details from client message but preserve internal_detail."""
+        exc = DatabaseError("Failed to create location: (psycopg2.errors.UniqueViolation) Key (name)=(Pharmacy) already exists")
+        assert exc.message == "Failed to create location"
+        assert exc.internal_detail == "Failed to create location: (psycopg2.errors.UniqueViolation) Key (name)=(Pharmacy) already exists"
+
 
 class TestExceptionInheritance:
     """Test exception inheritance hierarchy."""
