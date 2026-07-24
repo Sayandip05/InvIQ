@@ -1,80 +1,111 @@
 # InvIQ API Documentation
 
-This document provides a comprehensive, production-grade reference for the InvIQ backend REST API, GraphQL analytics interface, and WebSocket layer. It details authentication rules, rate limits, caching behavior, and Guest Demo Mode interactions.
+Comprehensive reference for the InvIQ backend REST API, GraphQL analytics interface, and WebSocket layer.
 
 ---
 
-## ── Architecture Overview ───────────────────────────────────────────────────
+## Architecture Overview
 
-InvIQ uses a **REST + GraphQL hybrid** — the industry-standard pattern:
+InvIQ uses a **REST + GraphQL hybrid** pattern:
 
-- **REST** handles all **mutations** (create, update, delete) and complex transactional endpoints.
+- **REST** handles all **mutations** (create, update, delete), authentication, chat, vendor uploads, admin, and super admin operations.
 - **GraphQL** (Strawberry) handles all **analytics reads** — zero over-fetching, flexible field selection, role-aware data masking.
+- **WebSocket** provides **real-time stock alert push** notifications.
 
 | Layer | Protocol | Base URL | Purpose |
 |-------|----------|----------|---------|
-| REST API | HTTPS | `/api` | All mutations + auth + chat + vendor |
+| REST API | HTTPS | `/api` | All mutations + auth + chat + vendor + admin |
 | GraphQL | HTTPS | `/graphql/analytics` | Analytics reads (dashboard, heatmap, alerts, summary, stock health) |
-| WebSocket | WSS | `/ws` | Real-time stock alert push |
+| WebSocket | WSS | `/ws/alerts` | Real-time stock alert push |
 
-- **Data Format:** UTF-8 JSON requests and responses
-- **Standard REST Success Response Envelope:**
-  ```json
-  {
-    "success": true,
-    "message": "Action completed successfully",
-    "data": { ... }
+### Response Envelope
+
+**Success:**
+```json
+{
+  "success": true,
+  "message": "Action completed successfully",
+  "data": { ... }
+}
+```
+
+**Error:**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human-readable description"
   }
-  ```
-- **Standard REST Error Response Envelope:**
-  ```json
-  {
-    "success": false,
-    "error": "Error type identifier (e.g. ValidationError)",
-    "message": "Human readable error description",
-    "details": { ... }
-  }
-  ```
+}
+```
 
 ---
 
-## ── Global API Configurations ────────────────────────────────────────────────
+## Global API Configurations
 
 ### 1. Authentication & Security
-- **Type:** JSON Web Tokens (JWT) signed with symmetric `HS256`.
-- **Headers:** All authenticated requests must include `Authorization: Bearer <access_token>`.
-- **Token Lifespans:**
-  - **Access Token:** 30 minutes
-  - **Refresh Token:** 7 days (supports token rotation)
-- **Logout / Invalidation:** Blacklisted in Redis until expiration.
-- **Login Lockout:** 5 failed attempts on an account → 15 minutes lockout (tracked in Redis).
 
-### 2. Authorization Scopes (5-Tier RBAC)
-The system supports a 5-tier role hierarchy. Permissions are cumulative (higher roles inherit lower permissions):
-1. **`super_admin` (6):** Cross-tenant platform management, organization provisioning.
-2. **`admin` (5):** Tenant-level administration, audit logs, user provisioning, reports.
-3. **`manager` (4):** Requisition approval/rejection, stock overrides. Full GraphQL privileged fields.
-4. **`staff` (3):** Basic inventory transactions (issue/receipt), requisition creation.
-5. **`vendor` (2):** Excel manifest uploads, inventory ingestion.
+- **Type:** JSON Web Tokens (JWT) signed with `HS256`
+- **Headers:** `Authorization: Bearer <access_token>`
+- **Token Lifespans:** Access = 30 min, Refresh = 7 days (supports rotation)
+- **Logout:** Access token blacklisted in Redis until expiry
+- **Refresh Rotation:** Old refresh token is blacklisted after successful exchange
+- **Login Lockout:** 5 failed attempts → 15 minutes lockout (Redis-tracked)
 
-> **GraphQL field masking:** `manager`, `admin`, and `super_admin` callers receive full values for `avgDailyUsage`, `daysRemaining`, and `leadTimeDays`. Guest and Vendor callers receive `null` for these operational forecasting fields.
+### 2. Authorization — 5-Tier RBAC
+
+Permissions are cumulative (higher roles inherit lower permissions):
+
+| Role | Level | Access |
+|------|-------|--------|
+| `super_admin` | 6 | Cross-tenant platform management, organization provisioning |
+| `admin` | 5 | Tenant-level administration, audit logs, user provisioning, reports |
+| `manager` | 4 | Requisition approval/rejection, full GraphQL privileged fields |
+| `staff` | 3 | Basic inventory transactions, requisition creation |
+| `vendor` | 2 | Excel manifest uploads, inventory ingestion |
+
+> **GraphQL field masking:** `manager`, `admin`, and `super_admin` callers receive full values for `avgDailyUsage`, `daysRemaining`, and `leadTimeDays`. `guest`, `vendor`, and `staff` callers receive `null` for these fields.
 
 ### 3. Guest Demo Mode (Unauthenticated Access)
-To allow visitors to preview the application without sign-up, the API utilizes a custom dependency: `get_optional_user()`.
-- **GET REST Endpoints:** Relaxed authentication. If an invalid or missing token is detected, the API silently treats the caller as a **Guest (anonymous)** and serves the requested data (read-only).
-- **GraphQL Endpoint:** Same model — unauthenticated callers are served all non-privileged fields; operational forecasting fields are masked to `null`.
-- **POST/PUT/DELETE Endpoints:** Strict authentication. If a guest attempts a write, approval, or chat interaction, the frontend intercepts the request and redirects the user to `/signin`.
-- **401 Interceptor:** The client interceptor only triggers a redirect to `/signin` if the request originally carried a token (session expired). Guests are never forced to redirect while browsing.
+
+- **GET REST endpoints:** Silently serve data as Guest (anonymous) — no 401 raised.
+- **GraphQL:** Same model — unauthenticated callers see all non-privileged fields; forecasting fields masked to `null`.
+- **POST/PUT/DELETE endpoints:** Strict authentication — frontend redirects to `/signin`.
+- **401 Interceptor:** Only triggers redirect if request originally carried a token (session expired).
 
 ### 4. Rate Limiting
-Handled by `slowapi` with Redis state storage:
-- **Authentication Endpoints (`/api/auth/*`):** 5 requests/minute (brute-force defense).
-- **Chat Endpoints (`/api/chat/*`):** 20 requests/minute (capping LLM API token costs).
-- **Default Endpoints:** 60 requests/minute.
-- **GraphQL (`/graphql/analytics`):** No Slowapi rate limiter — GraphQL is query-complexity-bounded by field selection depth.
+
+Handled by `slowapi` with Redis-backed moving-window strategy:
+
+| Tier | Limit | Applied To |
+|------|-------|------------|
+| Auth | 5/min | `/api/auth/login` |
+| Register | 3/min | `/api/auth/register` |
+| Password Reset | 3/min | `/api/auth/request-password-reset` |
+| Refresh Token | 10/min | `/api/auth/refresh` |
+| Chat | 20/min | `/api/chat/query`, `/api/chat/transcribe` |
+| Transaction | 30/min | `/api/inventory/transaction` |
+| Bulk Transaction | 10/min | `/api/inventory/bulk-transaction` |
+| Requisition | 20/min | `/api/requisition/create` |
+| Analytics | 30/min | `/api/analytics/*` |
+| Vendor Upload | 10/min | `/api/vendor/upload-delivery` |
+| Default | 60/min | All other endpoints |
+
+**429 Response:**
+```json
+{
+  "success": false,
+  "error": "rate_limit_exceeded",
+  "message": "Too many requests. Please retry after 60 seconds.",
+  "retry_after": 60
+}
+```
+With `Retry-After` header.
 
 ### 5. Caching System
-Analytics and dashboard statistics are cached in Redis to prevent heavy database aggregation overhead. **The REST and GraphQL layers share the same cache keys** — a REST warm cache is immediately available to GraphQL callers and vice versa.
+
+Analytics and dashboard statistics are cached in Redis. **REST and GraphQL share the same cache keys.**
 
 | Cache Key | TTL | Shared By |
 |-----------|-----|-----------|
@@ -84,308 +115,299 @@ Analytics and dashboard statistics are cached in Redis to prevent heavy database
 | `cache:analytics:alerts:WARNING` | 5 min | REST + GraphQL |
 | `cache:analytics:summary` | 5 min | REST + GraphQL |
 
-- **Invalidation:** Automatically flushed whenever write transactions (`/api/inventory/transaction`, `/api/requisition/{id}/approve`) are successfully committed.
-- **`stockHealth` GraphQL query:** Not cached — designed for ad-hoc reporting with server-side filter arguments.
+- **Invalidation:** Automatically flushed on write transactions (`/api/inventory/transaction`, `/api/requisition/{id}/approve`).
+- **`stockHealth` GraphQL query:** Not cached — designed for ad-hoc reporting.
+- **Key prefix:** All cache keys prefixed with `cache:` to avoid collision with rate-limiter keys.
 
 ---
 
-## ── REST API Endpoints Directory ─────────────────────────────────────────────
+## REST API Endpoints
 
 ### 1. Authentication (`/api/auth`)
 
-| Endpoint | Method | Auth Scope | Rate Limit | Description |
+| Endpoint | Method | Auth | Rate Limit | Description |
 |---|---|---|---|---|
-| `/auth/login` | **POST** | Public | 5/min | Authenticate credentials. Returns access/refresh JWT tokens. |
-| `/auth/register` | **POST** | `admin`+ | 3/min | Register a new user within the administrator's organization. |
-| `/auth/logout` | **POST** | Authenticated | Default | Blacklists the active JWT token in Redis. |
-| `/auth/refresh` | **POST** | Public | Default | Exchange valid refresh token for a new access token. |
-| `/auth/me` | **GET** | Authenticated | Default | Retrieve active user profile data. |
-| `/auth/me` | **PATCH**| Authenticated | Default | Update own profile details. |
-| `/auth/users` | **GET** | `admin`+ | Default | Paginated list of users within the organization. |
-| `/auth/users/{user_id}` | **GET** | `admin`+ | Default | Retrieve detailed profile of a specific user. |
-| `/auth/users/{user_id}/role` | **PUT** | `admin`+ | Default | Update a user's access role. |
-| `/auth/users/{user_id}/deactivate`| **PUT** | `admin`+ | Default | Temporarily deactivate a user account. |
-| `/auth/users/{user_id}/activate` | **PUT** | `admin`+ | Default | Re-activate a deactivated user account. |
-| `/auth/users/{user_id}` | **DELETE**| `admin`+ | Default | Hard delete a user account from the system. |
-| `/auth/users/{user_id}/reset-password`|**POST**| `admin`+ | Default | Reset a user's password directly (admin override). |
-| `/auth/change-password` | **POST** | Authenticated | Default | Change password for the logged-in user. |
-| `/auth/request-password-reset`|**POST**| Public | 5/min | Triggers a password reset token sent via email. |
-| `/auth/reset-password` | **POST** | Public | 5/min | Reset password using a valid email token. |
-| `/auth/verify-email` | **POST** | Public | 5/min | Verify user email registration using email token. |
-| `/auth/google-auth` | **POST** | Public | Default | Authenticate via Google OAuth using id token. |
+| `/auth/login` | **POST** | Public | 5/min | Authenticate credentials. Returns access+refresh JWT. Lockout after 5 failures. |
+| `/auth/register` | **POST** | `admin`+ | 3/min | Register a new user. Sends welcome email if SMTP enabled. |
+| `/auth/logout` | **POST** | Authenticated | Default | Blacklist active JWT in Redis. |
+| `/auth/refresh` | **POST** | Public | 10/min | Exchange valid refresh token for new access token. Old refresh revoked. |
+| `/auth/me` | **GET** | Authenticated | Default | Retrieve current user profile. |
+| `/auth/me` | **PATCH** | Authenticated | Default | Update own email/full_name. |
+| `/auth/change-password` | **POST** | Authenticated | Default | Verify current password, set new one. |
+| `/auth/users` | **GET** | `admin`+ | Default | Paginated user list with role/status filters. |
+| `/auth/users/{user_id}` | **GET** | `admin`+ | Default | User detail. |
+| `/auth/users/{user_id}/role` | **PUT** | `admin`+ | Default | Update user role. |
+| `/auth/users/{user_id}/activate` | **PUT** | `admin`+ | Default | Activate user account. |
+| `/auth/users/{user_id}/deactivate` | **PUT** | `admin`+ | Default | Deactivate user (not self). |
+| `/auth/users/{user_id}/reset-password` | **POST** | `admin`+ | Default | Admin password reset. |
+| `/auth/users/{user_id}` | **DELETE** | `admin`+ | Default | Hard delete user (not self). |
+| `/auth/request-password-reset` | **POST** | Public | 3/min | Send reset email (no user enumeration). |
+| `/auth/reset-password` | **POST** | Public | 5/min | Reset password via email token. |
+| `/auth/verify-email` | **POST** | Public | Default | Verify email via token. |
+| `/auth/google-auth` | **POST** | Public | 10/min | Google OAuth login/register. |
 
-#### Request/Response Samples:
+#### Request/Response Samples
+
 **POST `/api/auth/login`**
-- **Body:**
-  ```json
-  {
-    "username": "admin",
-    "password": "SecurePassword123"
-  }
-  ```
-- **Response (200 OK):**
-  ```json
-  {
-    "success": true,
-    "message": "Login successful",
-    "data": {
-      "access_token": "eyJhbGciOi...",
-      "refresh_token": "eyJhbGciOi...",
-      "token_type": "bearer",
-      "user": {
-        "id": 1,
-        "username": "admin",
-        "email": "admin@inviq.io",
-        "full_name": "Admin User",
-        "role": "admin",
-        "org_id": 1
-      }
+```json
+// Request
+{ "username": "admin", "password": "SecurePassword123" }
+
+// Response 200
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "access_token": "eyJhbGciOi...",
+    "refresh_token": "eyJhbGciOi...",
+    "token_type": "bearer",
+    "user": {
+      "id": 1,
+      "username": "admin",
+      "email": "admin@inviq.io",
+      "full_name": "Admin User",
+      "role": "admin"
     }
   }
-  ```
+}
+```
+
+**POST `/api/auth/register`**
+```json
+// Request (admin+)
+{
+  "email": "newuser@hospital.com",
+  "username": "nurse01",
+  "password": "SecurePass99",
+  "full_name": "Nurse Alpha",
+  "role": "staff"
+}
+```
 
 ---
 
 ### 2. Inventory Management (`/api/inventory`)
 
-All `GET` inventory routes support unauthenticated visitors in Guest Mode.
+All `GET` inventory routes support unauthenticated Guest Mode.
 
-| Endpoint | Method | Auth Scope | Rate Limit | Description |
+| Endpoint | Method | Auth | Rate Limit | Description |
 |---|---|---|---|---|
-| `/inventory/locations` | **GET** | Guest Permitted| Default | List all physical inventory locations (warehouses, pharmacies). |
-| `/inventory/items` | **GET** | Guest Permitted| Default | Retrieve inventory item registry (medications, supplies). |
-| `/inventory/location/{location_id}/items`|**GET**|Guest Permitted| Default | Get current stock status of all registered items at a location. |
-| `/inventory/stock/{location_id}/{item_id}`|**GET**|Guest Permitted| Default | Get exact closing stock of a specific item at a location. |
-| `/inventory/locations` | **POST** | `staff`+ | 20/min | Create a new physical location. |
-| `/inventory/items` | **POST** | `staff`+ | 20/min | Register a new item in the database catalog. |
-| `/inventory/reset-data` | **POST** | `staff`+ | 3/min | Reset and wipe all inventory, transactions, and locations. |
-| `/inventory/transaction` | **POST** | `staff`+ | 30/min | Add a single stock transaction (received/issued). |
-| `/inventory/bulk-transaction` | **POST** | `staff`+ | 10/min | Add a batch of transactions within a database transaction. |
+| `/inventory/locations` | **GET** | Guest Permitted | Default | List all locations. |
+| `/inventory/items` | **GET** | Guest Permitted | Default | List all items. |
+| `/inventory/location/{location_id}/items` | **GET** | Guest Permitted | Default | Stock status for all items at a location. |
+| `/inventory/stock/{location_id}/{item_id}` | **GET** | Guest Permitted | Default | Current stock for specific item+location. |
+| `/inventory/locations` | **POST** | `staff`+ | 20/min | Create new location. |
+| `/inventory/items` | **POST** | `staff`+ | 20/min | Register new item. |
+| `/inventory/reset-data` | **POST** | `admin`+ | 3/min | Delete all inventory data (requires `confirm=true`). |
+| `/inventory/transaction` | **POST** | `staff`+ | 30/min | Add single stock transaction. Triggers WebSocket alerts + email on low stock. |
+| `/inventory/bulk-transaction` | **POST** | `staff`+ | 10/min | Add batch of transactions atomically. |
 
-#### Request/Response Samples:
-**GET `/api/inventory/location/1/items`**
-- **Response (200 OK):**
-  ```json
-  {
-    "success": true,
-    "data": [
-      {
-        "id": 101,
-        "name": "Paracetamol 500mg",
-        "category": "Medication",
-        "unit": "Tablets",
-        "min_stock": 100,
-        "current_stock": 45,
-        "status": "WARNING"
-      }
-    ]
-  }
-  ```
+#### Request/Response Samples
 
 **POST `/api/inventory/transaction`**
-- **Body:**
-  ```json
-  {
-    "location_id": 1,
-    "item_id": 101,
-    "transaction_date": "2026-06-10",
+```json
+// Request
+{
+  "location_id": 1,
+  "item_id": 101,
+  "date": "2026-06-10",
+  "received": 50,
+  "issued": 0,
+  "notes": "Weekly restock",
+  "batch_number": "BAT-2026-001",
+  "expiry_date": "2027-06-10"
+}
+
+// Response 200
+{
+  "success": true,
+  "message": "Transaction added successfully",
+  "data": {
+    "id": 884,
+    "opening_stock": 45,
     "received": 50,
     "issued": 0,
-    "notes": "Weekly restock"
+    "closing_stock": 95,
+    "date": "2026-06-10"
   }
-  ```
-- **Response (201 Created):**
-  ```json
-  {
-    "success": true,
-    "message": "Transaction added successfully",
-    "data": {
-      "id": 884,
-      "opening_stock": 45,
-      "received": 50,
-      "issued": 0,
-      "closing_stock": 95,
-      "date": "2026-06-10"
-    }
-  }
-  ```
+}
+```
+
+**POST `/api/inventory/locations`**
+```json
+// Request
+{
+  "name": "Main Pharmacy",
+  "type": "pharmacy",
+  "region": "Delhi NCR",
+  "address": "123 Hospital Road"
+}
+```
 
 ---
 
 ### 3. Requisition Workflow (`/api/requisition`)
 
-| Endpoint | Method | Auth Scope | Rate Limit | Description |
+| Endpoint | Method | Auth | Rate Limit | Description |
 |---|---|---|---|---|
-| `/requisition/create` | **POST** | `staff`+ | 20/min | Create a new stock requisition request. |
-| `/requisition/list` | **GET** | Guest Permitted| Default | Paginated list of requisitions filtered by status. |
-| `/requisition/stats` | **GET** | Guest Permitted| Default | Summary statistics of requisition statuses (Pending, Approved, Rejected). |
-| `/requisition/{requisition_id}` | **GET** | Guest Permitted| Default | Detailed view of a requisition including items requested. |
-| `/requisition/{requisition_id}/approve` | **PUT** | `manager`+ | 10/min | Approve requisition (commits stock transaction & websocket trigger). |
-| `/requisition/{requisition_id}/reject` | **PUT** | `manager`+ | 10/min | Reject requisition (requires reason string). |
+| `/requisition/create` | **POST** | `staff`+ | 20/min | Create stock requisition request. Auto-generates REQ number. |
+| `/requisition/list` | **GET** | Guest Permitted | Default | Paginated list, filterable by status/location/requester. |
+| `/requisition/stats` | **GET** | Guest Permitted | Default | Summary: total, pending, approved today, rejected, emergency pending. |
+| `/requisition/{requisition_id}` | **GET** | Guest Permitted | Default | Full details with location + line items. |
+| `/requisition/{requisition_id}/approve` | **PUT** | `manager`+ | 10/min | Approve — deducts stock atomically, broadcasts WebSocket alert. |
+| `/requisition/{requisition_id}/reject` | **PUT** | `manager`+ | 10/min | Reject with mandatory reason (5-500 chars). |
 | `/requisition/{requisition_id}/cancel` | **PUT** | `staff`+ | 10/min | Cancel a pending requisition. |
 
-#### Request/Response Samples:
+#### Request/Response Samples
+
 **PUT `/api/requisition/5/approve`**
-- **Body:**
-  ```json
-  {
-    "item_adjustments": [
-      {
-        "item_id": 101,
-        "approved_quantity": 40
-      }
-    ]
+```json
+// Request
+{
+  "approved_by": "manager_name",
+  "item_adjustments": [
+    { "item_id": 101, "approved_quantity": 40 }
+  ]
+}
+
+// Response 200
+{
+  "success": true,
+  "message": "Requisition approved, stock updated",
+  "data": {
+    "id": 5,
+    "status": "APPROVED",
+    "approved_at": "2026-06-10T08:24:00Z"
   }
-  ```
-- **Response (200 OK):**
-  ```json
-  {
-    "success": true,
-    "message": "Requisition approved, stock updated",
-    "data": {
-      "id": 5,
-      "status": "APPROVED",
-      "approved_at": "2026-06-10T08:24:00Z"
-    }
-  }
-  ```
+}
+```
 
 ---
 
-### 4. AI Chatbot Agent (`/api/chat`)
+### 4. AI Chatbot (`/api/chat`)
 
-Queries to the AI Chatbot feed into a LangGraph ReAct agent.
+Queries feed into a LangGraph ReAct agent with 9 inventory tools.
 
-| Endpoint | Method | Auth Scope | Rate Limit | Description |
+| Endpoint | Method | Auth | Rate Limit | Description |
 |---|---|---|---|---|
-| `/chat/query` | **POST** | Authenticated | 20/min | Submit a natural language question. Generates tool actions or text. |
-| `/chat/transcribe` | **POST** | Authenticated | 15/min | Upload voice audio (WAV/MP3/M4A/WEBM) for Sarvam AI STT (`saaras:v3`) transcription. |
-| `/chat/sessions` | **GET** | Authenticated | Default | Get list of user's active/past chat sessions. |
-| `/chat/history/{conversation_id}` | **GET** | Authenticated | Default | Get historical messages from a specific chat session. |
-| `/chat/history/{conversation_id}` | **DELETE**| Authenticated | 10/min | Clear/delete a chat session history. |
-| `/chat/suggestions` | **GET** | Guest Permitted| Default | Returns a list of default recommended prompts. |
+| `/chat/query` | **POST** | Authenticated | 20/min | Submit natural language question. Returns LLM-generated answer. |
+| `/chat/transcribe` | **POST** | Authenticated | 20/min | Upload voice audio for Sarvam AI STT (`saaras:v3`) transcription. Supports 22 Indian languages. |
+| `/chat/sessions` | **GET** | Authenticated | Default | List user's chat sessions. |
+| `/chat/history/{conversation_id}` | **GET** | Authenticated | Default | Chat history for a session (ownership enforced). |
+| `/chat/history/{conversation_id}` | **DELETE** | Authenticated | 10/min | Clear/delete a conversation. |
+| `/chat/suggestions` | **GET** | Guest Permitted | Default | Predefined question suggestions. |
 
-#### Request/Response Samples:
-**POST `/api/chat/transcribe`**
-- **Content-Type:** `multipart/form-data`
-- **Form Body:** `file` (binary audio blob)
-- **Response (200 OK):**
-  ```json
-  {
-    "success": true,
-    "transcript": "What are the critical stock alerts in Delhi warehouse?",
-    "language": "hi-IN"
-  }
-  ```
+#### Request/Response Samples
 
 **POST `/api/chat/query`**
-- **Body:**
-  ```json
-  {
-    "conversation_id": "conv_8f8b3b249b1c",
-    "question": "What items are critical right now at Pharmacy A?"
-  }
-  ```
-- **Response (200 OK):**
-  ```json
-  {
-    "success": true,
-    "response": "At Pharmacy A, the following items are currently critical:\n1. **Paracetamol 500mg** - Current stock: 0 (Min: 100)\n2. **Amoxicillin 250mg** - Current stock: 5 (Min: 50)",
-    "question": "What items are critical right now at Pharmacy A?",
-    "conversation_id": "conv_8f8b3b249b1c",
-    "suggested_actions": [
-      {
-        "type": "view",
-        "label": "View All Alerts",
-        "action": "view_alerts"
-      }
-    ]
-  }
-  ```
+```json
+// Request
+{
+  "conversation_id": "conv_8f8b3b249b1c",
+  "question": "What items are critical right now at Pharmacy A?"
+}
 
+// Response 200
+{
+  "success": true,
+  "response": "At Pharmacy A, the following items are critical:\n1. **Paracetamol 500mg** - Current stock: 0 (Min: 100)\n2. **Amoxicillin 250mg** - Current stock: 5 (Min: 50)",
+  "question": "What items are critical right now at Pharmacy A?",
+  "conversation_id": "conv_8f8b3b249b1c",
+  "suggested_actions": [
+    { "type": "view", "label": "View All Alerts", "action": "view_alerts" }
+  ]
+}
+```
+
+**POST `/api/chat/transcribe`**
+```json
+// Request: multipart/form-data, field: file (binary audio)
+// Response 200
+{
+  "success": true,
+  "transcript": "What are the critical stock alerts in Delhi warehouse?",
+  "language": "hi-IN"
+}
+```
 
 ---
 
-### 5. Analytics Dashboard — REST (`/api/analytics`)
+### 5. Analytics — REST (`/api/analytics`)
 
-Analytics endpoints are cached in Redis to maintain fast, scalable sub-100ms response times. For flexible, field-level analytics queries, use the [GraphQL analytics endpoint](#-graphql-analytics-api) instead.
+Cached in Redis for fast, scalable sub-100ms responses.
 
-| Endpoint | Method | Auth Scope | Rate Limit | Description |
+| Endpoint | Method | Auth | Rate Limit | Description |
 |---|---|---|---|---|
-| `/analytics/dashboard/stats` | **GET** | Guest Permitted| 30/min | High-level metrics for dashboard (cached 2 min). |
-| `/analytics/heatmap` | **GET** | Guest Permitted| 30/min | Grid data representing item stock health per location (cached 5 min). |
-| `/analytics/alerts` | **GET** | Guest Permitted| 30/min | List of critical/warning stock alerts across all locations (cached 5 min). |
-| `/analytics/summary` | **GET** | Guest Permitted| 30/min | Aggregate inventory health overview (cached 5 min). |
+| `/analytics/dashboard/stats` | **GET** | Guest Permitted | 30/min | Category distribution, low-stock items, location stock, status distribution (cached 2 min). |
+| `/analytics/heatmap` | **GET** | Guest Permitted | 30/min | Location × item grid (cached 5 min). |
+| `/analytics/alerts` | **GET** | Guest Permitted | 30/min | Critical/warning alerts with reorder suggestions (cached 5 min). |
+| `/analytics/summary` | **GET** | Guest Permitted | 30/min | Aggregate inventory health overview (cached 5 min). |
 
 ---
 
 ### 6. Vendor Ingestion (`/api/vendor`)
 
-Fuzzy matching uses `RapidFuzz` to map manifest strings to registry database entities.
-
-| Endpoint | Method | Auth Scope | Rate Limit | Description |
+| Endpoint | Method | Auth | Rate Limit | Description |
 |---|---|---|---|---|
-| `/vendor/upload-delivery` | **POST** | `vendor`+ | 10/min | Upload Excel document containing stock delivery details. |
-| `/vendor/my-uploads` | **GET** | `vendor`+ | Default | Retrieve manifest ingestion history for current vendor. |
-| `/vendor/template` | **GET** | `vendor`+ | Default | Download a blank Excel template for vendor manifests. |
+| `/vendor/upload-delivery` | **POST** | `vendor`+ | 10/min | Upload Excel delivery manifest. Case-insensitive item matching. |
+| `/vendor/my-uploads` | **GET** | `vendor`+ | Default | Upload history. |
+| `/vendor/template` | **GET** | `vendor`+ | Default | Download blank Excel template. |
 
-- **Fuzzy Matching Threshold:** `85%` matching score. Names scoring lower write warning rows to the ingestion log and skip import.
-- **Upload parser:** `openpyxl` (Python engine).
+**Expected Excel columns:** `item_name`, `quantity_received`, `delivery_date` (optional), `notes` (optional)
 
 ---
 
-### 7. Administrative Controls (`/api/admin`)
+### 7. Admin Dashboard (`/api/admin`)
 
-| Endpoint | Method | Auth Scope | Rate Limit | Description |
+| Endpoint | Method | Auth | Rate Limit | Description |
 |---|---|---|---|---|
-| `/admin/overview` | **GET** | `admin`+ | Default | Tenant system overview numbers (users, locations, audits). |
-| `/admin/audit-logs` | **GET** | `admin`+ | Default | Paginated system-wide write operation logs for compliance. |
-| `/admin/users/summary` | **GET** | `admin`+ | Default | User count aggregated by role. |
-| `/admin/reports/generate` | **GET** | `admin`+ | Default | Generate and export PDF reports (returns binary blob). |
+| `/admin/overview` | **GET** | `admin`+ | Default | Platform stats: total/active/inactive users, role breakdown, recent activity. |
+| `/admin/audit-logs` | **GET** | `admin`+ | Default | Audit trail filterable by user, action, resource type. |
+| `/admin/users/summary` | **GET** | `admin`+ | Default | All users with alerts (locked accounts, never logged in). |
+| `/admin/reports/generate` | **GET** | `admin`+ | Default | Generate PDF report (inventory/transactions/requisitions/low_stock). |
 
 ---
 
-### 8. Platform Superadmin Operations (`/api/superadmin`)
+### 8. Super Admin (`/api/superadmin`)
 
-Requires `super_admin` role (global scope, skips tenant constraints).
+Requires `super_admin` role (exact match).
 
-| Endpoint | Method | Auth Scope | Rate Limit | Description |
+| Endpoint | Method | Auth | Rate Limit | Description |
 |---|---|---|---|---|
-| `/superadmin/organizations` | **GET** | `super_admin` | Default | List all provisioned organizations. |
-| `/superadmin/organizations` | **POST** | `super_admin` | 10/min | Create and provision a new multi-tenant organization. |
-| `/superadmin/organizations/{org_id}`|**PUT** | `super_admin` | 10/min | Update organization details. |
-| `/superadmin/organizations/{org_id}`|**DELETE**| `super_admin` | 5/min | Delete organization (soft delete). |
-| `/superadmin/organizations/{org_id}/admin`|**POST**| `super_admin` | 10/min | Provision tenant admin user for an organization. |
-| `/superadmin/users` | **GET** | `super_admin` | Default | List all users across all organizations on the platform. |
+| `/superadmin/organizations` | **GET** | `super_admin` | Default | List all organizations. |
+| `/superadmin/organizations` | **POST** | `super_admin` | 10/min | Create organization. |
+| `/superadmin/organizations/{org_id}` | **PUT** | `super_admin` | 10/min | Update organization. |
+| `/superadmin/organizations/{org_id}` | **DELETE** | `super_admin` | 5/min | Soft-delete organization (must have 0 users). |
+| `/superadmin/organizations/{org_id}/admin` | **POST** | `super_admin` | 10/min | Create admin for organization. |
+| `/superadmin/users` | **GET** | `super_admin` | Default | List all users across all organizations. |
 
 ---
 
-## 🔷 GraphQL Analytics API
+### 9. Health & Root
 
-**Endpoint:** `POST /graphql/analytics`  
+| Endpoint | Method | Description |
+|---|---|---|
+| `/` | **GET** | Root — returns name, version, status, docs URL. |
+| `/health` | **GET** | Health check — verifies Redis connectivity. Returns 200 or 503. |
+
+---
+
+## GraphQL Analytics API
+
+**Endpoint:** `POST /graphql/analytics`
 **Playground (dev only):** `GET /graphql/analytics`
 
-The GraphQL layer is a read-only analytics interface built with **Strawberry** (code-first Python GraphQL). It exposes the same underlying `AnalyticsService` as the REST layer but with:
-- **Zero over-fetching** — clients request exactly the fields they need
-- **Server-side filtering** on `stockHealth` (location, item name, status)
-- **Role-aware field masking** (see RBAC section above)
-- **Shared Redis cache** — warm REST cache is immediately reused
+Read-only analytics interface built with **Strawberry**. Zero over-fetching, server-side filtering, role-aware field masking, shared Redis cache with REST.
 
 ### Authentication
 
-GraphQL uses the same JWT Bearer token as REST. Pass it in the `Authorization` header:
-
-```
-Authorization: Bearer <access_token>
-```
-
-Unauthenticated (Guest) requests are accepted — privileged fields return `null`.
+Same JWT Bearer token as REST. Pass in `Authorization` header. Unauthenticated requests accepted — privileged fields return `null`.
 
 ---
 
 ### Query: `dashboardStats`
 
-Returns high-level chart data for the analytics dashboard. Cached for 2 minutes.
+Returns high-level chart data. Cached 2 minutes.
 
 ```graphql
 query DashboardStats {
@@ -398,52 +420,27 @@ query DashboardStats {
 }
 ```
 
-**Response:**
-```json
-{
-  "data": {
-    "dashboardStats": {
-      "categoryDistribution": [
-        { "name": "Medication", "value": 42 },
-        { "name": "Equipment", "value": 18 }
-      ],
-      "lowStockItems": [
-        { "name": "Paracetamol 500mg", "stock": 5, "minStock": 100, "shortage": 95 }
-      ],
-      "locationStock": [
-        { "name": "Main Pharmacy", "value": 2840 }
-      ],
-      "statusDistribution": [
-        { "name": "CRITICAL", "value": 8, "color": "#ef4444" },
-        { "name": "WARNING",  "value": 14, "color": "#f59e0b" },
-        { "name": "HEALTHY",  "value": 38, "color": "#22c55e" }
-      ]
-    }
-  }
-}
-```
-
 ---
 
 ### Query: `heatmap`
 
-Returns the full inventory heatmap grid (locations × items). Cached for 5 minutes.
+Returns the full inventory heatmap grid (locations × items). Cached 5 minutes.
 
 ```graphql
 query Heatmap {
   heatmap {
     locations
     items
-    matrix        # JSON scalar — list[list[{stock, status, daysRemaining}]]
+    matrix
     details {
       locationName
       itemName
       currentStock
       healthStatus
       color
-      avgDailyUsage   # null for Guest/Vendor
-      daysRemaining   # null for Guest/Vendor
-      leadTimeDays    # null for Guest/Vendor
+      avgDailyUsage    # null for guest/vendor/staff
+      daysRemaining    # null for guest/vendor/staff
+      leadTimeDays     # null for guest/vendor/staff
     }
   }
 }
@@ -453,9 +450,7 @@ query Heatmap {
 
 ### Query: `alerts`
 
-Returns critical or warning stock alerts with recommended reorder quantities. Cached for 5 minutes per severity level.
-
-**Arguments:**
+Returns critical or warning stock alerts with recommended reorder quantities. Cached 5 minutes.
 
 | Argument | Type | Default | Values |
 |----------|------|---------|--------|
@@ -472,8 +467,8 @@ query Alerts($severity: String = "CRITICAL") {
       currentStock
       healthStatus
       recommendedReorder
-      avgDailyUsage   # null for Guest/Vendor
-      leadTimeDays    # null for Guest/Vendor
+      avgDailyUsage    # null for guest/vendor/staff
+      leadTimeDays     # null for guest/vendor/staff
     }
   }
 }
@@ -483,28 +478,14 @@ query Alerts($severity: String = "CRITICAL") {
 
 ### Query: `summary`
 
-Returns aggregate inventory health overview — item counts, health breakdown, and per-category stats. Cached for 5 minutes.
+Aggregate inventory health overview. Cached 5 minutes.
 
 ```graphql
 query Summary {
   summary {
-    overview {
-      totalLocations
-      totalItems
-      totalRecords
-    }
-    healthSummary {
-      critical
-      warning
-      healthy
-    }
-    categories {
-      name
-      total
-      critical
-      warning
-      healthy
-    }
+    overview { totalLocations totalItems totalRecords }
+    healthSummary { critical warning healthy }
+    categories { name total critical warning healthy }
   }
 }
 ```
@@ -513,22 +494,16 @@ query Summary {
 
 ### Query: `stockHealth`
 
-Flexible ad-hoc stock health query with server-side filtering. **Not cached** — designed for on-demand reporting.
-
-**Arguments:**
+Flexible ad-hoc stock health query with server-side filtering. **Not cached.**
 
 | Argument | Type | Default | Description |
 |----------|------|---------|-------------|
-| `location` | `String` | `""` | Case-insensitive substring match on location name |
-| `item` | `String` | `""` | Case-insensitive substring match on item name |
+| `location` | `String` | `""` | Case-insensitive substring match |
+| `item` | `String` | `""` | Case-insensitive substring match |
 | `statusFilter` | `String` | `""` | Exact match: `""` \| `"CRITICAL"` \| `"WARNING"` \| `"HEALTHY"` |
 
 ```graphql
-query StockHealth(
-  $location: String = "",
-  $item: String = "",
-  $statusFilter: String = "CRITICAL"
-) {
+query StockHealth($location: String = "", $item: String = "", $statusFilter: String = "CRITICAL") {
   stockHealth(location: $location, item: $item, statusFilter: $statusFilter) {
     locationName
     itemName
@@ -537,25 +512,16 @@ query StockHealth(
     healthStatus
     color
     lastUpdated
-    avgDailyUsage   # null for Guest/Vendor
-    daysRemaining   # null for Guest/Vendor
-    leadTimeDays    # null for Guest/Vendor
+    avgDailyUsage    # null for guest/vendor/staff
+    daysRemaining    # null for guest/vendor/staff
+    leadTimeDays     # null for guest/vendor/staff
   }
 }
-```
-
-**Example — all critical items at any Warehouse:**
-```graphql
-{ stockHealth(location: "Warehouse", statusFilter: "CRITICAL") {
-    itemName locationName currentStock
-} }
 ```
 
 ---
 
 ### GraphQL Error Handling
-
-GraphQL errors are returned in the standard `errors` array. The HTTP status code is always `200` for GraphQL responses (per the spec).
 
 ```json
 {
@@ -572,12 +538,19 @@ GraphQL errors are returned in the standard `errors` array. The HTTP status code
 
 ---
 
-## ── Real-Time WebSockets (`/ws`) ─────────────────────────────────────────────
+## Real-Time WebSocket (`/ws/alerts`)
 
-Clients connect to `/ws/alerts?token=<access_token>` to receive server-sent events. Connections are tracked per-location.
+Clients connect to `/ws/alerts?token=<access_token>`. JWT validated before accept; rejects with code 4001 on invalid token.
 
-### Event Format:
-**Critical Stock Alert Event (`low_stock_alert`)**
+### Connection
+
+```
+ws://localhost:8000/ws/alerts?token=eyJhbGciOi...
+```
+
+### Event Format
+
+**Critical Stock Alert:**
 ```json
 {
   "type": "low_stock_alert",
@@ -590,13 +563,35 @@ Clients connect to `/ws/alerts?token=<access_token>` to receive server-sent even
 }
 ```
 
+**Heartbeat:**
+- Client sends: `"ping"`
+- Server responds: `{"type": "pong"}`
+
 ---
 
-## ── Background Operations: Email alerts ──────────────────────────────────────
+## Background Operations: Email Alerts
 
-When stock level transitions below minimum requirements:
-1. Active administrators and managers are queried from PostgreSQL.
-2. A background `threading.Thread(daemon=True)` is spawned.
-3. The thread connects to the configured SMTP relay (TLS encrypted).
-4. HTML alert template is populated and dispatched.
-5. Thread terminates automatically; errors are logged silently without interrupting active requests.
+When stock drops below minimum threshold:
+
+1. Active admins/managers queried from PostgreSQL (cached 60s).
+2. Background `threading.Thread(daemon=True)` spawned — zero latency impact on HTTP response.
+3. Thread establishes SMTP TLS connection and dispatches HTML alert template.
+4. Thread terminates automatically; errors logged silently without rolling back transactions.
+
+---
+
+## Error Reference
+
+| Error Code | HTTP Status | Description |
+|------------|-------------|-------------|
+| `NOT_FOUND` | 404 | Resource not found |
+| `VALIDATION_ERROR` | 422 | Input validation failed |
+| `INSUFFICIENT_STOCK` | 400 | Not enough stock for operation |
+| `DUPLICATE` | 409 | Resource already exists |
+| `INVALID_STATE` | 400 | Operation not allowed in current state |
+| `AUTHENTICATION_ERROR` | 401 | Invalid credentials |
+| `AUTHORIZATION_ERROR` | 403 | Insufficient permissions |
+| `DATABASE_ERROR` | 500 | Database error (details sanitized) |
+| `SERVICE_UNAVAILABLE` | 503 | Database connection error |
+| `INTERNAL_ERROR` | 500 | Unhandled exception |
+| `rate_limit_exceeded` | 429 | Rate limit exceeded |

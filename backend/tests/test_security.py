@@ -178,11 +178,12 @@ class TestRoleHierarchy:
         assert ROLE_HIERARCHY["manager"] == 4
         assert ROLE_HIERARCHY["staff"] == 3
         assert ROLE_HIERARCHY["vendor"] == 2
-        assert ROLE_HIERARCHY["viewer"] == 1
+        assert "viewer" not in ROLE_HIERARCHY  # removed — backend requires real role
 
     def test_allowed_roles_set(self):
         """Allowed roles should match hierarchy keys."""
-        assert ALLOWED_ROLES == {"super_admin", "admin", "manager", "staff", "vendor", "viewer"}
+        assert ALLOWED_ROLES == {"super_admin", "admin", "manager", "staff", "vendor"}
+        assert "viewer" not in ALLOWED_ROLES  # backend requires authenticated real role
 
     def test_check_role_permission_same_level(self):
         """User with same role level should have permission."""
@@ -192,13 +193,13 @@ class TestRoleHierarchy:
     def test_check_role_permission_higher_level(self):
         """User with higher role should have permission."""
         assert check_role_permission("admin", "staff") is True
-        assert check_role_permission("manager", "viewer") is True
+        assert check_role_permission("manager", "vendor") is True
         assert check_role_permission("super_admin", "admin") is True
 
     def test_check_role_permission_lower_level(self):
         """User with lower role should not have permission."""
         assert check_role_permission("staff", "admin") is False
-        assert check_role_permission("viewer", "manager") is False
+        assert check_role_permission("vendor", "manager") is False
         assert check_role_permission("vendor", "staff") is False
 
     def test_check_role_permission_invalid_user_role(self):
@@ -218,11 +219,11 @@ class TestRoleHierarchy:
         for role in ALLOWED_ROLES:
             assert check_role_permission("super_admin", role) is True
 
-    def test_viewer_has_minimal_permissions(self):
-        """Viewer should only have permission for viewer role."""
-        assert check_role_permission("viewer", "viewer") is True
-        assert check_role_permission("viewer", "staff") is False
-        assert check_role_permission("viewer", "admin") is False
+    def test_vendor_has_minimal_permissions(self):
+        """Vendor (lowest real role) should fail staff or higher checks."""
+        assert check_role_permission("vendor", "vendor") is True
+        assert check_role_permission("vendor", "staff") is False
+        assert check_role_permission("vendor", "admin") is False
 
 
 class TestEmailMasking:

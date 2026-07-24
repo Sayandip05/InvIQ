@@ -1,7 +1,7 @@
 # High-Level Design (HLD) - InvIQ Smart Inventory Assistant
 
-**Version:** 4.0  
-**Last Updated:** June 26, 2026  
+**Version:** 5.0  
+**Last Updated:** July 24, 2026  
 **Author:** Sayandip Bar
 
 ---
@@ -34,14 +34,16 @@ Healthcare facilities struggle with manual inventory management, leading to stoc
 **InvIQ** is an AI-powered inventory management platform that tracks medical supplies across multiple healthcare locations. It provides:
 
 1. **Real-time inventory tracking** with automatic stock calculations
-2. **AI chatbot** powered by LangGraph ReAct agent for natural language queries
+2. **AI chatbot** powered by LangGraph ReAct agent with 9 inventory tools for natural language queries
 3. **Requisition workflow** with approval/rejection system
-4. **Vendor integration** via Excel upload with fuzzy item matching
+4. **Vendor integration** via Excel upload with item matching
 5. **Analytics dashboard** with heatmaps and critical alerts
 6. **GraphQL analytics layer** via Strawberry — role-aware resolvers at `/graphql/analytics`
 7. **Multi-tenancy** supporting multiple organizations
 8. **Guest Demo Mode** permitting unauthenticated dashboard and chat access
 9. **Low-stock email alerts** dispatched to managers on critical stock shortages
+10. **PDF report generation** for inventory, transactions, and requisitions
+11. **Alembic migrations** for production-safe database schema management
 
 ---
 
@@ -166,7 +168,7 @@ Healthcare facilities struggle with manual inventory management, leading to stoc
 │  │  └────────────────────────────────────────────────────────────────┘ │   │
 │  │                                                                      │   │
 │  │  ┌────────────────────────────────────────────────────────────────┐ │   │
-│  │  │  7 Agent Tools (@tool decorator)                               │ │   │
+│  │  │  9 Agent Tools (@tool decorator)                               │ │   │
 │  │  │  1. get_inventory_overview()                                   │ │   │
 │  │  │  2. get_critical_items(location, severity)                     │ │   │
 │  │  │  3. get_stock_health(item, location)                           │ │   │
@@ -174,6 +176,8 @@ Healthcare facilities struggle with manual inventory management, leading to stoc
 │  │  │  5. get_location_summary(location_name)                        │ │   │
 │  │  │  6. get_category_analysis(category)                            │ │   │
 │  │  │  7. get_consumption_trends(item, location, days)               │ │   │
+│  │  │  8. get_near_expiry_items(days)                                │ │   │
+│  │  │  9. get_cold_chain_items(location)                             │ │   │
 │  │  └────────────────────────────────────────────────────────────────┘ │   │
 │  └──────────────────────────────────────────────────────────────────────┘   │
 │                                                                              │
@@ -189,28 +193,29 @@ Healthcare facilities struggle with manual inventory management, leading to stoc
 │                        INFRASTRUCTURE LAYER                                  │
 │                                                                              │
 │  ┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────┐  │
-│  │  PostgreSQL          │  │  Upstash Redis       │  │  ChromaDB        │  │
-│  │  (Neon)              │  │  (REST API)          │  │  (Local)         │  │
+│  │  PostgreSQL          │  │  Upstash Redis       │  │  Qdrant Cloud    │  │
+│  │  (Neon)              │  │  (REST API)          │  │  (Vector Store)  │  │
 │  │                      │  │                      │  │                  │  │
-│  │  Tables:             │  │  Keys:               │  │  Collections:    │  │
-│  │  - users             │  │  - token_blacklist:* │  │  - chat_memory   │  │
-│  │  - organizations     │  │  - login_attempts:*  │  │                  │  │
+│  │  Tables:             │  │  Keys:               │  │  Collection:     │  │
+│  │  - organizations     │  │  - token_blacklist:* │  │  - chat_memory   │  │
+│  │  - users             │  │  - lockout:*         │  │                  │  │
 │  │  - locations         │  │  - analytics:*       │  │  Embeddings:     │  │
 │  │  - items             │  │  - dashboard:*       │  │  - 384 dims      │  │
-│  │  - inventory_trans   │  │                      │  │  - Semantic      │  │
-│  │  - requisitions      │  │  TTL:                │  │    search        │  │
-│  │  - requisition_items │  │  - 2-5 min (cache)   │  │  - Session-based │  │
-│  │  - vendor_uploads    │  │  - 30 min (tokens)   │  │    context       │  │
-│  │  - chat_sessions     │  │  - 15 min (lockout)  │  │                  │  │
-│  │  - chat_messages     │  │                      │  │  Fallback:       │  │
-│  │  - audit_logs        │  │  Fallback:           │  │  - Disabled      │  │
-│  │                      │  │  - In-memory dict    │  │    gracefully    │  │
-│  │  Features:           │  │    (dev only)        │  │                  │  │
-│  │  - ACID compliance   │  │                      │  │                  │  │
+│  │  - inventory_trans   │  │  - cache:*           │  │  - all-MiniLM-   │  │
+│  │  - requisitions      │  │                      │  │    L6-v2         │  │
+│  │  - requisition_items │  │  TTL:                │  │  - Semantic      │  │
+│  │  - vendor_uploads    │  │  - 2-5 min (cache)   │  │    search        │  │
+│  │  - chat_sessions     │  │  - 30 min (tokens)   │  │  - Session-based │  │
+│  │  - chat_messages     │  │  - 15 min (lockout)  │  │    context       │  │
+│  │  - audit_logs        │  │                      │  │                  │  │
+│  │                      │  │  Fallback:           │  │  Fallback:       │  │
+│  │  Features:           │  │  - In-memory dict    │  │  - Disabled      │  │
+│  │  - ACID compliance   │  │    (dev only)        │  │    gracefully    │  │
 │  │  - Foreign keys      │  │                      │  │                  │  │
 │  │  - Indexes           │  │                      │  │                  │  │
 │  │  - Connection pool   │  │                      │  │                  │  │
 │  │  - Retry logic (3x)  │  │                      │  │                  │  │
+│  │  - Alembic migrations│  │                      │  │                  │  │
 │  └──────────────────────┘  └──────────────────────┘  └──────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -220,16 +225,18 @@ Healthcare facilities struggle with manual inventory management, leading to stoc
 | Component | Responsibility |
 |-----------|---------------|
 | **React Frontend** | User interface, 5 role-based portals (Super Admin, Admin, Manager, Staff, Vendor) + Guest Demo Mode, real-time WebSocket updates |
-| **FastAPI Backend** | REST API (56 endpoints), authentication, business logic orchestration |
+| **FastAPI Backend** | REST API (56+ endpoints), authentication, business logic orchestration |
+| **Domain Layer** | Repository protocols (Protocol classes), value objects (StockStatus, StockThresholds, ReorderPolicy), domain calculations |
 | **GraphQL Layer (Strawberry)** | Read-only analytics API at `/graphql/analytics` — 5 queries, role-aware field masking, shared Redis cache with REST |
-| **AI Agent Service** | LangGraph ReAct agent with 9 tools (7 core + 2 pharmacy-specific), natural language processing |
+| **AI Agent Service** | LangGraph ReAct agent with 9 tools, natural language processing, voice transcription (Sarvam AI) |
 | **Analytics Service** | Dashboard stats, heatmaps, critical alerts with Redis caching — shared by REST and GraphQL |
-| **Inventory Service** | Stock tracking, transaction management, reorder calculations |
+| **Inventory Service** | Stock tracking, transaction management, reorder calculations, WebSocket alert triggers |
 | **Requisition Service** | Approval workflow, status management, inventory updates |
-| **Vendor Service** | Excel parsing, fuzzy item matching, bulk transaction creation |
-| **PostgreSQL** | Primary data store (users, inventory, transactions, requisitions) |
+| **Vendor Service** | Excel parsing, item matching, bulk transaction creation |
+| **Report Service** | PDF report generation for inventory, transactions, requisitions |
+| **PostgreSQL** | Primary data store (11 tables, Alembic migrations) |
 | **Upstash Redis** | Distributed cache, token blacklist, login attempt tracking |
-| **ChromaDB** | Vector database for AI semantic memory and RAG |
+| **Qdrant Cloud** | Vector database for AI semantic memory and RAG context |
 
 ---
 
@@ -503,8 +510,8 @@ Admins & Managers receive email warning
 │  Role-Based Access Control                                      │
 │                                                                  │
 │  Role Hierarchy:                                                │
-│  super_admin (5) > admin (4) > manager (3) >                    │
-│  staff (2) > vendor (1)                                         │
+│  super_admin (6) > admin (5) > manager (4) >                    │
+│  staff (3) > vendor (2)                                         │
 │                                                                  │
 │  Endpoint Protection:                                           │
 │  - /api/superadmin/* → super_admin only                         │
@@ -535,10 +542,13 @@ Admins & Managers receive email warning
 | **FastAPI** | Async support, automatic OpenAPI docs, fast performance, Python ecosystem |
 | **Strawberry GraphQL** | Code-first GraphQL for Python — integrates natively with FastAPI, supports role-aware resolvers and field-level nullable masking |
 | **PostgreSQL** | ACID compliance, complex queries, JSON support, production-ready |
+| **Alembic** | Database migration management for production-safe schema changes |
 | **Upstash Redis** | Serverless Redis, REST API (no TCP), pay-per-request, global replication |
-| **ChromaDB** | Vector database for semantic search and RAG context storage |
+| **Qdrant Cloud** | Vector database for semantic search and RAG context storage |
 | **LangGraph** | Orchestrates ReAct agent workflows and structures tool execution state machines |
 | **Groq** | Ultra-fast LLM inference (LLaMA 3.3 70B), cost-effective |
+| **Pydantic Settings** | Type-safe configuration management with `.env` file support and production validation |
+| **Argon2 (pwdlib)** | GPU-resistant, memory-hard password hashing (PHC winner) |
 
 #### Frontend
 | Technology | Why Chosen |
@@ -559,25 +569,27 @@ Admins & Managers receive email warning
 
 | Characteristic | Value | Notes |
 |----------------|-------|-------|
-| **Architecture** | Modular Monolith | Clean boundaries, ready for extraction |
-| **API Style** | REST + GraphQL + WebSocket | 56 REST endpoints, 5 GraphQL queries, 2 WebSocket endpoints |
-| **Database** | PostgreSQL (ACID) | Single source of truth |
-| **Caching** | Redis (Upstash) | 2-5 min TTL, pattern-based invalidation, shared between REST and GraphQL |
-| **AI** | LangGraph ReAct | 9 tools, 30s timeout |
-| **Auth** | JWT (HS256) | 30 min access, 7 days refresh |
-| **Rate Limiting** | slowapi | 5-60 req/min, Redis-backed (REST only) |
-| **Real-time** | WebSocket | Location-based broadcasting |
-| **Deployment** | Single instance | Render.com free tier |
+| **Architecture** | Clean Architecture (Domain/Application/Infrastructure/API) | Modular monolith with DDD-inspired layering |
+| **API Style** | REST + GraphQL + WebSocket | 56+ REST endpoints, 5 GraphQL queries, WebSocket alerts |
+| **Database** | PostgreSQL (ACID) | 11 tables, Alembic migrations, connection retry with backoff |
+| **Caching** | Redis (Upstash) | 2-5 min TTL, SCAN-based invalidation, shared between REST and GraphQL |
+| **AI** | LangGraph ReAct | 9 tools, 30s timeout, voice STT (Sarvam AI, 22 languages) |
+| **Auth** | JWT (HS256) + Argon2 | 30 min access, 7 days refresh, token rotation, timing-safe verification |
+| **Rate Limiting** | slowapi (moving-window) | 5-60 req/min, Redis-backed (REST only) |
+| **Real-time** | WebSocket | Location-based broadcasting, ping/pong heartbeat |
+| **Deployment** | Docker multi-stage → Azure/Render | CI/CD via GitHub Actions |
 | **Scaling** | Vertical | Add RAM/CPU to single instance |
 | **Background Jobs** | Daemon Threads | In-process email dispatch |
-| **External APIs** | Groq, LangSmith | LLM inference, observability |
+| **Config** | Pydantic Settings v2 | Type-safe, multi-path .env, production validation |
+| **External APIs** | Groq, LangSmith, Sarvam AI, Qdrant | LLM inference, observability, voice STT, vector storage |
 
 ### 8.3 External Integrations
 - **Groq API:** Handles LLM inference for chatbot queries using `llama-3.3-70b-versatile`.
 - **LangSmith:** Monitors chain execution and traces tool performance.
+- **Sarvam AI:** Voice-to-text transcription (`saaras:v3`) supporting 22 Indian languages.
+- **Qdrant Cloud:** Vector storage for chat memory and RAG context.
 - **SMTP Server:** Dispatches automated emails for password resets, invites, and critical stock notifications.
 - **Google OAuth:** Validates external credentials to log in social users.
-- *Placeholder Integrations:* Planned integrations include Twilio for SMS warnings and Stripe/Razorpay for automatic vendor replenishment invoices.
 
 ---
 
@@ -592,10 +604,10 @@ Admins & Managers receive email warning
 - **Modular Boundaries:** Designed with clean separation to ease extraction to microservices if scaling demands dictate:
   ```
   backend/app/
-  ├── api/              # API routes and Pydantic schemas
-  ├── application/      # Service orchestration (inventory, requisition, agent, analytics)
-  ├── domain/           # Core calculations and business rules
-  └── infrastructure/   # Persistence, caching, and database configuration
+  ├── api/              # API routes, Pydantic schemas, GraphQL
+  ├── application/      # Service orchestration (inventory, requisition, agent, analytics, report)
+  ├── domain/           # Core business rules, value objects, repository protocols
+  └── infrastructure/   # Persistence, caching, database, vector store
   ```
 
 ### 9.2 Background Jobs & Task Queues
@@ -619,6 +631,28 @@ Queries dynamically filter by `org_id` in the database query layer rather than a
 
 ## 10. Deployment Architecture
 
+### Local Development (Docker Compose)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     LOCAL DEVELOPMENT                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  docker compose up --build                                       │
+│                                                                  │
+│  ┌──────────────────────┐  ┌──────────────────────────────────┐ │
+│  │  FastAPI Container    │  │  Cloud Services (external)       │ │
+│  │  - Port 8000          │──│  - Neon PostgreSQL               │ │
+│  │  - Gunicorn + Uvicorn │  │  - Upstash Redis                │ │
+│  │  - 3 workers          │  │  - Qdrant Cloud                 │ │
+│  │  - Health check       │  │  - Groq API                     │ │
+│  └──────────────────────┘  └──────────────────────────────────┘ │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Production (Azure Container Instance)
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         PRODUCTION                               │
@@ -629,27 +663,57 @@ Queries dynamically filter by `org_id` in the database query layer rather than a
 │  - CDN distribution                                             │
 │  - Auto-deploy from GitHub                                      │
 │                                                                  │
-│  Backend (Render.com)                                           │
-│  - FastAPI + Gunicorn + Uvicorn                                 │
-│  - 3 workers                                                    │
-│  - Auto-deploy from GitHub                                      │
-│  - Health checks                                                │
+│  Backend (Azure Container Instance)                              │
+│  - Docker multi-stage build                                     │
+│  - ACR: inviqacr.azurecr.io                                     │
+│  - 2 CPU / 4 GB RAM                                             │
+│  - Auto-deploy via GitHub Actions CI/CD                          │
+│  - Health checks on /health                                     │
 │                                                                  │
-│  Database (Neon)                                                │
+│  Database (Neon PostgreSQL)                                      │
 │  - Managed PostgreSQL                                           │
+│  - Alembic migrations on startup                                │
 │  - Automatic backups                                            │
-│  - Connection pooling                                           │
 │                                                                  │
 │  Cache (Upstash Redis)                                          │
 │  - Serverless Redis                                             │
 │  - Global replication                                           │
-│  - REST API                                                     │
 │                                                                  │
-│  Vector DB (ChromaDB)                                           │
-│  - Local persistent storage                                     │
-│  - Mounted volume                                               │
+│  Vector DB (Qdrant Cloud)                                       │
+│  - Managed vector storage                                       │
+│  - Semantic search for AI chatbot                                │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
+```
+
+### CI/CD Pipeline
+
+```
+git push main
+    ↓
+CI: pytest + docker build (GitHub Actions)
+    ↓
+CD: build image → push to ACR → deploy to Azure
+    ↓
+Live at http://inviq-api.eastasia.azurecontainer.io:8000
+```
+
+### Docker Multi-Stage Build
+
+```
+Stage 1 (Builder):
+  python:3.11-slim
+  - Install system deps (gcc, libpq-dev, libffi-dev)
+  - Create virtual environment
+  - Install CPU-only PyTorch (~200 MB vs 2 GB CUDA)
+  - Install all Python dependencies
+
+Stage 2 (Runner):
+  python:3.11-slim
+  - Copy venv from builder
+  - Copy application code
+  - Health check via curl
+  - CMD: alembic upgrade head → gunicorn (3 workers)
 ```
 
 ---
@@ -658,13 +722,16 @@ Queries dynamically filter by `org_id` in the database query layer rather than a
 
 | Pattern | Where Used | Why |
 |---------|-----------|-----|
-| **Repository Pattern** | Data access layer (`user_repo`, etc.) | Decouples ORM queries from business logic, simplifying testing and making data sources swap-ready |
-| **Dependency Injection** | FastAPI `Depends()` | Promotes loose coupling, facilitates unit testing through mock dependencies, and controls connection scopes |
-| **Service Layer** | Business logic files | Isolates transactional orchestrations from routing logic |
-| **ReAct Agent** | Chat system (`agent_service`) | Powers an LLM reasoning-action loop to execute multi-step tools based on prompt contexts |
-| **CQRS (Light)** | Dashboard analytics — REST + GraphQL reads separated from writes | Isolates write operations from read-heavy analytics calculations served via REST and the GraphQL layer |
-| **Event-driven** | WebSocket modules | Pushes live notifications to active frontends without polling overhead |
-| **Role-aware Resolvers** | GraphQL analytics layer | Field-level null masking enforces RBAC at the data layer — Guest/Vendor see stock status but not operational forecasting fields |
+| **Clean Architecture** | `backend/app/` — Domain/Application/Infrastructure/API layers | Enforces dependency rule: domain has zero infrastructure imports |
+| **Repository Protocol** | `app/domain/interfaces.py` | Structural subtyping via `typing.Protocol` — services depend on contracts, not implementations |
+| **Dependency Injection** | FastAPI `Depends()` in `app/core/dependencies.py` | Promotes loose coupling, facilitates unit testing through mock dependencies |
+| **Service Layer** | `app/application/` services | Isolates transactional orchestrations from routing logic |
+| **Value Objects** | `app/domain/value_objects.py` — StockStatus, StockThresholds, ReorderPolicy | Immutable, behaviour-rich types encoding business rules |
+| **ReAct Agent** | Chat system (`agent_service`) | LLM reasoning-action loop with 9 inventory tools |
+| **CQRS (Light)** | Dashboard analytics — REST + GraphQL reads separated from writes | Isolates write operations from read-heavy analytics |
+| **Event-driven** | WebSocket modules | Pushes live notifications to active frontends without polling |
+| **Role-aware Resolvers** | GraphQL analytics layer | Field-level null masking enforces RBAC at the data layer |
+| **Read-only Session Guard** | `agent_tools.py` — `ReadOnlySession` | Prevents AI agent from modifying database during tool execution |
 
 ---
 
@@ -672,12 +739,13 @@ Queries dynamically filter by `org_id` in the database query layer rather than a
 
 | Requirement | Target | Implementation |
 |-------------|--------|----------------|
-| **Availability** | 99.5% uptime | Endpoint health checks, database reconnection retry loops, and safe fallback systems |
-| **Performance** | < 200ms API response | Caching reads in Redis with a 2-5 min TTL, database indexing, and query optimizations |
-| **Scalability** | 100 concurrent users | Stateless backend layout, async FastAPI event loops, and lightweight connection pool sizes |
-| **Security** | OWASP Top 10 compliance | JWT verification, Argon2 hashes, Redis blacklisting, and SQL injection safety via SQLAlchemy |
-| **Data Integrity** | Zero data loss | Strict PostgreSQL foreign keys and atomic ACID transaction blocks |
-| **Observability** | Full execution tracing | Python standard JSON logs, unique `X-Request-ID` headers, and optional LangSmith tracing |
+| **Availability** | 99.5% uptime | Health checks, database retry with exponential backoff (3 attempts), Redis graceful fallback, Alembic migrations |
+| **Performance** | < 200ms API response | Redis caching (2-5 min TTL), database indexing, connection pooling (5-10), N+1 query prevention |
+| **Scalability** | 100 concurrent users | Stateless backend, async FastAPI, connection pool sizing, moving-window rate limiting |
+| **Security** | OWASP Top 10 compliance | Argon2 hashing, JWT type enforcement + blacklisting, RBAC (6 tiers), timing-safe auth, PII masking, rate limiting |
+| **Data Integrity** | Zero data loss | PostgreSQL ACID transactions, foreign key constraints, atomic requisition approval, Alembic migrations |
+| **Observability** | Full execution tracing | Structured JSON logging, unique `X-Request-ID` headers, optional LangSmith tracing |
+| **Config Safety** | Production validation | Pydantic Settings with `@model_validator` — blocks startup on insecure SECRET_KEY in production |
 
 ---
 
@@ -750,5 +818,5 @@ Event → WebSocket manager → Broadcast to location → All clients receive
 ---
 
 **Document Status:** ✅ Complete  
-**Last Reviewed:** June 26, 2026  
+**Last Reviewed:** July 24, 2026  
 **Next Review:** Every 3 months

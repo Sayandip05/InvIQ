@@ -15,7 +15,7 @@ from app.api.routes import superadmin as superadmin_routes
 from app.api.routes import vendor as vendor_routes
 from app.api.routes.websocket import router as ws_router
 from app.api.graphql.schema import graphql_router
-from app.core.config import settings
+from app.core.config import settings, configure_langsmith
 from app.infrastructure.database.connection import Base, engine
 from app.core.logging_config import setup_logging
 from app.core.error_handlers import register_exception_handlers
@@ -61,6 +61,7 @@ def seed_admin_user():
 async def lifespan(app: FastAPI):
     """Manage startup and shutdown lifecycle."""
     # ── Startup ──
+    configure_langsmith()          # apply LangSmith env-vars (no import-time side effects)
     Base.metadata.create_all(bind=engine)
     seed_admin_user()
     get_redis()  # Initialize Redis connection (logs status)

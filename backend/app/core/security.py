@@ -148,14 +148,13 @@ def verify_refresh_token(token: str) -> Dict[str, Any]:
 
 # ── Role hierarchy ────────────────────────────────────────────────────────
 
-ALLOWED_ROLES = {"super_admin", "admin", "manager", "staff", "vendor", "viewer"}
+ALLOWED_ROLES = {"super_admin", "admin", "manager", "staff", "vendor"}
 ROLE_HIERARCHY = {
     "super_admin": 6,
     "admin": 5,
     "manager": 4,
     "staff": 3,
     "vendor": 2,
-    "viewer": 1,
 }
 
 

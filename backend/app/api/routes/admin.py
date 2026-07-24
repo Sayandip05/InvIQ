@@ -15,6 +15,7 @@ from app.core.dependencies import get_db, require_admin
 from app.infrastructure.database.models import User, AuditLog
 from app.infrastructure.database.user_repo import UserRepository
 from app.infrastructure.database.audit_repo import AuditRepository
+from app.application.report_service import ReportService
 
 logger = logging.getLogger("smart_inventory.admin")
 
@@ -203,13 +204,12 @@ def generate_pdf_report(
     """
     Generate and stream a PDF report.
     Supports: inventory, transactions, requisitions, low_stock
+
+    Data fetching is delegated to ReportService (application layer).
+    This handler only constructs the PDF from the returned plain dicts.
     """
     from io import BytesIO
-    from sqlalchemy import func
     from fastapi.responses import StreamingResponse
-    from app.infrastructure.database.models import (
-        Location, Item, InventoryTransaction, Requisition, RequisitionItem,
-    )
 
     try:
         from reportlab.lib.pagesizes import A4
@@ -220,9 +220,15 @@ def generate_pdf_report(
     except ImportError:
         raise HTTPException(status_code=500, detail="reportlab is not installed on the server")
 
+    # ── Data layer — all queries go through the service ──────────────────
+    svc = ReportService(db)
+
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=0.75*inch, leftMargin=0.75*inch,
-                            topMargin=0.75*inch, bottomMargin=0.75*inch)
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4,
+        rightMargin=0.75 * inch, leftMargin=0.75 * inch,
+        topMargin=0.75 * inch, bottomMargin=0.75 * inch,
+    )
     styles = getSampleStyleSheet()
     elements = []
 
@@ -257,158 +263,105 @@ def generate_pdf_report(
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f8fafc")]),
     ]
 
-    # ── INVENTORY REPORT ─────────────────────────────────────────────────
+    # ── INVENTORY / LOW_STOCK REPORT ──────────────────────────────────────
     if report_type in ("inventory", "low_stock"):
-        # Single query: latest closing_stock per item (any location or filtered)
-        latest_sub = (
-            db.query(
-                InventoryTransaction.item_id,
-                func.max(InventoryTransaction.date).label("max_date"),
-            )
-            .group_by(InventoryTransaction.item_id)
-            .subquery()
-        )
-        stock_rows = (
-            db.query(
-                Item.name,
-                Item.category,
-                Item.unit,
-                Item.min_stock,
-                InventoryTransaction.closing_stock,
-            )
-            .join(latest_sub, Item.id == latest_sub.c.item_id)
-            .join(InventoryTransaction, (
-                (InventoryTransaction.item_id == latest_sub.c.item_id) &
-                (InventoryTransaction.date == latest_sub.c.max_date)
-            ))
-            .all()
+        rows = (
+            svc.get_low_stock_rows(location_id=location_id)
+            if report_type == "low_stock"
+            else svc.get_stock_rows(location_id=location_id)
         )
 
-        if report_type == "low_stock":
-            stock_rows = [r for r in stock_rows if r.closing_stock <= r.min_stock]
-            elements.append(Paragraph("Items Below Minimum Stock Threshold", styles["Heading2"]))
-        else:
-            elements.append(Paragraph("Current Stock Levels", styles["Heading2"]))
+        heading = (
+            "Items Below Minimum Stock Threshold"
+            if report_type == "low_stock"
+            else "Current Stock Levels"
+        )
+        elements.append(Paragraph(heading, styles["Heading2"]))
 
-        if not stock_rows:
+        if not rows:
             elements.append(Paragraph("No data found for the selected criteria.", styles["Normal"]))
         else:
+            def _status(r: dict) -> str:
+                if r["current_stock"] <= 0:
+                    return "CRITICAL"
+                if r["current_stock"] <= r["min_stock"]:
+                    return "WARNING"
+                return "HEALTHY"
+
             table_data = [["Item Name", "Category", "Unit", "Current Stock", "Min Required", "Status"]]
-            for row in stock_rows:
-                if row.closing_stock <= 0:
-                    status = "CRITICAL"
-                elif row.closing_stock <= row.min_stock:
-                    status = "WARNING"
-                else:
-                    status = "HEALTHY"
+            for r in rows:
                 table_data.append([
-                    row.name[:35],
-                    row.category,
-                    row.unit,
-                    str(row.closing_stock),
-                    str(row.min_stock),
-                    status,
+                    r["name"][:35],
+                    r["category"],
+                    r["unit"],
+                    str(r["current_stock"]),
+                    str(r["min_stock"]),
+                    _status(r),
                 ])
             t = Table(table_data, colWidths=[2.2*inch, 1*inch, 0.6*inch, 0.9*inch, 0.9*inch, 0.8*inch])
             t.setStyle(TableStyle(HEADER_STYLE))
             elements.append(t)
 
-    # ── TRANSACTIONS REPORT ──────────────────────────────────────────────
+    # ── TRANSACTIONS REPORT ───────────────────────────────────────────────
     elif report_type == "transactions":
         elements.append(Paragraph("Recent Stock Transactions", styles["Heading2"]))
-
-        q = (
-            db.query(
-                InventoryTransaction.date,
-                Location.name.label("location"),
-                Item.name.label("item"),
-                InventoryTransaction.opening_stock,
-                InventoryTransaction.received,
-                InventoryTransaction.issued,
-                InventoryTransaction.closing_stock,
-                InventoryTransaction.entered_by,
-            )
-            .join(Location, InventoryTransaction.location_id == Location.id)
-            .join(Item, InventoryTransaction.item_id == Item.id)
+        rows = svc.get_transaction_rows(
+            location_id=location_id,
+            date_from=date_from,
+            date_to=date_to,
         )
-        if location_id:
-            q = q.filter(InventoryTransaction.location_id == location_id)
-        if date_from:
-            q = q.filter(InventoryTransaction.date >= date_from)
-        if date_to:
-            q = q.filter(InventoryTransaction.date <= date_to)
-
-        rows = q.order_by(InventoryTransaction.date.desc()).limit(200).all()
-
         if not rows:
             elements.append(Paragraph("No transactions found for the selected criteria.", styles["Normal"]))
         else:
             table_data = [["Date", "Location", "Item", "Open", "In", "Out", "Close", "By"]]
             for r in rows:
                 table_data.append([
-                    str(r.date),
-                    r.location[:20],
-                    r.item[:25],
-                    str(r.opening_stock),
-                    str(r.received),
-                    str(r.issued),
-                    str(r.closing_stock),
-                    r.entered_by[:12],
+                    r["date"],
+                    r["location"][:20],
+                    r["item"][:25],
+                    str(r["opening_stock"]),
+                    str(r["received"]),
+                    str(r["issued"]),
+                    str(r["closing_stock"]),
+                    r["entered_by"][:12],
                 ])
-            t = Table(table_data, colWidths=[0.75*inch, 1.4*inch, 1.5*inch,
-                                             0.5*inch, 0.4*inch, 0.4*inch, 0.5*inch, 0.75*inch])
+            t = Table(table_data, colWidths=[
+                0.75*inch, 1.4*inch, 1.5*inch,
+                0.5*inch, 0.4*inch, 0.4*inch, 0.5*inch, 0.75*inch,
+            ])
             t.setStyle(TableStyle(HEADER_STYLE))
             elements.append(t)
             elements.append(Paragraph(f"Showing {len(rows)} most recent transactions.", styles["Normal"]))
 
-    # ── REQUISITIONS REPORT ──────────────────────────────────────────────
+    # ── REQUISITIONS REPORT ───────────────────────────────────────────────
     elif report_type == "requisitions":
         elements.append(Paragraph("Requisitions Summary", styles["Heading2"]))
 
-        q = db.query(
-            Requisition.requisition_number,
-            Requisition.department,
-            Requisition.requested_by,
-            Requisition.urgency,
-            Requisition.status,
-            Requisition.created_at,
-            Requisition.approved_by,
-        )
-        if date_from:
-            q = q.filter(Requisition.created_at >= date_from)
-        if date_to:
-            q = q.filter(Requisition.created_at <= date_to)
-        rows = q.order_by(Requisition.created_at.desc()).limit(100).all()
-
-        # Stats
-        total = len(rows)
-        pending  = sum(1 for r in rows if r.status == "PENDING")
-        approved = sum(1 for r in rows if r.status == "APPROVED")
-        rejected = sum(1 for r in rows if r.status == "REJECTED")
-
+        stats = svc.get_requisition_stats(date_from=date_from, date_to=date_to)
         stat_data = [
             ["Metric", "Count"],
-            ["Total", str(total)],
-            ["Pending", str(pending)],
-            ["Approved", str(approved)],
-            ["Rejected", str(rejected)],
+            ["Total", str(stats["total"])],
+            ["Pending", str(stats["pending"])],
+            ["Approved", str(stats["approved"])],
+            ["Rejected", str(stats["rejected"])],
         ]
         st = Table(stat_data, colWidths=[2.5*inch, 1*inch])
         st.setStyle(TableStyle(HEADER_STYLE))
         elements.append(st)
         elements.append(Spacer(1, 0.2*inch))
 
+        rows = svc.get_requisition_rows(date_from=date_from, date_to=date_to)
         if rows:
             elements.append(Paragraph("Requisition List", styles["Heading2"]))
             table_data = [["Req #", "Department", "Requested By", "Urgency", "Status", "Date"]]
             for r in rows:
                 table_data.append([
-                    r.requisition_number,
-                    r.department,
-                    r.requested_by,
-                    r.urgency,
-                    r.status,
-                    str(r.created_at)[:10] if r.created_at else "-",
+                    r["requisition_number"],
+                    r["department"],
+                    r["requested_by"],
+                    r["urgency"],
+                    r["status"],
+                    r["created_at"],
                 ])
             t = Table(table_data, colWidths=[1.1*inch, 1*inch, 1.2*inch, 0.8*inch, 0.9*inch, 0.9*inch])
             t.setStyle(TableStyle(HEADER_STYLE))
@@ -424,4 +377,3 @@ def generate_pdf_report(
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
-

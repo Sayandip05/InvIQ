@@ -373,7 +373,7 @@ class TestInventoryReset:
     """Test data reset endpoint — requires admin role."""
 
     def test_reset_data_staff_forbidden(self, client, test_user):
-        """Staff users must NOT be able to reset data (security boundary)."""
+        """Staff must NOT be able to reset data (production safety)."""
         headers = get_auth_header(client, test_user["username"], test_user["password"])
         response = client.post(
             "/api/inventory/reset-data",
