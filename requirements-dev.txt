@@ -1,0 +1,37 @@
+# ==========================================================================
+# InvIQ Smart Inventory Assistant — Development Dependencies
+# ==========================================================================
+# Install on top of requirements.txt for local development and CI:
+#   pip install -r requirements.txt -r requirements-dev.txt
+# ==========================================================================
+
+# -- Production deps (inherit everything) -----------------------------------
+-r requirements.txt
+
+# -- Testing ----------------------------------------------------------------
+pytest>=7.4.3
+pytest-asyncio>=0.21.1
+pytest-cov>=4.1.0
+pytest-xdist>=3.5.0            # parallel test execution (-n auto)
+pytest-mock>=3.12.0
+pytest-timeout>=2.2.0
+faker>=22.0.0                  # fake data factories
+
+# -- Code Quality -----------------------------------------------------------
+# ruff covers formatting (replaces black) AND linting (replaces pylint/flake8)
+# in a single fast Rust-based tool. No need for black or pylint separately.
+ruff>=0.1.8
+mypy>=1.7.1                    # static type checking
+bandit>=1.7.6                  # security linting
+
+# -- Type Stubs -------------------------------------------------------------
+types-redis>=4.6.0
+
+# -- Documentation ----------------------------------------------------------
+mkdocs>=1.5.3
+mkdocs-material>=9.5.3
+
+# -- Debugging & Profiling --------------------------------------------------
+ipython>=8.19.0
+ipdb>=0.13.13
+memory-profiler>=0.61.0

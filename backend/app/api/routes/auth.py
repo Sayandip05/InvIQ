@@ -1,5 +1,6 @@
 import logging
 import os
+import httpx
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
@@ -944,11 +945,9 @@ def google_auth(
     db: Session = Depends(get_user_repo),
 ):
     """Authenticate or register user via Google OAuth."""
-    import requests
-
     try:
         # Verify the ID token with Google
-        response = requests.get(
+        response = httpx.get(
             settings.GOOGLE_OAUTH_VERIFY_URL,
             headers={"Authorization": f"Bearer {request_body.id_token}"},
             timeout=10,
