@@ -9,8 +9,15 @@ from unittest.mock import Mock
 
 from app.domain.calculations import (
     calculate_reorder_quantity,
+    classify_stock_health,
     get_health_color,
     format_stock_item,
+)
+from app.domain.value_objects import (
+    StockStatus,
+    StockThresholds,
+    ReorderPolicy,
+    DAYS_REMAINING_INFINITE,
 )
 
 
@@ -202,3 +209,136 @@ class TestFormatStockItem:
 
         assert result["avg_daily_usage"] == 7.12
         assert result["days_remaining"] == 14.3
+
+
+# ---------------------------------------------------------------------------
+# StockStatus
+# ---------------------------------------------------------------------------
+
+class TestStockStatus:
+    """Test StockStatus enum — classification and color mapping."""
+
+    def test_from_days_critical(self):
+        assert StockStatus.from_days(0.0) == StockStatus.CRITICAL
+        assert StockStatus.from_days(2.9) == StockStatus.CRITICAL
+
+    def test_from_days_boundary_critical(self):
+        """Exactly at the CRITICAL boundary should still be WARNING."""
+        assert StockStatus.from_days(StockThresholds.CRITICAL_DAYS) == StockStatus.WARNING
+
+    def test_from_days_warning(self):
+        assert StockStatus.from_days(3.0) == StockStatus.WARNING
+        assert StockStatus.from_days(6.9) == StockStatus.WARNING
+
+    def test_from_days_boundary_warning(self):
+        """Exactly at the WARNING boundary should be HEALTHY."""
+        assert StockStatus.from_days(StockThresholds.WARNING_DAYS) == StockStatus.HEALTHY
+
+    def test_from_days_healthy(self):
+        assert StockStatus.from_days(7.0) == StockStatus.HEALTHY
+        assert StockStatus.from_days(100.0) == StockStatus.HEALTHY
+
+    def test_from_days_none_is_healthy(self):
+        """No usage data → cannot classify as critical, treat as HEALTHY."""
+        assert StockStatus.from_days(None) == StockStatus.HEALTHY
+
+    def test_color_critical(self):
+        assert StockStatus.CRITICAL.color == "#ef4444"
+
+    def test_color_warning(self):
+        assert StockStatus.WARNING.color == "#f59e0b"
+
+    def test_color_healthy(self):
+        assert StockStatus.HEALTHY.color == "#10b981"
+
+    def test_str_equality(self):
+        """StockStatus inherits str so it equals its string value."""
+        assert StockStatus.CRITICAL == "CRITICAL"
+        assert StockStatus.WARNING == "WARNING"
+        assert StockStatus.HEALTHY == "HEALTHY"
+
+
+# ---------------------------------------------------------------------------
+# StockThresholds
+# ---------------------------------------------------------------------------
+
+class TestStockThresholds:
+    """Verify threshold constants are correct and consistent."""
+
+    def test_critical_days_value(self):
+        assert StockThresholds.CRITICAL_DAYS == 3.0
+
+    def test_warning_days_value(self):
+        assert StockThresholds.WARNING_DAYS == 7.0
+
+    def test_critical_less_than_warning(self):
+        assert StockThresholds.CRITICAL_DAYS < StockThresholds.WARNING_DAYS
+
+    def test_usage_window_days(self):
+        assert StockThresholds.USAGE_WINDOW_DAYS == 7
+
+    def test_default_safety_factor(self):
+        assert StockThresholds.DEFAULT_SAFETY_FACTOR == 2.0
+
+
+# ---------------------------------------------------------------------------
+# ReorderPolicy
+# ---------------------------------------------------------------------------
+
+class TestReorderPolicy:
+    """Test the value-object API for reorder quantity calculation."""
+
+    def test_recommended_quantity_basic(self):
+        policy = ReorderPolicy(avg_daily_usage=10.0, lead_time_days=7)
+        # (10 * 7 * 2.0) - 50 = 90
+        assert policy.recommended_quantity(current_stock=50) == 90
+
+    def test_recommended_quantity_zero_usage(self):
+        policy = ReorderPolicy(avg_daily_usage=0.0, lead_time_days=7)
+        assert policy.recommended_quantity(current_stock=0) == 0
+
+    def test_recommended_quantity_negative_usage(self):
+        policy = ReorderPolicy(avg_daily_usage=-1.0, lead_time_days=7)
+        assert policy.recommended_quantity(current_stock=0) == 0
+
+    def test_recommended_quantity_no_reorder_needed(self):
+        policy = ReorderPolicy(avg_daily_usage=5.0, lead_time_days=7)
+        # (5 * 7 * 2) = 70 < 200 → 0
+        assert policy.recommended_quantity(current_stock=200) == 0
+
+    def test_recommended_quantity_custom_safety_factor(self):
+        policy = ReorderPolicy(avg_daily_usage=10.0, lead_time_days=5, safety_factor=3.0)
+        # (10 * 5 * 3) = 150
+        assert policy.recommended_quantity(current_stock=0) == 150
+
+    def test_immutability(self):
+        policy = ReorderPolicy(avg_daily_usage=10.0, lead_time_days=7)
+        with pytest.raises((AttributeError, TypeError)):
+            policy.avg_daily_usage = 99.0  # type: ignore[misc]
+
+
+# ---------------------------------------------------------------------------
+# classify_stock_health
+# ---------------------------------------------------------------------------
+
+class TestClassifyStockHealth:
+    """Test the pure classify_stock_health() domain function."""
+
+    def test_critical(self):
+        assert classify_stock_health(1.0) == StockStatus.CRITICAL
+        assert classify_stock_health(0.0) == StockStatus.CRITICAL
+
+    def test_warning(self):
+        assert classify_stock_health(3.0) == StockStatus.WARNING
+        assert classify_stock_health(6.99) == StockStatus.WARNING
+
+    def test_healthy(self):
+        assert classify_stock_health(7.0) == StockStatus.HEALTHY
+        assert classify_stock_health(30.0) == StockStatus.HEALTHY
+
+    def test_none_is_healthy(self):
+        assert classify_stock_health(None) == StockStatus.HEALTHY
+
+    def test_returns_stock_status_enum(self):
+        result = classify_stock_health(5.0)
+        assert isinstance(result, StockStatus)

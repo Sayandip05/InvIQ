@@ -1,6 +1,7 @@
 from sqlalchemy import func, case
 from sqlalchemy.orm import Session
 from app.infrastructure.database.models import InventoryTransaction, Location, Item
+from app.domain.value_objects import StockThresholds
 from datetime import datetime, timedelta
 
 
@@ -19,7 +20,7 @@ def get_latest_stock_health(db: Session):
             func.avg(InventoryTransaction.issued).label("avg_daily_usage"),
         )
         .filter(
-            InventoryTransaction.date >= (latest_date - timedelta(days=7)),
+            InventoryTransaction.date >= (latest_date - timedelta(days=StockThresholds.USAGE_WINDOW_DAYS)),
             InventoryTransaction.date <= latest_date,
         )
         .group_by(InventoryTransaction.location_id, InventoryTransaction.item_id)
@@ -54,7 +55,7 @@ def get_latest_stock_health(db: Session):
                         ),
                         else_=999,
                     )
-                    < 3,
+                    < StockThresholds.CRITICAL_DAYS,
                     "CRITICAL",
                 ),
                 (
@@ -64,7 +65,7 @@ def get_latest_stock_health(db: Session):
                             InventoryTransaction.closing_stock / subq.c.avg_daily_usage,
                         ),
                         else_=999,
-                    ).between(3, 7),
+                    ).between(StockThresholds.CRITICAL_DAYS, StockThresholds.WARNING_DAYS),
                     "WARNING",
                 ),
                 else_="HEALTHY",
