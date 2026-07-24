@@ -15,6 +15,7 @@ from app.core.dependencies import (
     get_current_user,
     get_optional_user,
     require_staff,
+    require_admin,
 )
 from app.core.exceptions import (
     NotFoundError,
@@ -183,7 +184,7 @@ def reset_inventory_data(
     request: Request,
     body: ResetDataRequest,
     repo: InventoryRepository = Depends(get_inventory_repo),
-    current_user: User = Depends(require_staff),
+    current_user: User = Depends(require_admin),
 ):
     if not body.confirm:
         from app.core.exceptions import ValidationError

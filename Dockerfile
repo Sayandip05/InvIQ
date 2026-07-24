@@ -74,13 +74,15 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Use explicit venv path to guarantee the correct Python interpreter and
-# all venv-installed packages are used — avoids system Python shadowing.
-CMD ["/venv/bin/gunicorn", "backend.app.main:app", \
-     "--worker-class", "uvicorn.workers.UvicornWorker", \
-     "--workers", "3", \
-     "--bind", "0.0.0.0:8000", \
-     "--timeout", "120", \
-     "--access-logfile", "-", \
-     "--error-logfile", "-", \
-     "--log-level", "info"]
+# Run alembic migrations then start gunicorn.
+# `exec` replaces the shell so signals (SIGTERM) still reach gunicorn.
+CMD ["sh", "-c", \
+     "cd /app/backend && /venv/bin/alembic upgrade head && \
+      exec /venv/bin/gunicorn backend.app.main:app \
+        --worker-class uvicorn.workers.UvicornWorker \
+        --workers 3 \
+        --bind 0.0.0.0:8000 \
+        --timeout 120 \
+        --access-logfile - \
+        --error-logfile - \
+        --log-level info"]

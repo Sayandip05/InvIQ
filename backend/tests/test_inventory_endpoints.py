@@ -370,11 +370,21 @@ class TestInventoryTransactions:
 
 
 class TestInventoryReset:
-    """Test data reset endpoint."""
+    """Test data reset endpoint — requires admin role."""
 
-    def test_reset_data_without_confirm(self, client, test_user):
-        """Reset without confirm=True should fail."""
+    def test_reset_data_staff_forbidden(self, client, test_user):
+        """Staff users must NOT be able to reset data (security boundary)."""
         headers = get_auth_header(client, test_user["username"], test_user["password"])
+        response = client.post(
+            "/api/inventory/reset-data",
+            json={"confirm": True},
+            headers=headers,
+        )
+        assert response.status_code == 403
+
+    def test_reset_data_without_confirm(self, client, admin_user):
+        """Admin: reset without confirm=True should fail with 400/422."""
+        headers = get_auth_header(client, admin_user["username"], admin_user["password"])
         response = client.post(
             "/api/inventory/reset-data",
             json={"confirm": False},
@@ -382,9 +392,9 @@ class TestInventoryReset:
         )
         assert response.status_code in [400, 422]
 
-    def test_reset_data_with_confirm(self, client, test_user):
-        """Reset with confirm=True should succeed and clear data."""
-        headers = get_auth_header(client, test_user["username"], test_user["password"])
+    def test_reset_data_with_confirm(self, client, admin_user):
+        """Admin: reset with confirm=True should wipe data and return 200."""
+        headers = get_auth_header(client, admin_user["username"], admin_user["password"])
         response = client.post(
             "/api/inventory/reset-data",
             json={"confirm": True},

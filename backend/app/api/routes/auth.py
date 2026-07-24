@@ -1062,6 +1062,6 @@ def google_auth(
             },
         }
 
-    except requests.RequestException as e:
+    except httpx.RequestError as e:
         logger.error(f"Google OAuth error: {e}")
         raise AuthenticationError("Failed to verify Google account")
