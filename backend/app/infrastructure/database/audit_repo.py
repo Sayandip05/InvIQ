@@ -104,45 +104,4 @@ class AuditRepository:
             logger.error("Database error getting audit logs by resource: %s", str(e))
             raise DatabaseError(f"Failed to get audit logs by resource: {str(e)}")
 
-    def get_recent(self, limit: int = 50) -> List[AuditLog]:
-        try:
-            return (
-                self.db.query(AuditLog)
-                .order_by(AuditLog.created_at.desc())
-                .limit(limit)
-                .all()
-            )
-        except SQLAlchemyError as e:
-            logger.error("Database error fetching audit logs: %s", str(e))
-            raise DatabaseError(f"Failed to fetch audit logs: {str(e)}")
 
-    def get_by_user(self, username: str, limit: int = 50) -> List[AuditLog]:
-        try:
-            return (
-                self.db.query(AuditLog)
-                .filter(AuditLog.username == username)
-                .order_by(AuditLog.created_at.desc())
-                .limit(limit)
-                .all()
-            )
-        except SQLAlchemyError as e:
-            logger.error("Database error fetching user audit logs: %s", str(e))
-            raise DatabaseError(f"Failed to fetch user audit logs: {str(e)}")
-
-    def get_by_resource(
-        self, resource_type: str, resource_id: str, limit: int = 50
-    ) -> List[AuditLog]:
-        try:
-            return (
-                self.db.query(AuditLog)
-                .filter(
-                    AuditLog.resource_type == resource_type,
-                    AuditLog.resource_id == resource_id,
-                )
-                .order_by(AuditLog.created_at.desc())
-                .limit(limit)
-                .all()
-            )
-        except SQLAlchemyError as e:
-            logger.error("Database error fetching resource audit logs: %s", str(e))
-            raise DatabaseError(f"Failed to fetch resource audit logs: {str(e)}")

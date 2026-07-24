@@ -1,5 +1,8 @@
+import contextvars
+import logging
 from datetime import timedelta, date
 from typing import Optional, List, Dict, Any
+
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from langchain_core.tools import tool
@@ -10,7 +13,72 @@ from app.infrastructure.database.queries import (
 from app.infrastructure.database.models import Location, Item, InventoryTransaction
 from app.domain.calculations import calculate_reorder_quantity
 
-import contextvars
+_logger = logging.getLogger("smart_inventory.agent")
+
+
+# ---------------------------------------------------------------------------
+# ReadOnlySession — structural write guard for the AI agent
+# ---------------------------------------------------------------------------
+
+_WRITE_METHODS = frozenset({
+    "add", "add_all", "delete", "merge", "flush",
+    "commit", "rollback", "bulk_insert_mappings",
+    "bulk_update_mappings", "bulk_save_objects",
+    "execute",  # overridden below to allow SELECT-only
+})
+
+
+class ReadOnlySession:
+    """
+    Strict read-only proxy around a SQLAlchemy Session.
+
+    The AI chatbot (ReAct agent) is allowed to READ inventory data but must
+    NEVER modify it.  This proxy enforces that rule structurally — any tool
+    function that calls a mutating method will raise RuntimeError immediately,
+    before a single byte reaches the database.
+
+    Allowed:  .query(), .execute(SELECT …)
+    Blocked:  .add(), .delete(), .commit(), .flush(), .execute(INSERT/UPDATE/DELETE …)
+    """
+
+    def __init__(self, session: Session) -> None:
+        object.__setattr__(self, "_session", session)
+
+    # ── Passthrough for read operations ─────────────────────────────────
+
+    def query(self, *args, **kwargs):
+        return object.__getattribute__(self, "_session").query(*args, **kwargs)
+
+    def execute(self, statement, *args, **kwargs):
+        """Allow SELECT-like statements; block INSERT / UPDATE / DELETE."""
+        stmt_text = str(statement).strip().upper()
+        if any(stmt_text.startswith(kw) for kw in ("INSERT", "UPDATE", "DELETE", "DROP", "TRUNCATE", "ALTER")):
+            raise RuntimeError(
+                "[ReadOnlySession] The AI agent attempted a write operation via execute(). "
+                "Agent tools must never modify inventory data."
+            )
+        return object.__getattribute__(self, "_session").execute(statement, *args, **kwargs)
+
+    # ── Block all mutating methods ───────────────────────────────────────
+
+    def __getattr__(self, name: str):
+        if name in _WRITE_METHODS:
+            def _blocked(*args, **kwargs):
+                raise RuntimeError(
+                    f"[ReadOnlySession] The AI agent attempted to call Session.{name}(). "
+                    f"Agent tools must never modify inventory data. "
+                    f"Use a dedicated service endpoint for write operations."
+                )
+            return _blocked
+        # Delegate safe attributes (e.g. .bind, .info) to the real session
+        return getattr(object.__getattribute__(self, "_session"), name)
+
+    def __setattr__(self, name: str, value) -> None:
+        raise RuntimeError(
+            f"[ReadOnlySession] Attempted to set attribute '{name}' on a read-only session."
+        )
+
+
 
 # ContextVar is the correct mechanism here: copy_context() in agent_service.py
 # propagates ContextVars into the ThreadPoolExecutor worker thread.
@@ -20,16 +88,21 @@ _db_session_var: contextvars.ContextVar = contextvars.ContextVar(
 )
 
 
-def set_db_session(db: Session):
-    """Bind the current DB session into the context so agent @tool functions can access it."""
-    _db_session_var.set(db)
+def set_db_session(db: Session) -> None:
+    """
+    Bind a read-only view of the DB session into the current context.
+
+    The session is wrapped in ReadOnlySession so agent @tool functions
+    can query inventory data but can NEVER commit, add, delete, or flush.
+    This is a structural guardrail — violations raise RuntimeError before
+    any SQL reaches the database.
+    """
+    _db_session_var.set(ReadOnlySession(db))
 
 
-def _get_db() -> Optional[Session]:
-    """Return the DB session for the current context (works across threads via copy_context)."""
+def _get_db() -> Optional["ReadOnlySession"]:
+    """Return the read-only DB proxy for the current context."""
     return _db_session_var.get()
-
-
 
 def _no_data_message(message: str) -> List[Dict[str, Any]]:
     return [{"info": message}]

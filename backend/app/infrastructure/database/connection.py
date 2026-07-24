@@ -11,8 +11,7 @@ For development: SQLite is supported (e.g., sqlite:///./database.db)
 import logging
 import time
 from sqlalchemy import create_engine, text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from app.core.config import settings
 
 logger = logging.getLogger("smart_inventory.db")
@@ -91,7 +90,17 @@ else:
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    """
+    SQLAlchemy 2.0-style declarative base.
+
+    All ORM models inherit from this class.  Using DeclarativeBase
+    (sqlalchemy.orm) instead of the legacy declarative_base() from
+    sqlalchemy.ext.declarative which was soft-deprecated in 1.4 and
+    will be removed in SQLAlchemy 3.0.
+    """
+    pass
 
 
 def get_db():
