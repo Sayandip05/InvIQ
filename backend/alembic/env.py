@@ -27,7 +27,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from app.core.config import settings  # noqa: E402
-from app.infrastructure.database.connection import Base  # noqa: E402
+from app.infrastructure.database.connection import Base, sanitize_db_url  # noqa: E402
 
 # Import ALL models here so Alembic can see them for auto-generation.
 # If you add a new model, import its module below.
@@ -41,7 +41,10 @@ config = context.config
 
 # Override sqlalchemy.url with the value from pydantic-settings
 # so we don't have to duplicate the connection string in alembic.ini.
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+# Prefer DIRECT_URL (e.g. Supabase session mode, port 5432) over DATABASE_URL for migrations.
+# Escape '%' as '%%' because ConfigParser treats '%' as an interpolation character.
+migration_url = sanitize_db_url(settings.DIRECT_URL or settings.DATABASE_URL)
+config.set_main_option("sqlalchemy.url", migration_url.replace("%", "%%"))
 
 # ---------------------------------------------------------------------------
 # Logging

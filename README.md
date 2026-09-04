@@ -21,7 +21,7 @@ Independent retail medical stores and local pharmacy chains in Tier-2/3 cities l
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.104-009688?logo=fastapi&logoColor=white)
 ![GraphQL](https://img.shields.io/badge/GraphQL-Strawberry-E10098?logo=graphql&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?logo=postgresql&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-3ECF8E?logo=supabase&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-Upstash-DC382D?logo=redis&logoColor=white)
 ![Azure](https://img.shields.io/badge/Azure-App_Service_%26_Blob_Storage-0078D4?logo=microsoftazure&logoColor=white)
 ![Alembic](https://img.shields.io/badge/Database-Alembic_Migrations-CC292B?logo=alembic&logoColor=white)
@@ -58,7 +58,7 @@ Independent retail medical stores and local pharmacy chains in Tier-2/3 cities l
 
 InvIQ has exactly **TWO environments**:
 1. **DEVELOPMENT** — Local machine development and manual testing.
-2. **PRODUCTION** — Deployed cloud environment (Azure App Service + Azure Blob Storage + Neon Postgres + Upstash Redis).
+2. **PRODUCTION** — Deployed cloud environment (Azure App Service + Azure Blob Storage + Supabase Postgres + Upstash Redis).
 
 ### 1. Local Development Setup
 
@@ -154,7 +154,7 @@ graph TB
     end
 
     subgraph DataStorage["💾 Persistence & Cloud Infrastructure"]
-        PG[("🐘 PostgreSQL / Neon<br/>Strict org_id Row Isolation<br/>B-Tree & Composite Indexes")]
+        PG[("⚡ PostgreSQL / Supabase<br/>Strict org_id Row Isolation<br/>B-Tree & Composite Indexes")]
         Redis[("⚡ Upstash Redis<br/>• Distributed Lock (Redlock)<br/>• Token Blacklist & WS Tickets<br/>• Org Pub/Sub: inviq:events:org:{id}")]
         Qdrant[("🧠 Qdrant Cloud Vector DB<br/>Gemini 768-dim Embeddings<br/>Tenant Payload Filtering")]
         Azure[("☁️ Azure Blob Storage<br/>Invoices, Reports & Manifests")]
@@ -498,7 +498,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Strawberry GraphQL** - Code-first GraphQL for Python
 - **LangChain/LangGraph** - AI agent orchestration
 - **Groq** - Fast LLM inference
-- **Neon** - Managed PostgreSQL
+- **Supabase** - Managed PostgreSQL & Realtime
 - **Upstash** - Serverless Redis
 - **ChromaDB** - Vector database for RAG
 

@@ -59,7 +59,6 @@ x-backend-env: &backend-env
   LOCKOUT_DURATION_MINUTES: ${LOCKOUT_DURATION_MINUTES:-15}
   
   # Admin Accounts
-  SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL:-admin@example.com}
   ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@inventory.local}
   ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
   ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin1234!}

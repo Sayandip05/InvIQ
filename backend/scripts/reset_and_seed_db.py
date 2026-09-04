@@ -38,13 +38,16 @@ from sqlalchemy import text
 
 
 def reset_and_seed():
-    print("🔄 Dropping public schema and rebuilding fresh Database Schema...")
-    with engine.begin() as conn:
-        conn.execute(text("DROP SCHEMA public CASCADE; CREATE SCHEMA public;"))
-        conn.execute(text("GRANT ALL ON SCHEMA public TO public;"))
-    
+    print("🔄 Ensuring Database Schema and seeding fresh data...")
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
+
+    for model in [ImportQuarantineRow, DataImportJob, VendorInvoice, VendorUpload, RequisitionItem, Requisition, InventoryTransaction, Item, Location, ChatMessage, ChatSession, AuditLog, User, Organization]:
+        try:
+            db.query(model).delete()
+        except Exception:
+            pass
+    db.commit()
 
 
     try:
@@ -337,24 +340,7 @@ def reset_and_seed():
                 )
                 db.add(tx)
 
-        # ─────────────────────────────────────────────────────────────────────
-        # 3. SETUP PLATFORM SUPER ADMIN
-        # ─────────────────────────────────────────────────────────────────────
-        print("👑 Creating Platform Super Admin (Sayandip)...")
-        superadmin = User(
-            org_id=None,
-            email="sayandipbar05@gmail.com",
-            username="superadmin",
-            full_name="Sayandip Bar",
-            hashed_password=hash_password("superadmin123"),
-            role="super_admin",
-            is_active=True,
-            is_verified=True,
-            location_ids=[],
-        )
-        db.add(superadmin)
         db.commit()
-
         print("✅ Database cleanly reset with 2 Admins (Single Pharmacy & 3-Pharmacy Chain)!")
 
         # Invalidate Redis cache

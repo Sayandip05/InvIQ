@@ -2,7 +2,7 @@
 InvIQ Pharmacy Chat & Qdrant Memory Seed Script
 =================================================
 Seeds:
-  1. Login User Accounts (Admin, Pharmacist/Manager, Staff) in Neon PostgreSQL
+  1. Login User Accounts (Admin, Pharmacist/Manager, Staff) in Supabase PostgreSQL
   2. Realistic Wholesale Pharmacy Chat Sessions & Messages in PostgreSQL (chat_sessions, chat_messages)
   3. Embedded Conversations in Qdrant Vector Memory Store (semantic recall test data)
 """

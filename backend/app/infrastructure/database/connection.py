@@ -25,7 +25,22 @@ if not settings.DATABASE_URL:
         "Examples: postgresql://user:pass@host/db or sqlite:///./database.db"
     )
 
-DATABASE_URL = settings.DATABASE_URL
+import re
+
+def sanitize_db_url(url: str) -> str:
+    """
+    Sanitize database connection URL.
+    Strips parameters like 'pgbouncer=true' which are Prisma-specific and
+    rejected by PostgreSQL libpq / psycopg2.
+    """
+    if not url:
+        return url
+    cleaned = re.sub(r"([?&])pgbouncer=[^&#]*(&?)", lambda m: m.group(1) if m.group(2) else "", url)
+    cleaned = re.sub(r"[?&]$", "", cleaned)
+    cleaned = re.sub(r"\?&", "?", cleaned)
+    return cleaned
+
+DATABASE_URL = sanitize_db_url(settings.DATABASE_URL)
 
 logger.info("Database: PostgreSQL")
 

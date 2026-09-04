@@ -1,5 +1,5 @@
 # ── Multi-stage Dockerfile for InvIQ Smart Inventory Assistant ───────────
-# Optimized for cloud deployment with Neon PostgreSQL + Upstash Redis
+# Optimized for cloud deployment with Supabase PostgreSQL + Upstash Redis
 # Stage 1: Builder — install dependencies into a virtual environment
 # Stage 2: Runner — slim image that copies only the venv and app code
 
