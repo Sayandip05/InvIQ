@@ -1468,6 +1468,9 @@ def google_auth(
     if not aud or aud != client_id:
         raise AuthenticationError("Google ID token audience mismatch")
 
+    # Check if user exists
+    user = db.get_by_email(google_email)
+
     if user:
         # Existing user - log them in
         if not user.is_active:
