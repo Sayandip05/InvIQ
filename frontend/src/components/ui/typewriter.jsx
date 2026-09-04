@@ -15,6 +15,7 @@ export function Typewriter({
   delayBetweenWords = 2200,
   cursor = true,
   cursorChar = "|",
+  cursorClassName = "text-[#F26A4B]",
   className = "",
 }) {
   const [displayText, setDisplayText] = useState("");
@@ -86,7 +87,7 @@ export function Typewriter({
       <span>{displayText}</span>
       {cursor && (
         <span
-          className="ml-0.5 font-light text-blue-600 select-none inline-block align-baseline"
+          className={`ml-0.5 font-light ${cursorClassName || "text-[#F26A4B]"} select-none inline-block align-baseline`}
           style={{
             opacity: showCursor ? 1 : 0,
             transition: "opacity 0.08s ease-in-out",
