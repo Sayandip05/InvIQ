@@ -7,13 +7,13 @@ function cn(...inputs) {
 }
 
 function DotPattern({
-  width = 16,
-  height = 16,
+  width = 20,
+  height = 20,
   x = 0,
   y = 0,
   cx = 1,
   cy = 1,
-  cr = 1,
+  cr = 0.8,
   className,
   ...props
 }) {
@@ -23,7 +23,7 @@ function DotPattern({
     <svg
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute inset-0 h-full w-full fill-neutral-400/80",
+        "pointer-events-none absolute inset-0 h-full w-full fill-neutral-400/40",
         className
       )}
       {...props}
