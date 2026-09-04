@@ -11,23 +11,12 @@ import {
 } from 'lucide-react';
 
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+const THEME_CHART_COLORS = ['#F26A4B', '#2E2E2E', '#5E5A52', '#A89F8F', '#CFC8B8'];
 const STATUS_COLORS = {
-    HEALTHY: '#22c55e',
-    WARNING: '#f59e0b',
-    CRITICAL: '#ef4444'
+    HEALTHY: '#2E2E2E',
+    WARNING: '#F59E0B',
+    CRITICAL: '#F26A4B'
 };
-const LOCATION_COLORS = [
-    '#3B82F6', // Blue
-    '#6366F1', // Indigo
-    '#8B5CF6', // Purple
-    '#EC4899', // Pink
-    '#F97316', // Orange
-    '#10B981', // Emerald
-    '#06B6D4', // Cyan
-    '#14B8A6', // Teal
-    '#F59E0B', // Amber
-];
 
 import { Skeleton } from '../../components/ui/skeleton';
 
@@ -35,14 +24,14 @@ export const DashboardSkeleton = () => {
     return (
         <div className="flex flex-col min-h-full">
             {/* Top Bar Skeleton */}
-            <div className="sticky top-0 z-30 bg-white border-b border-slate-200 px-6 py-3.5 shadow-2xs">
+            <div className="sticky top-0 z-30 bg-card/90 backdrop-blur border-b border-border px-6 py-3.5 shadow-2xs">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <Skeleton className="h-7 w-48 rounded-none" />
+                    <Skeleton className="h-7 w-48 rounded-md" />
                     <div className="flex items-center gap-2.5 flex-wrap">
-                        <Skeleton className="h-8 w-40 rounded-none" />
-                        <Skeleton className="h-8 w-36 rounded-none" />
-                        <div className="pl-1 border-l border-slate-200">
-                            <Skeleton className="h-8 w-8 rounded-none" />
+                        <Skeleton className="h-8 w-40 rounded-md" />
+                        <Skeleton className="h-8 w-36 rounded-md" />
+                        <div className="pl-1 border-l border-border">
+                            <Skeleton className="h-8 w-8 rounded-md" />
                         </div>
                     </div>
                 </div>
@@ -51,38 +40,38 @@ export const DashboardSkeleton = () => {
             {/* Page Content Skeleton Container */}
             <div className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6 flex-1">
                 {/* 4 KPI Matrix Skeleton */}
-                <div className="bg-white border border-slate-200 rounded-none grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-200 shadow-none">
+                <div className="bg-card border border-border rounded-lg grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border shadow-xs">
                     {[1, 2, 3, 4].map((i) => (
                         <div key={i} className="p-6 flex flex-col justify-between space-y-4">
                             <div className="space-y-2">
-                                <Skeleton className="h-3 w-36 rounded-none" />
-                                <Skeleton className="h-8 w-24 rounded-none mt-2" />
+                                <Skeleton className="h-3 w-36 rounded-md" />
+                                <Skeleton className="h-8 w-24 rounded-md mt-2" />
                             </div>
-                            <Skeleton className="h-3.5 w-28 rounded-none mt-2" />
+                            <Skeleton className="h-3.5 w-28 rounded-md mt-2" />
                         </div>
                     ))}
                 </div>
 
                 {/* Connected Charts Grid Matrix Skeleton */}
-                <div className="bg-white border border-slate-200 rounded-none grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-slate-200 shadow-none">
+                <div className="bg-card border border-border rounded-lg grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border shadow-xs">
                     {/* Left Chart Skeleton (Donut / Pie Chart) */}
                     <div className="p-6 space-y-4">
                         <div className="space-y-1.5">
                             <div className="flex items-center gap-2">
-                                <Skeleton className="h-5 w-48 rounded-none" />
-                                <Skeleton className="h-4 w-20 rounded-none" />
+                                <Skeleton className="h-5 w-48 rounded-md" />
+                                <Skeleton className="h-4 w-20 rounded-md" />
                             </div>
-                            <Skeleton className="h-3 w-72 rounded-none" />
+                            <Skeleton className="h-3 w-72 rounded-md" />
                         </div>
                         <div className="h-64 flex flex-col items-center justify-center space-y-4 pt-2">
                             <div className="relative flex items-center justify-center">
                                 <Skeleton className="w-40 h-40 rounded-full" />
-                                <div className="absolute w-24 h-24 bg-white rounded-full" />
+                                <div className="absolute w-24 h-24 bg-card rounded-full" />
                             </div>
                             <div className="flex items-center gap-4 pt-2">
-                                <Skeleton className="h-3 w-16 rounded-none" />
-                                <Skeleton className="h-3 w-16 rounded-none" />
-                                <Skeleton className="h-3 w-16 rounded-none" />
+                                <Skeleton className="h-3 w-16 rounded-md" />
+                                <Skeleton className="h-3 w-16 rounded-md" />
+                                <Skeleton className="h-3 w-16 rounded-md" />
                             </div>
                         </div>
                     </div>
@@ -92,19 +81,19 @@ export const DashboardSkeleton = () => {
                         <div className="flex items-center justify-between">
                             <div className="space-y-1.5">
                                 <div className="flex items-center gap-2">
-                                    <Skeleton className="h-5 w-52 rounded-none" />
-                                    <Skeleton className="h-4 w-24 rounded-none" />
+                                    <Skeleton className="h-5 w-52 rounded-md" />
+                                    <Skeleton className="h-4 w-24 rounded-md" />
                                 </div>
-                                <Skeleton className="h-3 w-64 rounded-none" />
+                                <Skeleton className="h-3 w-64 rounded-md" />
                             </div>
-                            <Skeleton className="h-4 w-16 rounded-none" />
+                            <Skeleton className="h-4 w-16 rounded-md" />
                         </div>
                         <div className="h-64 flex flex-col justify-around pt-3 pr-2">
                             {[90, 75, 60, 45, 30].map((widthPct, idx) => (
                                 <div key={idx} className="flex items-center gap-3">
-                                    <Skeleton className="h-3 w-28 rounded-none shrink-0" />
+                                    <Skeleton className="h-3 w-28 rounded-md shrink-0" />
                                     <Skeleton 
-                                        className="h-5 rounded-none" 
+                                        className="h-5 rounded-md" 
                                         style={{ width: `${widthPct}%` }} 
                                     />
                                 </div>
@@ -114,24 +103,24 @@ export const DashboardSkeleton = () => {
                 </div>
 
                 {/* Top Critical Shortages Skeleton */}
-                <div className="bg-white border border-slate-200 rounded-none shadow-none p-6 space-y-4">
+                <div className="bg-card border border-border rounded-lg shadow-xs p-6 space-y-4">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1.5">
-                            <Skeleton className="h-5 w-44 rounded-none" />
-                            <Skeleton className="h-3 w-56 rounded-none" />
+                            <Skeleton className="h-5 w-44 rounded-md" />
+                            <Skeleton className="h-3 w-56 rounded-md" />
                         </div>
-                        <Skeleton className="h-5 w-20 rounded-none" />
+                        <Skeleton className="h-5 w-20 rounded-md" />
                     </div>
-                    <div className="divide-y divide-slate-100">
+                    <div className="divide-y divide-border/60">
                         {[1, 2, 3, 4, 5].map((i) => (
                             <div key={i} className="py-3.5 flex items-center justify-between">
                                 <div className="space-y-1.5">
-                                    <Skeleton className="h-4 w-48 rounded-none" />
-                                    <Skeleton className="h-3 w-36 rounded-none" />
+                                    <Skeleton className="h-4 w-48 rounded-md" />
+                                    <Skeleton className="h-3 w-36 rounded-md" />
                                 </div>
                                 <div className="space-y-1.5 flex flex-col items-end">
-                                    <Skeleton className="h-4 w-16 rounded-none" />
-                                    <Skeleton className="h-2.5 w-12 rounded-none" />
+                                    <Skeleton className="h-4 w-16 rounded-md" />
+                                    <Skeleton className="h-2.5 w-12 rounded-md" />
                                 </div>
                             </div>
                         ))}
@@ -214,11 +203,11 @@ const Dashboard = () => {
     if (error && !stats) {
         return (
             <div className="p-8 max-w-7xl mx-auto w-full">
-                <div className="p-6 bg-red-50 border border-red-200 text-red-700 rounded-none space-y-3">
+                <div className="p-6 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg space-y-3">
                     <p className="font-semibold text-sm">{error}</p>
                     <button
                         onClick={() => window.location.reload()}
-                        className="px-4 py-2 bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition-colors rounded-none"
+                        className="px-4 py-2 bg-destructive text-destructive-foreground text-xs font-semibold hover:opacity-90 transition-opacity rounded-md cursor-pointer"
                     >
                         Retry Loading
                     </button>
@@ -239,22 +228,23 @@ const Dashboard = () => {
     const warningItems = status_distribution.find(i => i.name === 'WARNING')?.value || 0;
 
     return (
-        <div className="flex flex-col min-h-full">
-            {/* Full-Width Top Navbar — Seamlessly Joined to Left Sidebar & Top Edge */}
-            <div className="sticky top-0 z-30 bg-white border-b border-slate-200 px-6 py-3.5 shadow-2xs">
+        <div className="flex flex-col min-h-full bg-background text-foreground">
+            {/* Full-Width Top Navbar */}
+            <div className="sticky top-0 z-30 bg-card/90 backdrop-blur border-b border-border px-6 py-3.5 shadow-2xs">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900 tracking-tight">Dashboard Overview</h2>
+                        <h2 className="text-xl font-sans font-bold text-foreground tracking-tight">Dashboard Overview</h2>
+                        <p className="text-xs text-muted-foreground mt-0.5">Real-time inventory intelligence & batch tracking</p>
                     </div>
 
                     <div className="flex items-center gap-2.5 flex-wrap">
                         {/* Facility / Store Filter */}
                         <div className="relative flex items-center">
-                            <Building2 size={14} className="absolute left-3 text-slate-400 pointer-events-none" />
+                            <Building2 size={14} className="absolute left-3 text-muted-foreground pointer-events-none" />
                             <select
                                 value={selectedLocation}
                                 onChange={(e) => setSelectedLocation(e.target.value)}
-                                className="text-xs font-medium bg-slate-50 border border-slate-300 text-slate-800 rounded-none pl-8 pr-7 py-2 hover:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 cursor-pointer"
+                                className="text-xs font-medium bg-background border border-border text-foreground rounded-md pl-8 pr-7 py-2 hover:bg-accent/40 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
                             >
                                 <option value="">All Facilities ({locations.length || 'Global'})</option>
                                 {locations.map((loc) => (
@@ -267,11 +257,11 @@ const Dashboard = () => {
 
                         {/* Category Filter */}
                         <div className="relative flex items-center">
-                            <Tag size={14} className="absolute left-3 text-slate-400 pointer-events-none" />
+                            <Tag size={14} className="absolute left-3 text-muted-foreground pointer-events-none" />
                             <select
                                 value={selectedCategory}
                                 onChange={(e) => setSelectedCategory(e.target.value)}
-                                className="text-xs font-medium bg-slate-50 border border-slate-300 text-slate-800 rounded-none pl-8 pr-7 py-2 hover:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 cursor-pointer"
+                                className="text-xs font-medium bg-background border border-border text-foreground rounded-md pl-8 pr-7 py-2 hover:bg-accent/40 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
                             >
                                 <option value="">All Categories ({categories.length || 'All'})</option>
                                 {categories.map((cat) => (
@@ -286,7 +276,7 @@ const Dashboard = () => {
                         {hasActiveFilters && (
                             <button
                                 onClick={handleResetFilters}
-                                className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-none transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-secondary-foreground bg-secondary hover:bg-accent border border-border rounded-md transition-colors cursor-pointer"
                                 title="Reset all filters"
                             >
                                 <RotateCcw size={12} />
@@ -295,7 +285,7 @@ const Dashboard = () => {
                         )}
 
                         {/* Notification Alerts Bell Dropdown */}
-                        <div className="pl-1 border-l border-slate-200">
+                        <div className="pl-1 border-l border-border">
                             <AlertsDropdown />
                         </div>
                     </div>
@@ -304,65 +294,65 @@ const Dashboard = () => {
 
             {/* Page Content Container with Standard Spacious Layout */}
             <div className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6 flex-1">
-                {/* 4 KPI Matrix with Sharp Connected Edge Points */}
-                <div className="bg-white border border-slate-200 rounded-none grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-200 shadow-none">
+                {/* 4 KPI Matrix with Warm Parchment Cards */}
+                <div className="bg-card border border-border rounded-lg grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border shadow-xs">
 
                 <div className="p-6 flex flex-col justify-between">
                     <div>
-                        <p className="text-xs font-semibold text-slate-500 tracking-wider">Active Pharmaceutical SKUs</p>
-                        <h3 className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">{totalItems}</h3>
+                        <p className="text-[11px] font-bold text-muted-foreground tracking-wider font-mono uppercase">Active SKUs</p>
+                        <h3 className="text-3xl font-sans font-bold text-foreground mt-2 tracking-tight">{totalItems}</h3>
                     </div>
-                    <div className="mt-4 flex items-center text-xs font-medium text-slate-400">
-                        <span>No data yet</span>
+                    <div className="mt-4 flex items-center text-xs font-medium text-muted-foreground">
+                        <span>Total catalog volume</span>
                     </div>
                 </div>
 
                 <div className="p-6 flex flex-col justify-between">
                     <div>
-                        <p className="text-xs font-semibold text-slate-500 tracking-wider">Total Inventory Valuation</p>
-                        <h3 className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">₹0</h3>
+                        <p className="text-[11px] font-bold text-muted-foreground tracking-wider font-mono uppercase">Inventory Valuation</p>
+                        <h3 className="text-3xl font-sans font-bold text-foreground mt-2 tracking-tight">₹0</h3>
                     </div>
-                    <div className="mt-4 flex items-center text-xs font-medium text-slate-400">
-                        <span>No inventory added</span>
+                    <div className="mt-4 flex items-center text-xs font-medium text-muted-foreground">
+                        <span>Live purchase evaluation</span>
                     </div>
                 </div>
 
                 <div className="p-6 flex flex-col justify-between">
                     <div>
-                        <p className="text-xs font-semibold text-slate-500 tracking-wider">Stock Fulfillment Rate</p>
-                        <h3 className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">
+                        <p className="text-[11px] font-bold text-muted-foreground tracking-wider font-mono uppercase">Stock Fulfillment Rate</p>
+                        <h3 className="text-3xl font-sans font-bold text-foreground mt-2 tracking-tight">
                             {totalItems > 0 ? (((totalItems - criticalItems) / totalItems) * 100).toFixed(1) + '%' : '—'}
                         </h3>
                     </div>
-                    <div className="mt-4 flex items-center text-slate-400 text-xs font-medium">
-                        <span>Add stock to track</span>
+                    <div className="mt-4 flex items-center text-muted-foreground text-xs font-medium">
+                        <span>Across active store locations</span>
                     </div>
                 </div>
 
                 <div className="p-6 flex flex-col justify-between">
                     <div>
-                        <p className="text-xs font-semibold text-slate-500 tracking-wider">Critical Stock Alerts</p>
-                        <h3 className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">{criticalItems} Critical</h3>
+                        <p className="text-[11px] font-bold text-muted-foreground tracking-wider font-mono uppercase">Critical Stock Alerts</p>
+                        <h3 className="text-3xl font-sans font-bold text-destructive mt-2 tracking-tight">{criticalItems} Critical</h3>
                     </div>
-                    <div className="mt-4 flex items-center text-xs font-medium text-amber-600">
+                    <div className="mt-4 flex items-center text-xs font-medium text-amber-700">
                         <span>⚠️ {warningItems} Near Minimum</span>
                     </div>
                 </div>
             </div>
 
             {/* Connected Charts Grid Matrix */}
-            <div className="bg-white border border-slate-200 rounded-none grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-slate-200 shadow-none">
+            <div className="bg-card border border-border rounded-lg grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border shadow-xs">
                 {/* Status Distribution */}
                 <div className="p-6">
                     <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-base font-bold text-slate-900">Inventory Health Breakdown</h3>
+                        <h3 className="text-base font-sans font-bold text-foreground">Inventory Health Breakdown</h3>
                         {totalItems > 0 && (
-                            <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 border border-emerald-200 rounded-none flex items-center gap-0.5">
+                            <span className="text-xs font-semibold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 border border-emerald-300 rounded-md flex items-center gap-0.5">
                                 <ArrowUpRight size={12} /> {totalItems > 0 ? (((totalItems - criticalItems) / totalItems) * 100).toFixed(1) : 0}% Healthy
                             </span>
                         )}
                     </div>
-                    <p className="text-xs text-slate-500 mb-6">Real-time batch stock status across warehouse locations.</p>
+                    <p className="text-xs text-muted-foreground mb-6">Real-time batch stock status across warehouse locations.</p>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -372,24 +362,32 @@ const Dashboard = () => {
                                     cy="50%"
                                     innerRadius={60}
                                     outerRadius={80}
-                                    paddingAngle={3}
+                                    paddingAngle={4}
                                     dataKey="value"
                                 >
                                     {status_distribution.map((entry, index) => {
                                         const colorMap = {
-                                            HEALTHY: '#22c55e',
-                                            WARNING: '#f59e0b',
-                                            CRITICAL: '#ef4444',
+                                            HEALTHY: '#2E2E2E',
+                                            WARNING: '#F59E0B',
+                                            CRITICAL: '#F26A4B',
                                         };
                                         return (
                                             <Cell
                                                 key={`cell-${index}`}
-                                                fill={entry.color || colorMap[entry.name] || '#22c55e'}
+                                                fill={entry.color || colorMap[entry.name] || THEME_CHART_COLORS[index % THEME_CHART_COLORS.length]}
                                             />
                                         );
                                     })}
                                 </Pie>
-                                <Tooltip />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: '#F4EFE4',
+                                        borderColor: '#D2CBBB',
+                                        borderRadius: '0.5rem',
+                                        color: '#1E1E1E',
+                                        fontSize: '0.75rem',
+                                    }}
+                                />
                                 <Legend />
                             </PieChart>
                         </ResponsiveContainer>
@@ -400,16 +398,16 @@ const Dashboard = () => {
                 <div className="p-6">
                     <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-2">
-                            <h3 className="text-base font-bold text-slate-900">Therapeutic Category Volume</h3>
-                            <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 border border-blue-200 rounded-none flex items-center gap-0.5">
+                            <h3 className="text-base font-sans font-bold text-foreground">Therapeutic Category Volume</h3>
+                            <span className="text-xs font-semibold text-foreground bg-accent px-2 py-0.5 border border-border rounded-md flex items-center gap-0.5">
                                 {category_distribution.length} Categories
                             </span>
                         </div>
-                        <span className="text-xs font-bold text-slate-900">
+                        <span className="text-xs font-bold text-foreground">
                             {totalItems} Units
                         </span>
                     </div>
-                    <p className="text-xs text-slate-500 mb-4">Current units in stock by therapeutic medicine category.</p>
+                    <p className="text-xs text-muted-foreground mb-4">Current units in stock by therapeutic medicine category.</p>
                     <div className="max-h-[300px] overflow-y-auto pr-2">
                         <div style={{ height: Math.max(260, category_distribution.length * 34) }}>
                             <ResponsiveContainer width="100%" height="100%">
@@ -418,17 +416,25 @@ const Dashboard = () => {
                                     layout="vertical"
                                     margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
                                 >
-                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E2E8F0" />
-                                    <XAxis type="number" tick={{ fontSize: 11 }} />
+                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#D2CBBB" />
+                                    <XAxis type="number" tick={{ fontSize: 11, fill: '#5E5A52' }} />
                                     <YAxis
                                         dataKey="name"
                                         type="category"
                                         width={140}
                                         interval={0}
-                                        tick={{ fontSize: 11 }}
+                                        tick={{ fontSize: 11, fill: '#1E1E1E' }}
                                     />
-                                    <Tooltip />
-                                    <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                                    <Tooltip
+                                        contentStyle={{
+                                            backgroundColor: '#F4EFE4',
+                                            borderColor: '#D2CBBB',
+                                            borderRadius: '0.5rem',
+                                            color: '#1E1E1E',
+                                            fontSize: '0.75rem',
+                                        }}
+                                    />
+                                    <Bar dataKey="value" fill="#F26A4B" radius={[0, 4, 4, 0]} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
@@ -437,34 +443,34 @@ const Dashboard = () => {
             </div>
 
             {/* Top Critical Shortages — Full Width */}
-            <div className="bg-white border border-slate-200 rounded-none shadow-none">
+            <div className="bg-card border border-border rounded-lg shadow-xs">
                 <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
                         <div>
-                            <h3 className="text-base font-bold text-slate-900">Top Critical Shortages</h3>
-                            <p className="text-xs text-slate-500">Items requiring immediate reorder.</p>
+                            <h3 className="text-base font-sans font-bold text-foreground">Top Critical Shortages</h3>
+                            <p className="text-xs text-muted-foreground">Items requiring immediate reorder.</p>
                         </div>
-                        <span className="text-xs font-semibold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-none">
+                        <span className="text-xs font-semibold text-destructive bg-destructive/10 border border-destructive/20 px-2 py-0.5 rounded-md">
                             {low_stock_items.length} Critical
                         </span>
                     </div>
-                    <div className="divide-y divide-slate-100">
+                    <div className="divide-y divide-border/60">
                         {low_stock_items.length === 0 ? (
-                            <p className="text-slate-400 text-sm text-center py-10">No critical shortages found.</p>
+                            <p className="text-muted-foreground text-sm text-center py-10">No critical shortages found.</p>
                         ) : (
                             low_stock_items.slice(0, 8).map((item, index) => (
                                 <div key={index} className="py-3 flex items-center justify-between">
                                     <div>
-                                        <p className="font-semibold text-slate-900 text-sm">{item.name}</p>
-                                        <p className="text-xs text-slate-400">
+                                        <p className="font-semibold text-foreground text-sm">{item.name}</p>
+                                        <p className="text-xs text-muted-foreground">
                                             {item.location || 'Central Warehouse'}{item.category ? ` • ${item.category}` : ''}
                                         </p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-sm font-bold text-red-600">
+                                        <p className="text-sm font-bold text-destructive">
                                             {item.days_remaining != null ? `${item.days_remaining}d left` : `${item.stock || item.current_stock || 0} left`}
                                         </p>
-                                        <p className="text-[11px] text-slate-400">Min: {item.min_stock ?? '—'}</p>
+                                        <p className="text-[11px] text-muted-foreground">Min: {item.min_stock ?? '—'}</p>
                                     </div>
                                 </div>
                             ))

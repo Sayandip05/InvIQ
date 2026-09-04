@@ -388,16 +388,16 @@ export default function OrganizationSettings() {
     return (
         <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-150">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
                 <div>
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">
-                        <Store size={14} className="text-slate-900" />
+                    <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 font-mono">
+                        <Store size={14} className="text-foreground" />
                         <span>Pharmacy Business & Branches</span>
                     </div>
-                    <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+                    <h1 className="font-sans text-2xl font-bold text-foreground tracking-tight">
                         Store Profile & Counter Setup
                     </h1>
-                    <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                         Manage your chemist legal profile, drug licenses, GSTIN, and branch locations.
                     </p>
                 </div>
@@ -406,14 +406,14 @@ export default function OrganizationSettings() {
                     <button
                         onClick={fetchOrgData}
                         disabled={loading}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-none hover:bg-slate-100 transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-foreground bg-accent border border-border rounded-none hover:bg-accent/80 transition-colors cursor-pointer"
                     >
                         <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
                         <span>Refresh</span>
                     </button>
                     <button
                         onClick={handleOpenAddBranch}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-slate-900 border border-slate-900 rounded-none hover:bg-black transition-all"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-primary-foreground bg-primary border border-primary rounded-none hover:bg-black transition-all cursor-pointer"
                     >
                         <Plus size={14} />
                         <span>Add Branch Counter</span>
@@ -451,20 +451,20 @@ export default function OrganizationSettings() {
                 {/* ── Left Column: Pharmacy Business Profile & Discount Policy ── */}
                 <div className="lg:col-span-1 space-y-6">
                     {/* Store Profile Card */}
-                    <div className="bg-white border border-slate-300 rounded-none p-6 space-y-5">
-                        <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                    <div className="bg-card border border-border rounded-none p-6 space-y-5">
+                        <div className="flex items-center justify-between border-b border-border pb-3">
                             <div className="flex items-center gap-2">
-                                <Building2 size={16} className="text-slate-900" />
-                                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Store Profile</h2>
+                                <Building2 size={16} className="text-foreground" />
+                                <h2 className="text-sm font-bold text-foreground uppercase tracking-wider font-mono">Store Profile</h2>
                             </div>
-                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-none bg-slate-100 text-slate-800 border border-slate-300">
+                            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-none bg-accent text-foreground border border-border font-mono">
                                 {orgData.plan.replace('_', ' ')}
                             </span>
                         </div>
 
                         <form onSubmit={handleSaveProfile} className="space-y-4">
                             <div>
-                                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                <label className="block text-xs font-semibold text-foreground/80 mb-1">
                                     Pharmacy / Store Name <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -473,87 +473,87 @@ export default function OrganizationSettings() {
                                     value={orgData.name}
                                     onChange={(e) => setOrgData({ ...orgData, name: e.target.value })}
                                     placeholder="e.g. Sharma Medicos & Chemist"
-                                    className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-none focus:outline-none focus:border-slate-900 text-slate-900"
+                                    className="w-full px-3 py-2 text-sm bg-background border border-border rounded-none focus:outline-none focus:border-primary text-foreground"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                <label className="block text-xs font-semibold text-foreground/80 mb-1">
                                     Drug License No. (DL No.)
                                 </label>
                                 <div className="relative">
-                                    <FileBadge className="absolute left-3 top-2.5 text-slate-400" size={15} />
+                                    <FileBadge className="absolute left-3 top-2.5 text-muted-foreground" size={15} />
                                     <input
                                         type="text"
                                         value={orgData.dl_number}
                                         onChange={(e) => setOrgData({ ...orgData, dl_number: e.target.value })}
                                         placeholder="e.g. DL-20B-12345 / 21B-67890"
-                                        className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-300 rounded-none focus:outline-none focus:border-slate-900 text-slate-900 font-mono text-xs"
+                                        className="w-full pl-9 pr-3 py-2 text-sm bg-background border border-border rounded-none focus:outline-none focus:border-primary text-foreground font-mono text-xs"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                <label className="block text-xs font-semibold text-foreground/80 mb-1">
                                     GSTIN / Tax ID
                                 </label>
                                 <div className="relative">
-                                    <FileCheck2 className="absolute left-3 top-2.5 text-slate-400" size={15} />
+                                    <FileCheck2 className="absolute left-3 top-2.5 text-muted-foreground" size={15} />
                                     <input
                                         type="text"
                                         value={orgData.gstin}
                                         onChange={(e) => setOrgData({ ...orgData, gstin: e.target.value })}
                                         placeholder="e.g. 07AAAAA0000A1Z5"
-                                        className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-300 rounded-none focus:outline-none focus:border-slate-900 text-slate-900 font-mono text-xs uppercase"
+                                        className="w-full pl-9 pr-3 py-2 text-sm bg-background border border-border rounded-none focus:outline-none focus:border-primary text-foreground font-mono text-xs uppercase"
                                     />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                    <label className="block text-xs font-semibold text-foreground/80 mb-1">
                                         Contact Phone
                                     </label>
                                     <div className="relative">
-                                        <Phone className="absolute left-3 top-2.5 text-slate-400" size={14} />
+                                        <Phone className="absolute left-3 top-2.5 text-muted-foreground" size={14} />
                                         <input
                                             type="text"
                                             value={orgData.phone}
                                             onChange={(e) => setOrgData({ ...orgData, phone: e.target.value })}
                                             placeholder="+91 98765..."
-                                            className="w-full pl-8 pr-2 py-2 text-sm bg-white border border-slate-300 rounded-none focus:outline-none focus:border-slate-900 text-slate-900 text-xs"
+                                            className="w-full pl-8 pr-2 py-2 text-sm bg-background border border-border rounded-none focus:outline-none focus:border-primary text-foreground text-xs"
                                         />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                    <label className="block text-xs font-semibold text-foreground/80 mb-1">
                                         Store Email
                                     </label>
                                     <div className="relative">
-                                        <Mail className="absolute left-3 top-2.5 text-slate-400" size={14} />
+                                        <Mail className="absolute left-3 top-2.5 text-muted-foreground" size={14} />
                                         <input
                                             type="email"
                                             value={orgData.email}
                                             onChange={(e) => setOrgData({ ...orgData, email: e.target.value })}
                                             placeholder="store@domain..."
-                                            className="w-full pl-8 pr-2 py-2 text-sm bg-white border border-slate-300 rounded-none focus:outline-none focus:border-slate-900 text-slate-900 text-xs"
+                                            className="w-full pl-8 pr-2 py-2 text-sm bg-background border border-border rounded-none focus:outline-none focus:border-primary text-foreground text-xs"
                                         />
                                     </div>
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                <label className="block text-xs font-semibold text-foreground/80 mb-1">
                                     Headquarters / Main Store Address
                                 </label>
                                 <div className="relative">
-                                    <MapPin className="absolute left-3 top-2.5 text-slate-400" size={15} />
+                                    <MapPin className="absolute left-3 top-2.5 text-muted-foreground" size={15} />
                                     <textarea
                                         rows={3}
                                         value={orgData.address}
                                         onChange={(e) => setOrgData({ ...orgData, address: e.target.value })}
                                         placeholder="Full street address, market name, city, state"
-                                        className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-300 rounded-none focus:outline-none focus:border-slate-900 text-slate-900 text-xs"
+                                        className="w-full pl-9 pr-3 py-2 text-sm bg-background border border-border rounded-none focus:outline-none focus:border-primary text-foreground text-xs"
                                     />
                                 </div>
                             </div>
@@ -561,7 +561,7 @@ export default function OrganizationSettings() {
                             <button
                                 type="submit"
                                 disabled={saving}
-                                className="w-full py-2.5 px-4 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-none transition-all flex items-center justify-center gap-2"
+                                className="w-full py-2.5 px-4 bg-primary hover:bg-black text-primary-foreground font-bold text-xs rounded-none transition-all flex items-center justify-center gap-2 cursor-pointer"
                             >
                                 {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={14} />}
                                 <span>{saving ? 'Saving Profile...' : 'Save Store Profile'}</span>
@@ -570,25 +570,25 @@ export default function OrganizationSettings() {
                     </div>
 
                     {/* Summary metrics card */}
-                    <div className="bg-slate-50 border border-slate-300 rounded-none p-4 space-y-3">
-                        <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Branch Summary</h3>
+                    <div className="bg-card border border-border rounded-none p-4 space-y-3">
+                        <h3 className="text-xs font-bold text-foreground uppercase tracking-wider font-mono">Branch Summary</h3>
                         <div className="grid grid-cols-2 gap-3 text-center">
-                            <div className="p-3 bg-white border border-slate-300 rounded-none">
-                                <p className="text-2xl font-black text-slate-900">{orgData.total_branches}</p>
-                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Total Branches</p>
+                            <div className="p-3 bg-background border border-border rounded-none">
+                                <p className="font-sans text-2xl font-bold text-foreground">{orgData.total_branches}</p>
+                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider font-mono">Total Branches</p>
                             </div>
-                            <div className="p-3 bg-white border border-slate-300 rounded-none">
-                                <p className="text-2xl font-black text-slate-900">{orgData.active_branches}</p>
-                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Active Counters</p>
+                            <div className="p-3 bg-background border border-border rounded-none">
+                                <p className="font-sans text-2xl font-bold text-foreground">{orgData.active_branches}</p>
+                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider font-mono">Active Counters</p>
                             </div>
                         </div>
                     </div>
 
                     {/* ── Customer Discount Policy Card ─────────────────────────── */}
-                    <div className="bg-white border border-slate-300 rounded-none p-6 space-y-4">
-                        <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
-                            <Tag size={16} className="text-slate-900" />
-                            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Customer Discount Policy</h2>
+                    <div className="bg-card border border-border rounded-none p-6 space-y-4">
+                        <div className="flex items-center gap-2 border-b border-border pb-3">
+                            <Tag size={16} className="text-foreground" />
+                            <h2 className="text-sm font-bold text-foreground uppercase tracking-wider font-mono">Customer Discount Policy</h2>
                         </div>
 
                         {discountMsg && (
@@ -608,7 +608,7 @@ export default function OrganizationSettings() {
 
                         {/* Model selector */}
                         <div className="space-y-2">
-                            <p className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Discount Model</p>
+                            <p className="text-xs font-semibold text-foreground/80 uppercase tracking-wider font-mono">Discount Model</p>
                             {[
                                 ['none',   'No Discount (Full MRP always)'],
                                 ['flat',   'Flat % — same % off every bill'],
@@ -616,16 +616,16 @@ export default function OrganizationSettings() {
                             ].map(([val, label]) => (
                                 <label key={val} className={`flex items-center gap-3 p-2.5 rounded-none border cursor-pointer transition-all ${
                                     discountModel === val
-                                        ? 'border-slate-900 bg-slate-100 font-semibold'
-                                        : 'border-slate-300 hover:border-slate-400 bg-white'
+                                        ? 'border-primary bg-accent font-semibold text-foreground'
+                                        : 'border-border hover:border-border/80 bg-background text-foreground'
                                 }`}>
                                     <input
                                         type="radio" name="discount_model" value={val}
                                         checked={discountModel === val}
                                         onChange={() => setDiscountModel(val)}
-                                        className="accent-slate-900"
+                                        className="accent-primary"
                                     />
-                                    <span className="text-xs text-slate-900">{label}</span>
+                                    <span className="text-xs text-foreground">{label}</span>
                                 </label>
                             ))}
                         </div>
@@ -633,20 +633,20 @@ export default function OrganizationSettings() {
                         {/* Flat model: single pct input */}
                         {discountModel === 'flat' && (
                             <div>
-                                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label className="block text-xs font-semibold text-foreground/80 mb-1.5">
                                     Flat Discount Percentage
                                 </label>
                                 <div className="relative">
-                                    <Percent className="absolute left-3 top-2.5 text-slate-400" size={13} />
+                                    <Percent className="absolute left-3 top-2.5 text-muted-foreground" size={13} />
                                     <input
                                         type="number" min="0.1" max="100" step="0.5"
                                         value={flatPct}
                                         onChange={e => setFlatPct(e.target.value)}
                                         placeholder="e.g. 10"
-                                        className="w-full pl-8 pr-3 py-2 text-sm bg-white border border-slate-300 rounded-none focus:outline-none focus:border-slate-900 text-slate-900 font-mono"
+                                        className="w-full pl-8 pr-3 py-2 text-sm bg-background border border-border rounded-none focus:outline-none focus:border-primary text-foreground font-mono"
                                     />
                                 </div>
-                                <p className="text-[11px] text-slate-400 mt-1.5">
+                                <p className="text-[11px] text-muted-foreground mt-1.5">
                                     Every bill gets this % off regardless of total amount.
                                 </p>
                             </div>
@@ -655,36 +655,36 @@ export default function OrganizationSettings() {
                         {/* Tiered model: slab table */}
                         {discountModel === 'tiered' && (
                             <div className="space-y-3">
-                                <p className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Discount Slabs</p>
+                                <p className="text-xs font-semibold text-foreground/80 uppercase tracking-wider font-mono">Discount Slabs</p>
                                 <div className="space-y-2">
                                     {tieredSlabs.map((slab, idx) => (
-                                        <div key={idx} className="flex items-center gap-1.5 bg-slate-50 border border-slate-300 rounded-none p-2">
-                                            <span className="text-[11px] font-bold text-slate-500 shrink-0">₹</span>
+                                        <div key={idx} className="flex items-center gap-1.5 bg-background border border-border rounded-none p-2">
+                                            <span className="text-[11px] font-bold text-muted-foreground shrink-0">₹</span>
                                             <input
                                                 type="number" placeholder="Min"
                                                 value={slab.min_bill ?? ''}
                                                 onChange={e => updateSlab(idx, 'min_bill', e.target.value)}
-                                                className="w-20 px-2 py-1 text-xs border border-slate-300 rounded-none text-slate-900 bg-white focus:outline-none focus:border-slate-900 font-mono"
+                                                className="w-20 px-2 py-1 text-xs border border-border rounded-none text-foreground bg-card focus:outline-none focus:border-primary font-mono"
                                             />
-                                            <span className="text-[11px] text-slate-400">–</span>
+                                            <span className="text-[11px] text-muted-foreground">–</span>
                                             <input
                                                 type="number" placeholder="Max (∞)"
                                                 value={slab.max_bill ?? ''}
                                                 onChange={e => updateSlab(idx, 'max_bill', e.target.value === '' ? null : e.target.value)}
-                                                className="w-24 px-2 py-1 text-xs border border-slate-300 rounded-none text-slate-900 bg-white focus:outline-none focus:border-slate-900 font-mono"
+                                                className="w-24 px-2 py-1 text-xs border border-border rounded-none text-foreground bg-card focus:outline-none focus:border-primary font-mono"
                                             />
-                                            <span className="text-[11px] text-slate-400">→</span>
+                                            <span className="text-[11px] text-muted-foreground">→</span>
                                             <input
                                                 type="number" min="0" max="100" step="0.5" placeholder="%"
                                                 value={slab.discount_pct ?? ''}
                                                 onChange={e => updateSlab(idx, 'discount_pct', e.target.value)}
-                                                className="w-14 px-2 py-1 text-xs border border-slate-300 rounded-none text-slate-900 bg-white focus:outline-none focus:border-slate-900 font-mono"
+                                                className="w-14 px-2 py-1 text-xs border border-border rounded-none text-foreground bg-card focus:outline-none focus:border-primary font-mono"
                                             />
-                                            <span className="text-[11px] text-slate-600 font-bold">%</span>
+                                            <span className="text-[11px] text-foreground font-bold">%</span>
                                             <button
                                                 onClick={() => removeSlab(idx)}
                                                 disabled={tieredSlabs.length === 1}
-                                                className="ml-auto p-1 text-slate-400 hover:text-rose-600 transition-colors disabled:opacity-30"
+                                                className="ml-auto p-1 text-muted-foreground hover:text-rose-600 transition-colors disabled:opacity-30 cursor-pointer"
                                                 title="Remove slab"
                                             ><Trash2 size={12} /></button>
                                         </div>
@@ -692,18 +692,18 @@ export default function OrganizationSettings() {
                                 </div>
                                 <button
                                     onClick={addSlab}
-                                    className="flex items-center gap-1.5 text-xs font-bold text-slate-800 hover:text-black transition-colors"
+                                    className="flex items-center gap-1.5 text-xs font-bold text-foreground hover:text-[#F26A4B] transition-colors cursor-pointer"
                                 >
                                     <Plus size={13} /> Add Slab
                                 </button>
-                                <p className="text-[11px] text-slate-400">
+                                <p className="text-[11px] text-muted-foreground">
                                     Leave Max blank for highest slab (no ceiling). Slabs are evaluated top-to-bottom.
                                 </p>
                             </div>
                         )}
 
                         {discountModel === 'none' && (
-                            <p className="text-xs text-slate-500 bg-slate-50 rounded-none px-3.5 py-3 border border-slate-200">
+                            <p className="text-xs text-muted-foreground bg-background rounded-none px-3.5 py-3 border border-border">
                                 No discount applied. Customers pay full MRP on every bill.
                             </p>
                         )}
@@ -711,7 +711,7 @@ export default function OrganizationSettings() {
                         <button
                             onClick={handleSaveDiscount}
                             disabled={discountSaving}
-                            className="w-full py-2.5 px-4 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-none transition-all flex items-center justify-center gap-2"
+                            className="w-full py-2.5 px-4 bg-primary hover:bg-black text-primary-foreground font-bold text-xs rounded-none transition-all flex items-center justify-center gap-2 cursor-pointer"
                         >
                             {discountSaving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
                             <span>{discountSaving ? 'Saving Policy...' : 'Save Discount Policy'}</span>
@@ -721,17 +721,17 @@ export default function OrganizationSettings() {
 
                 {/* ── Right Column: Branch & Counter Management ───────────────── */}
                 <div className="lg:col-span-2 space-y-4">
-                    <div className="bg-white border border-slate-300 rounded-none p-6 space-y-5">
-                        <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+                    <div className="bg-card border border-border rounded-none p-6 space-y-5">
+                        <div className="flex items-center justify-between border-b border-border pb-4">
                             <div>
-                                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Branch & Counter Locations</h2>
-                                <p className="text-xs text-slate-500 mt-0.5">
+                                <h2 className="font-mono text-sm font-bold text-foreground uppercase tracking-wider">Branch & Counter Locations</h2>
+                                <p className="text-xs text-muted-foreground mt-0.5">
                                     Counter staff and medicine stocks are strictly partitioned across these locations.
                                 </p>
                             </div>
                             <button
                                 onClick={handleOpenAddBranch}
-                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-slate-900 bg-slate-100 border border-slate-300 rounded-none hover:bg-slate-200 transition-colors"
+                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-foreground bg-accent border border-border rounded-none hover:bg-accent/80 transition-colors cursor-pointer"
                             >
                                 <Plus size={14} />
                                 <span>Add Branch</span>
@@ -739,19 +739,19 @@ export default function OrganizationSettings() {
                         </div>
 
                         {loading ? (
-                            <div className="p-8 text-center text-slate-400 text-xs">
+                            <div className="p-8 text-center text-muted-foreground text-xs font-mono">
                                 Loading branches...
                             </div>
                         ) : orgData.branches.length === 0 ? (
-                            <div className="p-8 text-center border-2 border-dashed border-slate-300 rounded-none space-y-3">
-                                <Store className="w-8 h-8 text-slate-400 mx-auto" />
+                            <div className="p-8 text-center border-2 border-dashed border-border rounded-none space-y-3">
+                                <Store className="w-8 h-8 text-muted-foreground mx-auto" />
                                 <div>
-                                    <p className="text-xs font-bold text-slate-800 uppercase tracking-wider">No branch counters configured</p>
-                                    <p className="text-xs text-slate-500 mt-1">Add your main pharmacy counter to begin dispensing medicines.</p>
+                                    <p className="text-xs font-bold text-foreground uppercase tracking-wider font-mono">No branch counters configured</p>
+                                    <p className="text-xs text-muted-foreground mt-1">Add your main pharmacy counter to begin dispensing medicines.</p>
                                 </div>
                                 <button
                                     onClick={handleOpenAddBranch}
-                                    className="px-4 py-2 text-xs font-bold text-white bg-slate-900 rounded-none hover:bg-black"
+                                    className="px-4 py-2 text-xs font-bold text-primary-foreground bg-primary rounded-none hover:bg-black cursor-pointer"
                                 >
                                     Create Primary Counter
                                 </button>
@@ -763,57 +763,57 @@ export default function OrganizationSettings() {
                                         key={b.id}
                                         className={`p-4 rounded-none border transition-all flex flex-col justify-between ${
                                             b.is_active
-                                                ? 'bg-white border-slate-300 hover:border-slate-800'
-                                                : 'bg-slate-50 border-slate-200 opacity-70'
+                                                ? 'bg-background border-border hover:border-primary/40'
+                                                : 'bg-accent/50 border-border opacity-70'
                                         }`}
                                     >
                                         <div className="space-y-2">
                                             <div className="flex items-start justify-between gap-2">
                                                 <div>
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground font-mono">
                                                         ID: #{b.id} • {b.region}
                                                     </span>
-                                                    <h3 className="text-sm font-bold text-slate-900 leading-tight">
+                                                    <h3 className="font-sans text-sm font-bold text-foreground leading-tight">
                                                         {b.name}
                                                     </h3>
                                                 </div>
                                                 <span
-                                                    className={`px-2 py-0.5 rounded-none text-[10px] font-bold uppercase tracking-wider ${
+                                                    className={`px-2 py-0.5 rounded-none text-[10px] font-bold uppercase tracking-wider font-mono ${
                                                         b.is_active
-                                                            ? 'bg-slate-900 text-white'
-                                                            : 'bg-slate-200 text-slate-600'
+                                                            ? 'bg-primary text-primary-foreground'
+                                                            : 'bg-muted text-foreground'
                                                     }`}
                                                 >
                                                     {b.is_active ? 'Active' : 'Archived'}
                                                 </span>
                                             </div>
 
-                                            <div className="text-xs text-slate-600 space-y-1 pt-1 font-sans">
+                                            <div className="text-xs text-muted-foreground space-y-1 pt-1 font-sans">
                                                 <p className="flex items-center gap-1.5">
-                                                    <span className="font-semibold text-slate-800">Type:</span>
+                                                    <span className="font-semibold text-foreground">Type:</span>
                                                     <span className="capitalize">{b.type.replace('_', ' ')}</span>
                                                 </p>
                                                 {b.address && (
                                                     <p className="truncate" title={b.address}>
-                                                        <span className="font-semibold text-slate-800">Address:</span> {b.address}
+                                                        <span className="font-semibold text-foreground">Address:</span> {b.address}
                                                     </p>
                                                 )}
                                                 {b.phone && (
                                                     <p>
-                                                        <span className="font-semibold text-slate-800">Phone:</span> {b.phone}
+                                                        <span className="font-semibold text-foreground">Phone:</span> {b.phone}
                                                     </p>
                                                 )}
                                                 <p>
-                                                    <span className="font-semibold text-slate-800">Radius:</span> {b.radius_meters || 500}m counter boundary
+                                                    <span className="font-semibold text-foreground">Radius:</span> {b.radius_meters || 500}m counter boundary
                                                 </p>
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-200">
+                                        <div className="flex items-center justify-between pt-3 mt-3 border-t border-border">
                                             <button
                                                 onClick={() => handleToggleBranchActive(b)}
-                                                className={`text-[11px] font-bold flex items-center gap-1 hover:underline ${
-                                                    b.is_active ? 'text-amber-700' : 'text-slate-900'
+                                                className={`text-[11px] font-bold flex items-center gap-1 hover:underline cursor-pointer ${
+                                                    b.is_active ? 'text-amber-700' : 'text-foreground'
                                                 }`}
                                             >
                                                 <Power size={12} />
@@ -823,14 +823,14 @@ export default function OrganizationSettings() {
                                             <div className="flex items-center gap-1">
                                                 <button
                                                     onClick={() => handleOpenEditBranch(b)}
-                                                    className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-none transition-colors"
+                                                    className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded-none transition-colors cursor-pointer"
                                                     title="Edit branch"
                                                 >
                                                     <Edit3 size={14} />
                                                 </button>
                                                 <button
                                                     onClick={() => setDeleteCandidate(b)}
-                                                    className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-none transition-colors"
+                                                    className="p-1.5 text-muted-foreground hover:text-rose-600 hover:bg-rose-50 rounded-none transition-colors cursor-pointer"
                                                     title="Delete or archive branch"
                                                 >
                                                     <Trash2 size={14} />
@@ -847,28 +847,26 @@ export default function OrganizationSettings() {
 
             {/* ── Modal: Add / Edit Branch ──────────────────────────────────────── */}
             {isBranchModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
-                    <div className="bg-white border border-slate-300 rounded-none shadow-2xl max-w-lg w-full overflow-hidden">
-                        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
+                    <div className="bg-card border border-border rounded-none shadow-2xl max-w-lg w-full p-6 space-y-4 text-card-foreground">
+                        <div className="flex items-center justify-between pb-3 border-b border-border">
                             <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 bg-slate-900 text-white flex items-center justify-center text-xs font-bold rounded-none">
-                                    <Store size={14} />
-                                </div>
-                                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                                    {editingBranch ? `Edit Branch: ${editingBranch.name}` : 'Add New Pharmacy Branch'}
+                                <Store size={18} className="text-foreground" />
+                                <h3 className="font-sans text-sm font-bold text-foreground uppercase tracking-wider">
+                                    {editingBranch ? 'Edit Branch Counter' : 'Add New Pharmacy Counter'}
                                 </h3>
                             </div>
                             <button
                                 onClick={() => setIsBranchModalOpen(false)}
-                                className="p-1 text-slate-400 hover:text-slate-800 transition"
+                                className="p-1 text-muted-foreground hover:text-foreground hover:bg-accent rounded-none"
                             >
                                 <X size={16} />
                             </button>
                         </div>
 
-                        <form onSubmit={handleSaveBranch} className="p-6 space-y-4">
+                        <form onSubmit={handleSaveBranch} className="space-y-3.5">
                             <div>
-                                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                <label className="block text-xs font-semibold text-foreground mb-1">
                                     Branch / Counter Name <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -876,57 +874,56 @@ export default function OrganizationSettings() {
                                     required
                                     value={branchForm.name}
                                     onChange={(e) => setBranchForm({ ...branchForm, name: e.target.value })}
-                                    placeholder="e.g. South Extension Counter"
-                                    className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-none focus:outline-none focus:border-slate-900 text-slate-900"
+                                    placeholder="e.g. Durgapur Station Road Branch"
+                                    className="w-full px-3 py-2 text-sm bg-background border border-border rounded-none focus:outline-none focus:border-primary text-foreground text-xs"
                                 />
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                                        Type
+                                    <label className="block text-xs font-semibold text-foreground mb-1">
+                                        Counter Type
                                     </label>
                                     <select
                                         value={branchForm.type}
                                         onChange={(e) => setBranchForm({ ...branchForm, type: e.target.value })}
-                                        className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-none focus:outline-none focus:border-slate-900 text-slate-900"
+                                        className="w-full px-3 py-2 text-sm bg-background border border-border rounded-none focus:outline-none focus:border-primary text-foreground text-xs"
                                     >
                                         <option value="retail_counter">Retail Counter</option>
-                                        <option value="cold_storage">Cold Storage (2-8°C)</option>
-                                        <option value="branch">Branch Store</option>
-                                        <option value="central_warehouse">Warehouse</option>
+                                        <option value="hospital_pharmacy">Hospital Pharmacy</option>
+                                        <option value="warehouse">Storage Godown</option>
+                                        <option value="clinic_dispensary">Clinic Dispensary</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                                        Region / City <span className="text-red-500">*</span>
+                                    <label className="block text-xs font-semibold text-foreground mb-1">
+                                        Region / District
                                     </label>
                                     <input
                                         type="text"
-                                        required
                                         value={branchForm.region}
                                         onChange={(e) => setBranchForm({ ...branchForm, region: e.target.value })}
-                                        placeholder="e.g. North Delhi"
-                                        className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-none focus:outline-none focus:border-slate-900 text-slate-900"
+                                        placeholder="e.g. West Bengal"
+                                        className="w-full px-3 py-2 text-sm bg-background border border-border rounded-none focus:outline-none focus:border-primary text-foreground text-xs"
                                     />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                                        Counter Phone
+                                    <label className="block text-xs font-semibold text-foreground mb-1">
+                                        Phone Number
                                     </label>
                                     <input
                                         type="text"
                                         value={branchForm.phone}
                                         onChange={(e) => setBranchForm({ ...branchForm, phone: e.target.value })}
                                         placeholder="+91..."
-                                        className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-none focus:outline-none focus:border-slate-900 text-slate-900 text-xs"
+                                        className="w-full px-3 py-2 text-sm bg-background border border-border rounded-none focus:outline-none focus:border-primary text-foreground text-xs"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                    <label className="block text-xs font-semibold text-foreground mb-1">
                                         PIN Code
                                     </label>
                                     <input
@@ -934,13 +931,13 @@ export default function OrganizationSettings() {
                                         value={branchForm.pincode}
                                         onChange={(e) => setBranchForm({ ...branchForm, pincode: e.target.value })}
                                         placeholder="110001"
-                                        className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-none focus:outline-none focus:border-slate-900 text-slate-900 text-xs font-mono"
+                                        className="w-full px-3 py-2 text-sm bg-background border border-border rounded-none focus:outline-none focus:border-primary text-foreground text-xs font-mono"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                <label className="block text-xs font-semibold text-foreground mb-1">
                                     Address
                                 </label>
                                 <input
@@ -948,12 +945,12 @@ export default function OrganizationSettings() {
                                     value={branchForm.address}
                                     onChange={(e) => setBranchForm({ ...branchForm, address: e.target.value })}
                                     placeholder="Shop number, street, landmark"
-                                    className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-none focus:outline-none focus:border-slate-900 text-slate-900 text-xs"
+                                    className="w-full px-3 py-2 text-sm bg-background border border-border rounded-none focus:outline-none focus:border-primary text-foreground text-xs"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                <label className="block text-xs font-semibold text-foreground mb-1">
                                     Geofence Radius (meters)
                                 </label>
                                 <input
@@ -962,22 +959,22 @@ export default function OrganizationSettings() {
                                     max="50000"
                                     value={branchForm.radius_meters}
                                     onChange={(e) => setBranchForm({ ...branchForm, radius_meters: parseInt(e.target.value) || 500 })}
-                                    className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-none focus:outline-none focus:border-slate-900 text-slate-900 font-mono"
+                                    className="w-full px-3 py-2 text-sm bg-background border border-border rounded-none focus:outline-none focus:border-primary text-foreground font-mono"
                                 />
                             </div>
 
-                            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
+                            <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
                                 <button
                                     type="button"
                                     onClick={() => setIsBranchModalOpen(false)}
-                                    className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-none hover:bg-slate-100"
+                                    className="px-4 py-2 text-xs font-semibold text-foreground bg-accent border border-border rounded-none hover:bg-accent/80 cursor-pointer"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={branchSaving}
-                                    className="px-5 py-2 text-xs font-bold text-white bg-slate-900 rounded-none hover:bg-black transition-all flex items-center gap-1.5"
+                                    className="px-5 py-2 text-xs font-bold text-primary-foreground bg-primary rounded-none hover:bg-black transition-all flex items-center gap-1.5 cursor-pointer"
                                 >
                                     {branchSaving && <Loader2 size={12} className="animate-spin" />}
                                     <span>{branchSaving ? 'Saving...' : editingBranch ? 'Update Branch' : 'Add Branch'}</span>
@@ -990,23 +987,23 @@ export default function OrganizationSettings() {
 
             {/* ── Modal: Safe Delete/Archive Confirmation ──────────────────────── */}
             {deleteCandidate && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
-                    <div className="bg-white border border-slate-300 rounded-none shadow-2xl max-w-md w-full p-6 space-y-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
+                    <div className="bg-card border border-border rounded-none shadow-2xl max-w-md w-full p-6 space-y-4 text-card-foreground">
                         <div className="flex items-center gap-3 text-amber-700">
                             <AlertCircle size={22} />
-                            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Remove Branch Counter?</h3>
+                            <h3 className="font-sans text-sm font-bold text-foreground uppercase tracking-wider">Remove Branch Counter?</h3>
                         </div>
-                        <p className="text-xs text-slate-600 leading-relaxed">
-                            Are you sure you want to remove <strong>{deleteCandidate.name}</strong>?
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                            Are you sure you want to remove <strong className="text-foreground">{deleteCandidate.name}</strong>?
                             <br /><br />
                             <strong>Business rule:</strong> If historical stock or dispense transactions exist for this branch, it will be <strong>safely archived</strong> (deactivated) to preserve audit trails. If no transaction history exists, it will be permanently deleted.
                         </p>
-                        <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
+                        <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
                             <button
                                 type="button"
                                 disabled={deleting}
                                 onClick={() => setDeleteCandidate(null)}
-                                className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-none hover:bg-slate-100"
+                                className="px-4 py-2 text-xs font-semibold text-foreground bg-accent border border-border rounded-none hover:bg-accent/80 cursor-pointer"
                             >
                                 Cancel
                             </button>
@@ -1014,7 +1011,7 @@ export default function OrganizationSettings() {
                                 type="button"
                                 disabled={deleting}
                                 onClick={handleConfirmDelete}
-                                className="px-4 py-2 text-xs font-bold text-white bg-rose-700 hover:bg-rose-800 rounded-none transition-all flex items-center gap-1.5"
+                                className="px-4 py-2 text-xs font-bold text-white bg-rose-700 hover:bg-rose-800 rounded-none transition-all flex items-center gap-1.5 cursor-pointer"
                             >
                                 {deleting && <Loader2 size={12} className="animate-spin" />}
                                 <span>{deleting ? 'Processing...' : 'Confirm Removal'}</span>

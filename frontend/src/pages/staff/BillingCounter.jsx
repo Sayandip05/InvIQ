@@ -206,19 +206,19 @@ export default function BillingCounter() {
     const fmtCur = (n) => `₹${parseFloat(n || 0).toFixed(2)}`;
 
     return (
-        <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 font-sans">
+        <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 font-sans text-foreground">
             
-            {/* Header (Sharp Zoho Theme) */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-300 p-5 rounded-none shadow-xs">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-border p-5 rounded-lg shadow-xs">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-900 text-white flex items-center justify-center rounded-none font-bold">
+                    <div className="w-10 h-10 bg-primary text-primary-foreground flex items-center justify-center rounded-md font-bold">
                         <ScanBarcode size={20} />
                     </div>
                     <div>
-                        <h1 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
+                        <h1 className="text-base sm:text-lg font-sans font-bold text-foreground tracking-tight">
                             Retail POS &amp; Billing Counter
                         </h1>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-muted-foreground">
                             Scan medicine barcodes, apply batch discounts, and print bills in real time
                         </p>
                     </div>
@@ -226,11 +226,11 @@ export default function BillingCounter() {
 
                 {sessionId && (
                     <div className="flex items-center gap-2">
-                        <span className="px-3 py-1.5 rounded-none text-xs font-mono font-bold bg-slate-100 text-slate-900 border border-slate-300">
+                        <span className="px-3 py-1.5 rounded-md text-xs font-mono font-bold bg-secondary text-secondary-foreground border border-border">
                             SESSION BILL #{sessionId}
                         </span>
                         {status === 'open' && (
-                            <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-none">
+                            <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-emerald-100/70 text-emerald-800 border border-emerald-300 rounded-md">
                                 ACTIVE
                             </span>
                         )}
@@ -240,44 +240,44 @@ export default function BillingCounter() {
 
             {/* Toast Alerts */}
             {error && (
-                <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-300 text-rose-800 text-xs rounded-none">
-                    <AlertCircle size={14} className="shrink-0 text-rose-600" />
+                <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 text-destructive text-xs rounded-md">
+                    <AlertCircle size={14} className="shrink-0 text-destructive" />
                     <span>{error}</span>
-                    <button onClick={clearMessages} className="ml-auto font-bold text-rose-600">✕</button>
+                    <button onClick={clearMessages} className="ml-auto font-bold text-destructive cursor-pointer">✕</button>
                 </div>
             )}
             {success && (
-                <div className="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs rounded-none">
-                    <CheckCircle2 size={14} className="shrink-0 text-emerald-600" />
+                <div className="flex items-center gap-2 p-3 bg-emerald-100/70 border border-emerald-300 text-emerald-800 text-xs rounded-md">
+                    <CheckCircle2 size={14} className="shrink-0 text-emerald-700" />
                     <span>{success}</span>
-                    <button onClick={clearMessages} className="ml-auto font-bold text-emerald-700">✕</button>
+                    <button onClick={clearMessages} className="ml-auto font-bold text-emerald-800 cursor-pointer">✕</button>
                 </div>
             )}
 
             {/* ── IDLE STATE: Setup & Open Bill ─────────────────────────────── */}
             {status === 'idle' && (
-                <div className="bg-white border border-slate-300 rounded-none shadow-xs p-8 text-center space-y-6">
+                <div className="bg-card border border-border rounded-lg shadow-xs p-8 text-center space-y-6">
                     <div className="max-w-md mx-auto space-y-2">
-                        <div className="w-12 h-12 bg-slate-100 border border-slate-200 text-slate-800 flex items-center justify-center mx-auto rounded-none">
+                        <div className="w-12 h-12 bg-secondary border border-border text-foreground flex items-center justify-center mx-auto rounded-md">
                             <ShoppingCart size={24} />
                         </div>
-                        <h2 className="text-base font-bold text-slate-900">Initiate New Customer Bill</h2>
-                        <p className="text-xs text-slate-500">
+                        <h2 className="text-base font-sans font-bold text-foreground">Initiate New Customer Bill</h2>
+                        <p className="text-xs text-muted-foreground">
                             Select your retail shop counter to initialize the real-time stock allocation session.
                         </p>
                     </div>
 
                     <div className="max-w-sm mx-auto space-y-4 text-left">
                         <div>
-                            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                                Select Shop Counter / Location <span className="text-red-500">*</span>
+                            <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-1.5 font-mono">
+                                Select Shop Counter / Location <span className="text-destructive">*</span>
                             </label>
                             <div className="relative">
-                                <MapPin className="absolute left-3 top-2.5 text-slate-400" size={15} />
+                                <MapPin className="absolute left-3 top-2.5 text-muted-foreground" size={15} />
                                 <select
                                     value={locationId}
                                     onChange={e => setLocationId(e.target.value)}
-                                    className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-none focus:outline-none focus:border-slate-900 text-slate-900 font-medium"
+                                    className="w-full pl-9 pr-3 py-2 text-xs bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-ring text-foreground font-medium cursor-pointer"
                                 >
                                     <option value="">— Select Location Counter —</option>
                                     {locations.map(loc => (
@@ -292,7 +292,7 @@ export default function BillingCounter() {
                         <button
                             onClick={handleOpen}
                             disabled={loading || !locationId}
-                            className="w-full py-2.5 bg-slate-900 hover:bg-black disabled:bg-slate-300 text-white font-bold text-xs uppercase tracking-wider rounded-none transition flex items-center justify-center gap-2"
+                            className="w-full py-2.5 bg-primary hover:opacity-90 disabled:opacity-50 text-primary-foreground font-bold text-xs uppercase tracking-wider rounded-md transition flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                         >
                             {loading ? <Loader2 size={14} className="animate-spin" /> : <ScanBarcode size={14} />}
                             <span>Open Billing Session</span>
@@ -309,20 +309,20 @@ export default function BillingCounter() {
                     <div className="lg:col-span-2 space-y-4">
                         
                         {/* Barcode Input Bar */}
-                        <form onSubmit={handleScan} className="bg-white border border-slate-300 p-4 rounded-none shadow-xs space-y-3">
-                            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                        <form onSubmit={handleScan} className="bg-card border border-border p-4 rounded-lg shadow-xs space-y-3">
+                            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider font-mono">
                                 Barcode Scanner &amp; SKU Lookup
                             </h3>
                             <div className="flex gap-2">
                                 <div className="relative flex-1">
-                                    <ScanBarcode className="absolute left-3 top-2.5 text-slate-400" size={16} />
+                                    <ScanBarcode className="absolute left-3 top-2.5 text-muted-foreground" size={16} />
                                     <input
                                         ref={barcodeRef}
                                         type="text"
                                         placeholder="Scan barcode or type SKU (e.g. 890108600112)..."
                                         value={barcode}
                                         onChange={e => setBarcode(e.target.value)}
-                                        className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-none bg-white text-slate-900 font-mono focus:outline-none focus:border-slate-900"
+                                        className="w-full pl-9 pr-3 py-2 text-xs border border-input rounded-md bg-background text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring"
                                     />
                                 </div>
                                 <div className="w-24">
@@ -332,13 +332,13 @@ export default function BillingCounter() {
                                         placeholder="Qty"
                                         value={qty}
                                         onChange={e => setQty(e.target.value)}
-                                        className="w-full px-2 py-2 text-xs border border-slate-300 rounded-none text-center font-bold bg-white text-slate-900 focus:outline-none focus:border-slate-900"
+                                        className="w-full px-2 py-2 text-xs border border-input rounded-md text-center font-bold bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                                     />
                                 </div>
                                 <button
                                     type="submit"
                                     disabled={scanning || !barcode.trim()}
-                                    className="px-4 py-2 bg-slate-900 hover:bg-black disabled:bg-slate-300 text-white text-xs font-bold uppercase rounded-none transition flex items-center gap-1.5"
+                                    className="px-4 py-2 bg-primary hover:opacity-90 disabled:opacity-50 text-primary-foreground text-xs font-bold uppercase rounded-md transition flex items-center gap-1.5 cursor-pointer shadow-xs"
                                 >
                                     {scanning ? <Loader2 size={13} className="animate-spin" /> : <Plus size={14} />}
                                     <span>Add Item</span>
@@ -347,30 +347,30 @@ export default function BillingCounter() {
                         </form>
 
                         {/* Items Table */}
-                        <div className="bg-white border border-slate-300 rounded-none shadow-xs overflow-hidden">
-                            <div className="p-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-                                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                        <div className="bg-card border border-border rounded-lg shadow-xs overflow-hidden">
+                            <div className="p-3 border-b border-border bg-muted/20 flex items-center justify-between">
+                                <h3 className="text-xs font-bold text-foreground uppercase tracking-wider font-mono">
                                     Scanned Cart Items ({items.length})
                                 </h3>
                                 <button
                                     onClick={handleCancel}
-                                    className="text-xs text-rose-600 hover:text-rose-800 font-semibold"
+                                    className="text-xs text-destructive hover:underline font-semibold cursor-pointer"
                                 >
                                     Cancel Bill
                                 </button>
                             </div>
 
                             {items.length === 0 ? (
-                                <div className="p-12 text-center text-slate-400">
-                                    <ScanBarcode size={32} className="mx-auto mb-2 text-slate-300" />
-                                    <p className="text-xs font-semibold text-slate-700">No items scanned yet</p>
-                                    <p className="text-[11px] text-slate-400">Scan any medicine packaging barcode or SKU to add to cart.</p>
+                                <div className="p-12 text-center text-muted-foreground">
+                                    <ScanBarcode size={32} className="mx-auto mb-2 text-muted-foreground/60" />
+                                    <p className="text-xs font-semibold text-foreground">No items scanned yet</p>
+                                    <p className="text-[11px] text-muted-foreground">Scan any medicine packaging barcode or SKU to add to cart.</p>
                                 </div>
                             ) : (
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left text-xs border-collapse">
                                         <thead>
-                                            <tr className="bg-slate-100 text-slate-700 font-bold uppercase text-[10px] border-b border-slate-200">
+                                            <tr className="bg-muted/40 text-muted-foreground font-bold uppercase text-[10px] border-b border-border font-mono">
                                                 <th className="py-2.5 px-3">Medicine</th>
                                                 <th className="py-2.5 px-3">Batch &amp; Expiry</th>
                                                 <th className="py-2.5 px-3 text-right">MRP</th>
@@ -380,29 +380,29 @@ export default function BillingCounter() {
                                                 <th className="py-2.5 px-2 text-center">Del</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-100 font-medium">
+                                        <tbody className="divide-y divide-border/60 font-medium">
                                             {items.map(item => (
-                                                <tr key={item.id} className="hover:bg-slate-50">
+                                                <tr key={item.id} className="hover:bg-accent/30 transition-colors">
                                                     <td className="p-3">
-                                                        <p className="font-bold text-slate-900">{item.item_name}</p>
-                                                        <span className="text-[10px] text-slate-400 font-mono">{item.barcode || item.sku}</span>
+                                                        <p className="font-bold text-foreground">{item.item_name}</p>
+                                                        <span className="text-[10px] text-muted-foreground font-mono">{item.barcode || item.sku}</span>
                                                     </td>
                                                     <td className="p-3">
-                                                        <span className="font-mono text-xs font-semibold text-slate-800">{item.batch_number || 'BATCH-AUTO'}</span>
-                                                        <p className="text-[10px] text-slate-400">{item.expiry_date || 'Standard'}</p>
+                                                        <span className="font-mono text-xs font-semibold text-foreground">{item.batch_number || 'BATCH-AUTO'}</span>
+                                                        <p className="text-[10px] text-muted-foreground">{item.expiry_date || 'Standard'}</p>
                                                     </td>
-                                                    <td className="p-3 text-right font-mono">{fmtCur(item.mrp || item.unit_price)}</td>
-                                                    <td className="p-3 text-center font-bold">{item.quantity}</td>
-                                                    <td className="p-3 text-right text-emerald-700 font-mono">
+                                                    <td className="p-3 text-right font-mono text-foreground">{fmtCur(item.mrp || item.unit_price)}</td>
+                                                    <td className="p-3 text-center font-bold text-foreground">{item.quantity}</td>
+                                                    <td className="p-3 text-right text-emerald-800 font-mono">
                                                         {item.discount_percent ? `${item.discount_percent}%` : '—'}
                                                     </td>
-                                                    <td className="p-3 text-right font-mono font-bold text-slate-900">
+                                                    <td className="p-3 text-right font-mono font-bold text-foreground">
                                                         {fmtCur(item.line_total || (item.quantity * item.unit_price))}
                                                     </td>
                                                     <td className="p-3 text-center">
                                                         <button
                                                             onClick={() => handleRemove(item.id)}
-                                                            className="text-slate-400 hover:text-rose-600 transition"
+                                                            className="text-muted-foreground hover:text-destructive transition cursor-pointer"
                                                             title="Remove line"
                                                         >
                                                             <Trash2 size={14} />
@@ -419,27 +419,27 @@ export default function BillingCounter() {
 
                     {/* Right 1 Col: Bill Summary Card */}
                     <div className="space-y-4">
-                        <div className="bg-white border border-slate-300 rounded-none shadow-xs p-5 space-y-4">
-                            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider pb-2 border-b border-slate-200">
+                        <div className="bg-card border border-border rounded-lg shadow-xs p-5 space-y-4">
+                            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider pb-2 border-b border-border font-mono">
                                 Bill Computation Summary
                             </h3>
 
                             <div className="space-y-2 text-xs">
-                                <div className="flex justify-between text-slate-600">
+                                <div className="flex justify-between text-muted-foreground">
                                     <span>Total Items:</span>
-                                    <span className="font-bold text-slate-900">{items.reduce((acc, i) => acc + (i.quantity || 1), 0)} Units</span>
+                                    <span className="font-bold text-foreground font-mono">{items.reduce((acc, i) => acc + (i.quantity || 1), 0)} Units</span>
                                 </div>
-                                <div className="flex justify-between text-slate-600">
+                                <div className="flex justify-between text-muted-foreground">
                                     <span>Gross Total:</span>
-                                    <span className="font-mono">{fmtCur(billingPreview?.gross_total || 0)}</span>
+                                    <span className="font-mono text-foreground">{fmtCur(billingPreview?.gross_total || 0)}</span>
                                 </div>
-                                <div className="flex justify-between text-emerald-700">
+                                <div className="flex justify-between text-emerald-800">
                                     <span>Total Discount:</span>
                                     <span className="font-mono font-bold">- {fmtCur(billingPreview?.discount_amount || 0)}</span>
                                 </div>
-                                <div className="pt-3 border-t border-slate-200 flex justify-between items-baseline">
-                                    <span className="text-sm font-extrabold text-slate-900">Net Payable:</span>
-                                    <span className="text-xl font-extrabold font-mono text-slate-900">
+                                <div className="pt-3 border-t border-border flex justify-between items-baseline">
+                                    <span className="text-sm font-sans font-bold text-foreground">Net Payable:</span>
+                                    <span className="text-xl font-bold font-mono text-foreground">
                                         {fmtCur(billingPreview?.net_total || 0)}
                                     </span>
                                 </div>
@@ -448,7 +448,7 @@ export default function BillingCounter() {
                             <button
                                 onClick={handleClose}
                                 disabled={loading || items.length === 0}
-                                className="w-full py-3 bg-slate-900 hover:bg-black disabled:bg-slate-300 text-white font-bold text-xs uppercase tracking-wider rounded-none transition flex items-center justify-center gap-2"
+                                className="w-full py-3 bg-primary hover:opacity-90 disabled:opacity-50 text-primary-foreground font-bold text-xs uppercase tracking-wider rounded-md transition flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                             >
                                 {loading ? <Loader2 size={14} className="animate-spin" /> : <Receipt size={15} />}
                                 <span>Complete Bill &amp; Print</span>
@@ -461,28 +461,28 @@ export default function BillingCounter() {
 
             {/* ── CLOSED STATE: Receipt & Bill Summary ──────────────────────── */}
             {status === 'closed' && closedSession && (
-                <div className="bg-white border border-slate-300 rounded-none p-8 max-w-lg mx-auto shadow-xs text-center space-y-5">
-                    <div className="w-12 h-12 bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center mx-auto rounded-none">
+                <div className="bg-card border border-border rounded-lg p-8 max-w-lg mx-auto shadow-xs text-center space-y-5 text-card-foreground">
+                    <div className="w-12 h-12 bg-emerald-100/70 border border-emerald-300 text-emerald-800 flex items-center justify-center mx-auto rounded-md">
                         <CheckCircle2 size={24} />
                     </div>
 
                     <div>
-                        <h2 className="text-lg font-bold text-slate-900">Transaction Completed</h2>
-                        <p className="text-xs text-slate-500 mt-0.5">
+                        <h2 className="text-lg font-sans font-bold text-foreground">Transaction Completed</h2>
+                        <p className="text-xs text-muted-foreground mt-0.5">
                             Bill #{closedSession.session_id || sessionId} recorded and ledger updated.
                         </p>
                     </div>
 
-                    <div className="bg-slate-50 border border-slate-200 p-4 text-xs space-y-2 text-left font-mono">
+                    <div className="bg-background border border-border rounded-md p-4 text-xs space-y-2 text-left font-mono">
                         <div className="flex justify-between">
-                            <span className="text-slate-500">Gross Amount:</span>
-                            <span className="font-bold text-slate-800">{fmtCur(closedSession.gross_total)}</span>
+                            <span className="text-muted-foreground">Gross Amount:</span>
+                            <span className="font-bold text-foreground">{fmtCur(closedSession.gross_total)}</span>
                         </div>
-                        <div className="flex justify-between text-emerald-700">
+                        <div className="flex justify-between text-emerald-800">
                             <span>Discount:</span>
                             <span className="font-bold">- {fmtCur(closedSession.discount_amount)}</span>
                         </div>
-                        <div className="pt-2 border-t border-slate-300 flex justify-between text-sm font-bold text-slate-900">
+                        <div className="pt-2 border-t border-border flex justify-between text-sm font-bold text-foreground">
                             <span>Total Paid:</span>
                             <span>{fmtCur(closedSession.net_total)}</span>
                         </div>
@@ -491,13 +491,13 @@ export default function BillingCounter() {
                     <div className="flex gap-3 pt-2">
                         <button
                             onClick={() => window.print()}
-                            className="flex-1 py-2.5 bg-white border border-slate-300 text-slate-800 hover:bg-slate-100 text-xs font-bold uppercase rounded-none transition"
+                            className="flex-1 py-2.5 bg-background border border-border text-foreground hover:bg-accent text-xs font-bold uppercase rounded-md transition cursor-pointer"
                         >
                             Print Thermal Slip
                         </button>
                         <button
                             onClick={handleNewBill}
-                            className="flex-1 py-2.5 bg-slate-900 hover:bg-black text-white text-xs font-bold uppercase rounded-none transition flex items-center justify-center gap-1.5"
+                            className="flex-1 py-2.5 bg-primary hover:opacity-90 text-primary-foreground text-xs font-bold uppercase rounded-md transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                         >
                             <RotateCcw size={13} />
                             <span>Start Next Bill</span>

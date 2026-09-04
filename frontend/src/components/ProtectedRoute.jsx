@@ -14,12 +14,11 @@ import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const ROLE_HIERARCHY = { vendor: 2, staff: 3, manager: 4, admin: 5, super_admin: 6 };
+const ROLE_HIERARCHY = { vendor: 2, staff: 3, manager: 4, admin: 5 };
 
 // Maps each role to its correct landing page.
 // Must stay in sync with ROLE_HOME in App.jsx.
 const ROLE_HOME = {
-    super_admin: '/superadmin/dashboard',
     admin:       '/admin/dashboard',
     manager:     '/manager/dashboard',
     staff:       '/staff',

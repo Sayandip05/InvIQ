@@ -108,15 +108,15 @@ const Reports = () => {
     const fmtCurrency = (n) =>
         `₹${parseFloat(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-    const inputCls = "w-full px-3 py-2 border border-slate-200 rounded-none focus:outline-none focus:border-slate-400 text-sm bg-white text-slate-800";
-    const labelCls = "flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5";
+    const inputCls = "w-full px-3 py-2 border border-border rounded-none focus:outline-none focus:border-primary text-sm bg-background text-foreground";
+    const labelCls = "flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 font-mono";
 
     return (
-        <div className="flex flex-col min-h-full bg-slate-50">
+        <div className="flex flex-col min-h-full bg-background font-sans text-foreground">
             {/* Top Navbar */}
-            <div className="sticky top-0 z-30 bg-white border-b border-slate-200 px-6 py-3.5">
+            <div className="sticky top-0 z-30 bg-card border-b border-border px-6 py-3.5">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-base font-bold text-slate-900 tracking-tight">Reports &amp; Analytics</h2>
+                    <h2 className="font-sans text-base font-bold text-foreground tracking-tight">Reports &amp; Analytics</h2>
                     <AlertsDropdown />
                 </div>
             </div>
@@ -124,12 +124,12 @@ const Reports = () => {
             <div className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6 flex-1">
 
                 {/* Generate Report Card */}
-                <div className="bg-white border border-slate-200 rounded-none shadow-none">
+                <div className="bg-card border border-border rounded-none shadow-none">
 
                     {/* Card Header */}
-                    <div className="px-6 py-4 border-b border-slate-100">
-                        <h3 className="text-sm font-bold text-slate-900">Generate Report</h3>
-                        <p className="text-xs text-slate-400 mt-0.5">Select a report type and time period to export PDF</p>
+                    <div className="px-6 py-4 border-b border-border">
+                        <h3 className="font-sans text-sm font-bold text-foreground">Generate Report</h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">Select a report type and time period to export PDF</p>
                     </div>
 
                     <div className="p-6 space-y-6">
@@ -142,19 +142,19 @@ const Reports = () => {
                                         key={type.value}
                                         onClick={() => setReportType(type.value)}
                                         className={[
-                                            "p-4 text-left transition-all border rounded-none focus:outline-none flex flex-col justify-between min-h-[96px]",
+                                            "p-4 text-left transition-all border rounded-none focus:outline-none flex flex-col justify-between min-h-[96px] cursor-pointer",
                                             reportType === type.value
-                                                ? "bg-slate-100 border-slate-800 border-l-4 border-l-slate-900"
-                                                : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50",
+                                                ? "bg-accent border-primary border-l-4 border-l-primary"
+                                                : "bg-card border-border hover:border-primary/40 hover:bg-accent/40",
                                         ].join(" ")}
                                     >
                                         <div className="flex items-center justify-between gap-1 w-full">
-                                            <span className={`text-sm font-bold ${reportType === type.value ? 'text-slate-900' : 'text-slate-700'}`}>
+                                            <span className={`text-sm font-bold ${reportType === type.value ? 'text-foreground' : 'text-foreground/80'}`}>
                                                 {type.label}
                                             </span>
-                                            {reportType === type.value && <ChevronRight size={14} className="text-slate-700 shrink-0" />}
+                                            {reportType === type.value && <ChevronRight size={14} className="text-foreground shrink-0" />}
                                         </div>
-                                        <p className="text-xs text-slate-400 mt-2 leading-relaxed">{type.desc}</p>
+                                        <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{type.desc}</p>
                                     </button>
                                 ))}
                             </div>
@@ -177,21 +177,21 @@ const Reports = () => {
 
                                 {/* Monthly summary metrics */}
                                 {monthlyLoading ? (
-                                    <div className="flex items-center gap-2 py-4 text-slate-400 text-xs">
+                                    <div className="flex items-center gap-2 py-4 text-muted-foreground text-xs font-mono">
                                         <Loader2 size={14} className="animate-spin" /> Loading financial data…
                                     </div>
                                 ) : monthlyData ? (
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-slate-200">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border">
                                         {[
-                                            { label: 'Gross Sales', value: fmtCurrency(monthlyData.gross_total), sub: `${monthlyData.session_count} bill(s)`, color: 'text-slate-900' },
-                                            { label: 'Discounts', value: `−${fmtCurrency(monthlyData.discount_amount)}`, sub: 'Applied', color: 'text-amber-600' },
-                                            { label: 'Net Revenue', value: fmtCurrency(monthlyData.net_total), sub: 'Collected', color: 'text-slate-900' },
-                                            { label: 'Gross Profit', value: fmtCurrency(monthlyData.gross_profit), sub: `${monthlyData.margin_pct}% margin`, color: 'text-emerald-700' },
+                                            { label: 'Gross Sales', value: fmtCurrency(monthlyData.gross_total), sub: `${monthlyData.session_count} bill(s)`, color: 'text-foreground' },
+                                            { label: 'Discounts', value: `−${fmtCurrency(monthlyData.discount_amount)}`, sub: 'Applied', color: 'text-[#F26A4B]' },
+                                            { label: 'Net Revenue', value: fmtCurrency(monthlyData.net_total), sub: 'Collected', color: 'text-foreground' },
+                                            { label: 'Gross Profit', value: fmtCurrency(monthlyData.gross_profit), sub: `${monthlyData.margin_pct}% margin`, color: 'text-foreground' },
                                         ].map((m) => (
-                                            <div key={m.label} className="bg-white p-4">
-                                                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">{m.label}</p>
-                                                <p className={`text-base font-black mt-1 ${m.color}`}>{m.value}</p>
-                                                <p className="text-[10px] text-slate-400 mt-0.5">{m.sub}</p>
+                                            <div key={m.label} className="bg-card p-4">
+                                                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide font-mono">{m.label}</p>
+                                                <p className={`font-mono text-base font-bold mt-1 ${m.color}`}>{m.value}</p>
+                                                <p className="text-[10px] text-muted-foreground mt-0.5">{m.sub}</p>
                                             </div>
                                         ))}
                                     </div>
@@ -249,11 +249,11 @@ const Reports = () => {
                         )}
 
                         {/* Download Button */}
-                        <div className="pt-2 border-t border-slate-100">
+                        <div className="pt-2 border-t border-border">
                             <button
                                 onClick={handleDownload}
                                 disabled={loading}
-                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-800 text-white text-sm font-semibold rounded-none hover:bg-slate-900 transition disabled:opacity-40"
+                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-black text-primary-foreground text-sm font-semibold rounded-none border border-primary transition disabled:opacity-40 cursor-pointer"
                             >
                                 {loading ? (
                                     <>
@@ -272,9 +272,9 @@ const Reports = () => {
                 </div>
 
                 {/* Report Delivery Info */}
-                <div className="bg-white border border-slate-200 rounded-none px-6 py-4">
-                    <h3 className="text-sm font-bold text-slate-800 mb-1">Report Delivery &amp; Archiving</h3>
-                    <p className="text-xs text-slate-400 leading-relaxed">
+                <div className="bg-card border border-border rounded-none px-6 py-4">
+                    <h3 className="font-sans text-sm font-bold text-foreground mb-1">Report Delivery &amp; Archiving</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
                         All compiled PDF audit reports are cryptographically timestamped and archived for compliance.
                         Monthly reports aggregate closed billing sessions in real time.
                     </p>

@@ -28,17 +28,17 @@ const ForgotPassword = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-        <div className="w-full max-w-[400px] bg-white rounded-2xl shadow-xl p-7 border border-gray-100">
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="w-full max-w-[400px] bg-card rounded-2xl shadow-lg p-7 border border-border">
           <div className="flex flex-col items-center">
-            <CheckCircle size={48} className="text-green-500 mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900">Check your email</h2>
-            <p className="text-center text-gray-500 mt-2">
+            <CheckCircle size={48} className="text-[#F26A4B] mb-4" />
+            <h2 className="text-2xl font-sans font-bold text-foreground">Check your email</h2>
+            <p className="text-center text-muted-foreground mt-2 text-sm">
               If an account exists with {email}, we've sent a password reset link.
             </p>
             <button
               onClick={() => navigate("/signin")}
-              className="mt-6 text-blue-600 hover:underline font-medium"
+              className="mt-6 text-[#F26A4B] hover:underline font-semibold text-sm cursor-pointer"
             >
               Back to Sign In
             </button>
@@ -49,17 +49,17 @@ const ForgotPassword = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-      <div className="w-full max-w-[400px] bg-white rounded-2xl shadow-xl p-7 border border-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="w-full max-w-[400px] bg-card rounded-2xl shadow-lg p-7 border border-border">
         <div className="flex flex-col items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Forgot Password?</h2>
-          <p className="text-center text-gray-500 mt-2">
+          <h2 className="text-2xl font-sans font-bold text-foreground">Forgot Password?</h2>
+          <p className="text-center text-muted-foreground text-sm mt-2">
             Enter your email and we'll send you a reset link
           </p>
         </div>
 
         {error && (
-          <div className="mb-4 flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl px-4 py-3">
+          <div className="mb-4 flex items-center gap-2 bg-destructive/10 border border-destructive/30 text-destructive text-sm rounded-xl px-4 py-3">
             <AlertCircle size={16} />
             <span>{error}</span>
           </div>
@@ -67,13 +67,13 @@ const ForgotPassword = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-sm font-medium text-gray-700">Email</label>
+            <label className="text-xs font-bold text-foreground uppercase tracking-wider">Email</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="mt-1 w-full px-3.5 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               placeholder="Enter your email"
             />
           </div>
@@ -81,7 +81,7 @@ const ForgotPassword = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-11 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition disabled:opacity-50 flex items-center justify-center"
+            className="w-full h-11 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-black transition disabled:opacity-50 flex items-center justify-center cursor-pointer"
           >
             {loading ? (
               <>
@@ -96,7 +96,7 @@ const ForgotPassword = () => {
           <button
             type="button"
             onClick={() => navigate("/signin")}
-            className="w-full text-center text-gray-500 hover:text-gray-700 text-sm"
+            className="w-full text-center text-muted-foreground hover:text-foreground text-sm pt-1 cursor-pointer"
           >
             Back to Sign In
           </button>

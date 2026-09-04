@@ -11,7 +11,6 @@ import { useGuest } from '../../context/GuestContext';
 import AdminProfileModal from '../ui/AdminProfileModal';
 
 const ROLE_LABELS = {
-    super_admin: { label: 'Super Admin', color: 'bg-purple-900 text-purple-300' },
     admin:       { label: 'Admin',       color: 'bg-red-900 text-red-300' },
     staff:       { label: 'Staff',       color: 'bg-blue-900 text-blue-300' },
     vendor:      { label: 'Vendor',      color: 'bg-green-900 text-green-300' },
@@ -23,19 +22,19 @@ const ROLE_LABELS = {
  */
 const ALL_NAV_ITEMS = [
     // ── Admin Portal ──────────────────────────────────────────────────────
-    { path: '/admin/dashboard',         label: 'Dashboard',           icon: LayoutDashboard, roles: ['super_admin', 'admin', 'guest'] },
-    { path: '/admin/billing',           label: 'Billing Counter',     icon: ScanBarcode,     roles: ['super_admin', 'admin', 'staff', 'guest'] },
-    { path: '/admin/inventory',         label: 'Inventory',           icon: Package,          roles: ['super_admin', 'admin', 'guest'] },
-    { path: '/admin/stock-acquisition', label: 'Stock Acquisition',   icon: Upload,           roles: ['super_admin', 'admin', 'vendor', 'guest'] },
-    { path: '/admin/requisitions',      label: 'Requisitions',        icon: ClipboardList,    roles: ['super_admin', 'admin', 'guest'] },
-    { path: '/admin/chat',              label: 'AI Assistant',        icon: MessageSquare,    roles: ['super_admin', 'admin'] },
-    { path: '/admin/suppliers',         label: 'Suppliers & Vendors', icon: Truck,            roles: ['super_admin', 'admin'] },
-    { path: '/admin/users',             label: 'Users & Staff',       icon: Users,            roles: ['super_admin', 'admin'] },
-    { path: '/admin/organization',      label: 'Store & Branches',    icon: Building2,        roles: ['super_admin', 'admin'] },
-    { path: '/admin/reports',           label: 'Reports',             icon: FileText,         roles: ['super_admin', 'admin'] },
+    { path: '/admin/dashboard',         label: 'Dashboard',           icon: LayoutDashboard, roles: ['admin', 'guest'] },
+    { path: '/admin/billing',           label: 'Billing Counter',     icon: ScanBarcode,     roles: ['admin', 'staff', 'guest'] },
+    { path: '/admin/inventory',         label: 'Inventory',           icon: Package,          roles: ['admin', 'guest'] },
+    { path: '/admin/stock-acquisition', label: 'Stock Acquisition',   icon: Upload,           roles: ['admin', 'vendor', 'guest'] },
+    { path: '/admin/requisitions',      label: 'Requisitions',        icon: ClipboardList,    roles: ['admin', 'guest'] },
+    { path: '/admin/chat',              label: 'AI Assistant',        icon: MessageSquare,    roles: ['admin'] },
+    { path: '/admin/suppliers',         label: 'Suppliers & Vendors', icon: Truck,            roles: ['admin'] },
+    { path: '/admin/users',             label: 'Users & Staff',       icon: Users,            roles: ['admin'] },
+    { path: '/admin/organization',      label: 'Store & Branches',    icon: Building2,        roles: ['admin'] },
+    { path: '/admin/reports',           label: 'Reports',             icon: FileText,         roles: ['admin'] },
 
     // ── Staff Portal shortcut ──────────────────────────────────────────────
-    { path: '/staff',                   label: 'Staff Portal',        icon: Users,            roles: ['super_admin', 'admin', 'staff'], divider: true },
+    { path: '/staff',                   label: 'Staff Portal',        icon: Users,            roles: ['admin', 'staff'], divider: true },
 ];
 
 const Sidebar = () => {
@@ -57,12 +56,12 @@ const Sidebar = () => {
 
     return (
         <aside
-            className={`h-screen sticky top-0 flex flex-col bg-white border-r border-slate-200 text-slate-800 transition-all duration-300 z-40 ${
+            className={`h-screen sticky top-0 flex flex-col bg-sidebar border-r border-sidebar-border text-sidebar-foreground transition-all duration-300 z-40 ${
                 collapsed ? 'w-18 p-3' : 'w-64 p-4'
             }`}
         >
             {/* ── Brand / Header ────────────────────────────────────────── */}
-            <div className={`flex items-center pb-4 border-b border-slate-100 ${collapsed ? 'justify-center' : 'justify-between'}`}>
+            <div className={`flex items-center pb-4 border-b border-sidebar-border ${collapsed ? 'justify-center' : 'justify-between'}`}>
                 {!collapsed ? (
                     <>
                         <div className="flex items-center space-x-2.5 min-w-0">
@@ -72,11 +71,11 @@ const Sidebar = () => {
                                 className="w-8 h-8 object-contain shrink-0"
                             />
                             <div className="min-w-0">
-                                <span className="font-black text-slate-900 tracking-tight text-base block leading-none">
+                                <span className="font-sans font-bold text-sidebar-foreground tracking-tight text-lg block leading-none">
                                     InvIQ
                                 </span>
-                                <span className="text-[10px] text-slate-600 block mt-0.5 tracking-wider font-semibold">
-                                    SMART INVENTORY
+                                <span className="text-[10px] text-muted-foreground block mt-1 tracking-wider font-mono font-medium uppercase">
+                                    Smart Inventory
                                 </span>
                             </div>
                         </div>
@@ -84,7 +83,7 @@ const Sidebar = () => {
                         {/* Collapse button (shown only in expanded view) */}
                         <button
                             onClick={() => setCollapsed(true)}
-                            className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-1.5 transition-colors cursor-pointer rounded-none"
+                            className="text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent p-1.5 transition-colors cursor-pointer rounded-md"
                             title="Collapse sidebar"
                             aria-label="Collapse sidebar"
                         >
@@ -95,7 +94,7 @@ const Sidebar = () => {
                     /* Collapsed view: The logo itself acts as the toggle button */
                     <button
                         onClick={() => setCollapsed(false)}
-                        className="w-9 h-9 flex items-center justify-center mx-auto hover:bg-slate-100 transition-all cursor-pointer rounded-none group p-1"
+                        className="w-9 h-9 flex items-center justify-center mx-auto hover:bg-sidebar-accent transition-all cursor-pointer rounded-md group p-1"
                         title="Expand sidebar"
                         aria-label="Expand sidebar"
                     >
@@ -114,7 +113,7 @@ const Sidebar = () => {
                     <React.Fragment key={item.path}>
                         {item.divider && !collapsed && (
                             <div className="pt-3 pb-1">
-                                <p className="px-3 text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+                                <p className="px-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider font-mono">
                                     Operations
                                 </p>
                             </div>
@@ -123,14 +122,14 @@ const Sidebar = () => {
                             to={item.path}
                             title={collapsed ? item.label : undefined}
                             className={({ isActive }) =>
-                                `flex items-center ${collapsed ? 'justify-center px-2' : 'space-x-3 px-3'} py-2.5 transition-colors text-sm font-medium ${
+                                `flex items-center ${collapsed ? 'justify-center px-2' : 'space-x-3 px-3'} py-2.5 transition-colors text-sm font-medium rounded-md ${
                                     isActive
-                                        ? 'bg-slate-100 text-slate-900 border-l-2 border-slate-900 font-semibold'
-                                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                        ? 'bg-sidebar-accent text-sidebar-primary border-l-2 border-primary font-semibold'
+                                        : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
                                 }`
                             }
                         >
-                            <item.icon size={20} className="shrink-0" />
+                            <item.icon size={19} className="shrink-0" />
                             {!collapsed && <span className="font-medium truncate">{item.label}</span>}
                         </NavLink>
                     </React.Fragment>
@@ -138,11 +137,11 @@ const Sidebar = () => {
             </nav>
 
             {/* Help & Support Button */}
-            <div className="pt-2 border-t border-slate-100">
+            <div className="pt-2 border-t border-sidebar-border">
                 <button
                     onClick={() => setShowHelp(true)}
                     title={collapsed ? "Help & Support" : undefined}
-                    className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors`}
+                    className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-2 text-sm font-medium text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors rounded-md cursor-pointer`}
                 >
                     <HelpCircle size={18} className="shrink-0" />
                     {!collapsed && <span>Help & Support</span>}
@@ -150,27 +149,27 @@ const Sidebar = () => {
             </div>
 
             {/* Bottom section */}
-            <div className="mt-auto pt-3 border-t border-slate-100 space-y-2">
+            <div className="mt-auto pt-3 border-t border-sidebar-border space-y-2">
                 {/* Authenticated user info — Clickable to edit profile */}
                 {user && (
                     <div 
                         onClick={() => setShowProfileModal(true)}
                         title={collapsed ? `${displayName} (Click to edit profile)` : "Click to edit your profile"}
-                        className={`p-2.5 bg-slate-50 border border-slate-200 flex items-center cursor-pointer hover:bg-slate-100 hover:border-slate-300 transition-all group ${collapsed ? 'justify-center' : 'gap-3'}`}
+                        className={`p-2.5 bg-sidebar-accent/50 border border-sidebar-border rounded-md flex items-center cursor-pointer hover:bg-sidebar-accent transition-all group ${collapsed ? 'justify-center' : 'gap-3'}`}
                     >
-                        <div className="w-8 h-8 bg-slate-900 text-white flex items-center justify-center text-xs font-bold uppercase shrink-0" title={collapsed ? displayName : undefined}>
+                        <div className="w-8 h-8 bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold uppercase shrink-0 rounded-md" title={collapsed ? displayName : undefined}>
                             {displayName[0] || 'A'}
                         </div>
                         {!collapsed && (
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between">
-                                    <p className="text-xs font-bold text-slate-900 truncate">
+                                    <p className="text-xs font-bold text-sidebar-foreground truncate">
                                         {displayName}
                                     </p>
-                                    <span className="text-[10px] text-slate-400 group-hover:text-slate-700 font-medium ml-1">Edit</span>
+                                    <span className="text-[10px] text-muted-foreground group-hover:text-sidebar-foreground font-medium ml-1">Edit</span>
                                 </div>
                                 {roleInfo && (
-                                    <span className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 font-bold ${roleInfo.color}`}>
+                                    <span className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 font-bold rounded ${roleInfo.color}`}>
                                         {roleInfo.label}
                                     </span>
                                 )}
@@ -185,7 +184,7 @@ const Sidebar = () => {
                         id="sidebar-signin-cta"
                         onClick={() => navigate('/signin')}
                         title={collapsed ? "Sign In" : undefined}
-                        className={`w-full flex items-center justify-center gap-2 py-2.5 bg-slate-900 text-white hover:bg-black transition-colors text-sm font-semibold ${collapsed ? 'px-2' : 'px-3'}`}
+                        className={`w-full flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground hover:opacity-90 transition-opacity text-sm font-semibold rounded-md ${collapsed ? 'px-2' : 'px-3'} cursor-pointer`}
                     >
                         <Eye size={16} className="shrink-0" />
                         {!collapsed && <span>Sign In</span>}
@@ -198,7 +197,7 @@ const Sidebar = () => {
                         id="sidebar-logout"
                         onClick={handleLogout}
                         title={collapsed ? "Sign Out" : undefined}
-                        className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'space-x-3 px-3'} py-2 text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors text-left text-sm font-medium`}
+                        className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'space-x-3 px-3'} py-2 text-destructive hover:bg-destructive/10 transition-colors text-left text-sm font-medium rounded-md cursor-pointer`}
                     >
                         <LogOut size={18} className="shrink-0" />
                         {!collapsed && <span>Sign Out</span>}
@@ -206,50 +205,49 @@ const Sidebar = () => {
                 )}
             </div>
 
-
             {/* Help & Support Modal */}
             {showHelp && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-                    <div className="bg-white border border-slate-300 w-full max-w-md p-6 shadow-2xl space-y-4">
-                        <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+                    <div className="bg-card border border-border text-card-foreground w-full max-w-md p-6 shadow-2xl rounded-lg space-y-4">
+                        <div className="flex items-center justify-between pb-3 border-b border-border">
                             <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 bg-slate-900 text-white flex items-center justify-center">
+                                <div className="w-8 h-8 bg-primary text-primary-foreground flex items-center justify-center rounded-md">
                                     <HelpCircle size={18} />
                                 </div>
                                 <div>
-                                    <h3 className="text-base font-bold text-slate-900">Help & Support</h3>
-                                    <p className="text-xs text-slate-500">InvIQ Pharmacy & Supply Chain Desk</p>
+                                    <h3 className="text-base font-bold text-foreground">Help & Support</h3>
+                                    <p className="text-xs text-muted-foreground">InvIQ Pharmacy & Supply Chain Desk</p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setShowHelp(false)}
-                                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md cursor-pointer"
                             >
                                 <X size={18} />
                             </button>
                         </div>
 
                         <div className="space-y-3 text-xs sm:text-sm">
-                            <div className="p-3 bg-slate-50 border border-slate-200 space-y-1">
-                                <p className="font-semibold text-slate-900">Enterprise Hotline</p>
-                                <p className="text-slate-600">Call 24/7 Supply Chain Support: <span className="font-mono text-slate-900">+1 (800) 555-INVIQ</span></p>
+                            <div className="p-3 bg-background border border-border rounded-md space-y-1">
+                                <p className="font-semibold text-foreground">Enterprise Hotline</p>
+                                <p className="text-muted-foreground">Call 24/7 Supply Chain Support: <span className="font-mono text-foreground">+1 (800) 555-INVIQ</span></p>
                             </div>
 
-                            <div className="p-3 bg-slate-50 border border-slate-200 space-y-1">
-                                <p className="font-semibold text-slate-900">Direct Email Desk</p>
-                                <p className="text-slate-600">Technical & Batch Queries: <span className="font-mono text-slate-900">support@inviq.ai</span></p>
+                            <div className="p-3 bg-background border border-border rounded-md space-y-1">
+                                <p className="font-semibold text-foreground">Direct Email Desk</p>
+                                <p className="text-muted-foreground">Technical & Batch Queries: <span className="font-mono text-foreground">support@inviq.ai</span></p>
                             </div>
 
-                            <div className="p-3 bg-slate-50 border border-slate-200 space-y-1">
-                                <p className="font-semibold text-slate-900">Documentation & Guides</p>
-                                <p className="text-slate-600">Access cold-chain SOPs, FEFO guides, and automated requisition walkthroughs.</p>
+                            <div className="p-3 bg-background border border-border rounded-md space-y-1">
+                                <p className="font-semibold text-foreground">Documentation & Guides</p>
+                                <p className="text-muted-foreground">Access cold-chain SOPs, FEFO guides, and automated requisition walkthroughs.</p>
                             </div>
                         </div>
 
                         <div className="pt-2">
                             <button
                                 onClick={() => setShowHelp(false)}
-                                className="w-full py-2.5 bg-slate-900 text-white font-semibold text-sm hover:bg-black transition-colors rounded-none cursor-pointer"
+                                className="w-full py-2.5 bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity rounded-md cursor-pointer"
                             >
                                 OK, Got It
                             </button>

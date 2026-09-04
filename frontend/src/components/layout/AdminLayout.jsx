@@ -13,11 +13,11 @@ const AdminLayout = () => {
 
     return (
         <div
-            className="flex bg-[#F8FAFC] min-h-screen font-sans text-slate-900 overflow-hidden"
+            className="flex bg-background min-h-screen font-sans text-foreground overflow-hidden"
             data-layout="admin"
         >
             <Sidebar />
-            <main className="flex-1 overflow-y-auto h-screen flex flex-col">
+            <main className="flex-1 overflow-y-auto h-screen flex flex-col bg-background">
                 <Outlet />
             </main>
         </div>

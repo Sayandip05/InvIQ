@@ -33,14 +33,14 @@ const VerifyEmail = () => {
   }, [token]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-      <div className="w-full max-w-[400px] bg-white rounded-2xl shadow-xl p-7 border border-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="w-full max-w-[400px] bg-card rounded-2xl shadow-lg p-7 border border-border">
         <div className="flex flex-col items-center">
           {status === "loading" && (
             <>
-              <Loader2 size={48} className="text-blue-500 animate-spin mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900">Verifying...</h2>
-              <p className="text-center text-gray-500 mt-2">
+              <Loader2 size={48} className="text-[#F26A4B] animate-spin mb-4" />
+              <h2 className="text-2xl font-sans font-bold text-foreground">Verifying...</h2>
+              <p className="text-center text-muted-foreground mt-2 text-sm">
                 Please wait while we verify your email.
               </p>
             </>
@@ -48,12 +48,12 @@ const VerifyEmail = () => {
 
           {status === "success" && (
             <>
-              <CheckCircle size={48} className="text-green-500 mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900">Email Verified!</h2>
-              <p className="text-center text-gray-500 mt-2">{message}</p>
+              <CheckCircle size={48} className="text-[#F26A4B] mb-4" />
+              <h2 className="text-2xl font-sans font-bold text-foreground">Email Verified!</h2>
+              <p className="text-center text-muted-foreground mt-2 text-sm">{message}</p>
               <button
                 onClick={() => navigate("/signin")}
-                className="mt-6 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium"
+                className="mt-6 bg-primary text-primary-foreground px-6 py-2.5 rounded-xl hover:bg-black font-semibold text-sm cursor-pointer"
               >
                 Sign In
               </button>
@@ -62,12 +62,12 @@ const VerifyEmail = () => {
 
           {status === "error" && (
             <>
-              <AlertCircle size={48} className="text-red-500 mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900">Verification Failed</h2>
-              <p className="text-center text-gray-500 mt-2">{message}</p>
+              <AlertCircle size={48} className="text-destructive mb-4" />
+              <h2 className="text-2xl font-sans font-bold text-foreground">Verification Failed</h2>
+              <p className="text-center text-muted-foreground mt-2 text-sm">{message}</p>
               <button
                 onClick={() => navigate("/signin")}
-                className="mt-6 text-blue-600 hover:underline font-medium"
+                className="mt-6 text-[#F26A4B] hover:underline font-semibold text-sm cursor-pointer"
               >
                 Back to Sign In
               </button>

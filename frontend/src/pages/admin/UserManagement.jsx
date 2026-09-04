@@ -100,7 +100,6 @@ const UserManagement = () => {
 
     const getRoleBadge = (role) => {
         const colors = {
-            super_admin: 'bg-purple-50 text-purple-700 border-purple-200',
             admin:       'bg-red-50 text-red-700 border-red-200',
             manager:     'bg-amber-50 text-amber-700 border-amber-200',
             staff:       'bg-blue-50 text-blue-700 border-blue-200',
@@ -117,13 +116,13 @@ const UserManagement = () => {
     };
 
     return (
-        <div className="flex flex-col min-h-full bg-[#F8FAFC]">
+        <div className="flex flex-col min-h-full bg-background font-sans text-foreground">
             {/* ── Sticky Top Navbar ────────────────────────────────────────── */}
-            <div className="sticky top-0 z-30 bg-white border-b border-slate-200 px-6 py-3.5 shadow-2xs">
+            <div className="sticky top-0 z-30 bg-card border-b border-border px-6 py-3.5 shadow-2xs">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900 tracking-tight">Staff &amp; User Management</h2>
-                        <p className="text-xs text-slate-500 font-medium mt-0.5">
+                        <h2 className="font-sans text-xl font-bold text-foreground tracking-tight">Staff &amp; User Management</h2>
+                        <p className="text-xs text-muted-foreground font-medium mt-0.5">
                             Allocate staff members to your pharmacy organization and assign branch counters
                         </p>
                     </div>
@@ -131,7 +130,7 @@ const UserManagement = () => {
                     <div className="flex items-center gap-2.5 flex-wrap">
                         <button
                             onClick={loadData}
-                            className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-none transition-colors border border-slate-300 cursor-pointer"
+                            className="p-2 bg-accent hover:bg-accent/80 text-foreground rounded-none transition-colors border border-border cursor-pointer"
                             title="Refresh Data"
                         >
                             <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
@@ -150,13 +149,13 @@ const UserManagement = () => {
                                 });
                                 setShowModal(true);
                             }}
-                            className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-none transition-colors shadow-2xs cursor-pointer"
+                            className="flex items-center gap-1.5 px-3.5 py-2 bg-primary hover:bg-black text-primary-foreground text-xs font-semibold rounded-none border border-primary transition-colors shadow-2xs cursor-pointer"
                         >
                             <Plus size={14} />
                             <span>Allocate New Staff</span>
                         </button>
 
-                        <div className="pl-1 border-l border-slate-200">
+                        <div className="pl-1 border-l border-border">
                             <AlertsDropdown />
                         </div>
                     </div>
@@ -167,31 +166,31 @@ const UserManagement = () => {
             <div className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6 flex-1">
 
                 {/* Info strip */}
-                <div className="bg-blue-50/70 border border-blue-200 p-4 rounded-none flex items-center justify-between">
+                <div className="bg-accent border border-border p-4 rounded-none flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <Building2 className="w-5 h-5 text-blue-600 shrink-0" />
+                        <Building2 className="w-5 h-5 text-foreground shrink-0" />
                         <div>
-                            <p className="text-xs font-bold text-slate-800">
-                                Organization: <span className="text-blue-700">{currentUser?.organization_name || 'Your Pharmacy Network'}</span>
+                            <p className="text-xs font-bold text-foreground font-mono">
+                                Organization: <span className="text-foreground underline">{currentUser?.organization_name || 'Your Pharmacy Network'}</span>
                             </p>
-                            <p className="text-[11px] text-slate-500 mt-0.5">
+                            <p className="text-[11px] text-muted-foreground mt-0.5">
                                 Staff members created here are strictly isolated to your store and cannot access other chemist accounts.
                             </p>
                         </div>
                     </div>
-                    <span className="text-xs font-bold text-blue-800 bg-white border border-blue-200 px-2.5 py-1">
+                    <span className="text-xs font-bold text-foreground bg-card border border-border px-2.5 py-1 font-mono">
                         {users.length} User(s)
                     </span>
                 </div>
 
-                <div className="bg-white rounded-none shadow-2xs border border-slate-200">
-                    <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+                <div className="bg-card rounded-none shadow-2xs border border-border">
+                    <div className="p-4 border-b border-border flex items-center justify-between">
                         <div className="relative max-w-md w-full">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={14} />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={14} />
                             <input
                                 type="text"
                                 placeholder="Search by name, email, or role..."
-                                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-600 text-xs"
+                                className="w-full pl-9 pr-4 py-2 bg-background border border-border rounded-none focus:outline-none focus:ring-1 focus:ring-primary text-xs text-foreground"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
@@ -200,7 +199,7 @@ const UserManagement = () => {
 
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
-                            <thead className="bg-slate-50 text-slate-600 font-bold text-[11px] uppercase tracking-wider border-b border-slate-200">
+                            <thead className="bg-accent/40 text-muted-foreground font-bold text-[11px] uppercase tracking-wider border-b border-border font-mono">
                                 <tr>
                                     <th className="px-5 py-3">Staff / User</th>
                                     <th className="px-5 py-3">Email</th>
@@ -210,44 +209,44 @@ const UserManagement = () => {
                                     <th className="px-5 py-3 text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100 text-xs">
+                            <tbody className="divide-y divide-border text-xs text-foreground">
                                 {loading ? (
-                                    <tr><td colSpan="6" className="text-center py-12 text-slate-400">Loading user roster...</td></tr>
+                                    <tr><td colSpan="6" className="text-center py-12 text-muted-foreground font-mono">Loading user roster...</td></tr>
                                 ) : filteredUsers.length === 0 ? (
-                                    <tr><td colSpan="6" className="text-center py-12 text-slate-400">No staff members found</td></tr>
+                                    <tr><td colSpan="6" className="text-center py-12 text-muted-foreground font-mono">No staff members found</td></tr>
                                 ) : (
                                     filteredUsers.map(u => (
-                                        <tr key={u.id} className="hover:bg-slate-50 transition">
+                                        <tr key={u.id} className="hover:bg-accent/30 transition">
                                             <td className="px-5 py-3.5">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-none bg-blue-50 border border-blue-200 text-blue-700 flex items-center justify-center text-xs font-bold">
+                                                    <div className="w-8 h-8 rounded-none bg-accent border border-border text-foreground flex items-center justify-center text-xs font-bold font-mono">
                                                         {u.username?.[0]?.toUpperCase()}
                                                     </div>
                                                     <div>
-                                                        <p className="font-semibold text-slate-900">{u.username}</p>
-                                                        <p className="text-[11px] text-slate-500">{u.full_name || 'No full name provided'}</p>
+                                                        <p className="font-semibold text-foreground">{u.username}</p>
+                                                        <p className="text-[11px] text-muted-foreground">{u.full_name || 'No full name provided'}</p>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-5 py-3.5 text-slate-600">{u.email || '—'}</td>
-                                            <td className="px-5 py-3.5">{getRoleBadge(u.role)}</td>
-                                            <td className="px-5 py-3.5 text-slate-700">
+                                            <td className="px-5 py-3.5 text-muted-foreground">{u.email || '—'}</td>
+                                            <td className="px-5 py-3.5 font-mono">{getRoleBadge(u.role)}</td>
+                                            <td className="px-5 py-3.5 text-foreground">
                                                 <div className="flex items-center gap-1.5">
-                                                    <MapPin size={13} className="text-slate-400 shrink-0" />
+                                                    <MapPin size={13} className="text-muted-foreground shrink-0" />
                                                     <span className="truncate max-w-xs">{getLocationNames(u.location_ids)}</span>
                                                 </div>
                                             </td>
                                             <td className="px-5 py-3.5">
-                                                <span className={`px-2 py-0.5 border rounded-none text-[10px] font-bold uppercase tracking-wider ${u.is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                                                <span className={`px-2 py-0.5 border rounded-none text-[10px] font-bold uppercase tracking-wider font-mono ${u.is_active ? 'bg-accent text-foreground border-border' : 'bg-muted text-muted-foreground border-border'}`}>
                                                     {u.is_active ? 'Active' : 'Inactive'}
                                                 </span>
                                             </td>
                                             <td className="px-5 py-3.5 text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <button onClick={() => handleEdit(u)} className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 rounded-none transition cursor-pointer" title="Edit Staff">
+                                                    <button onClick={() => handleEdit(u)} className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent border border-border rounded-none transition cursor-pointer" title="Edit Staff">
                                                         <Edit2 size={13} />
                                                     </button>
-                                                    <button onClick={() => handleDelete(u.id)} className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 border border-slate-200 rounded-none transition cursor-pointer" title="Remove Staff">
+                                                    <button onClick={() => handleDelete(u.id)} className="p-1.5 text-muted-foreground hover:text-rose-600 hover:bg-rose-50 border border-border rounded-none transition cursor-pointer" title="Remove Staff">
                                                         <Trash2 size={13} />
                                                     </button>
                                                 </div>
@@ -263,53 +262,53 @@ const UserManagement = () => {
 
             {/* Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-                    <div className="bg-white border border-slate-200 rounded-none shadow-xl w-full max-w-md p-6 space-y-4">
-                        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+                    <div className="bg-card border border-border rounded-none shadow-xl w-full max-w-md p-6 space-y-4 text-card-foreground">
+                        <div className="flex items-center justify-between pb-3 border-b border-border">
                             <div>
-                                <h3 className="text-sm font-bold text-slate-900">{editingUser ? 'Edit Staff Allocation' : 'Allocate New Staff Member'}</h3>
-                                <p className="text-[11px] text-slate-500">Assign user credentials and branch location</p>
+                                <h3 className="font-sans text-sm font-bold text-foreground">{editingUser ? 'Edit Staff Allocation' : 'Allocate New Staff Member'}</h3>
+                                <p className="text-[11px] text-muted-foreground">Assign user credentials and branch location</p>
                             </div>
-                            <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                            <button onClick={() => setShowModal(false)} className="text-muted-foreground hover:text-foreground cursor-pointer">
                                 <X size={18} />
                             </button>
                         </div>
                         <form onSubmit={handleSubmit} className="space-y-3.5">
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Username *</label>
+                                <label className="block text-xs font-bold text-foreground/80 uppercase tracking-wider mb-1 font-mono">Username *</label>
                                 <input
                                     type="text"
                                     required
-                                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                    className="w-full px-3 py-2 text-xs bg-background border border-border rounded-none focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
                                     value={formData.username}
                                     onChange={e => setFormData({ ...formData, username: e.target.value })}
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Email *</label>
+                                <label className="block text-xs font-bold text-foreground/80 uppercase tracking-wider mb-1 font-mono">Email *</label>
                                 <input
                                     type="email"
                                     required
-                                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                    className="w-full px-3 py-2 text-xs bg-background border border-border rounded-none focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
                                     value={formData.email}
                                     onChange={e => setFormData({ ...formData, email: e.target.value })}
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Full Name</label>
+                                <label className="block text-xs font-bold text-foreground/80 uppercase tracking-wider mb-1 font-mono">Full Name</label>
                                 <input
                                     type="text"
-                                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                    className="w-full px-3 py-2 text-xs bg-background border border-border rounded-none focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
                                     value={formData.full_name}
                                     onChange={e => setFormData({ ...formData, full_name: e.target.value })}
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Role *</label>
+                                    <label className="block text-xs font-bold text-foreground/80 uppercase tracking-wider mb-1 font-mono">Role *</label>
                                     <select
                                         required
-                                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                        className="w-full px-3 py-2 text-xs bg-background border border-border rounded-none focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
                                         value={formData.role}
                                         onChange={e => setFormData({ ...formData, role: e.target.value })}
                                     >
@@ -320,9 +319,9 @@ const UserManagement = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Branch Counter</label>
+                                    <label className="block text-xs font-bold text-foreground/80 uppercase tracking-wider mb-1 font-mono">Branch Counter</label>
                                     <select
-                                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                        className="w-full px-3 py-2 text-xs bg-background border border-border rounded-none focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
                                         value={formData.location_ids?.[0] || ''}
                                         onChange={e => setFormData({ ...formData, location_ids: e.target.value ? [parseInt(e.target.value)] : [] })}
                                     >
@@ -334,31 +333,31 @@ const UserManagement = () => {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                <label className="block text-xs font-bold text-foreground/80 uppercase tracking-wider mb-1 font-mono">
                                     {editingUser ? 'New Password (leave blank to keep)' : 'Initial Password *'}
                                 </label>
                                 <input
                                     type="password"
                                     required={!editingUser}
                                     minLength={8}
-                                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                    className="w-full px-3 py-2 text-xs bg-background border border-border rounded-none focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
                                     value={formData.password}
                                     onChange={e => setFormData({ ...formData, password: e.target.value })}
                                 />
-                                <p className="text-[10px] text-slate-400 mt-0.5">Minimum 8 characters</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">Minimum 8 characters</p>
                             </div>
-                            <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                            <div className="flex justify-end gap-2 pt-3 border-t border-border">
                                 <button
                                     type="button"
                                     onClick={() => setShowModal(false)}
-                                    className="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-none transition cursor-pointer"
+                                    className="px-4 py-2 text-xs font-semibold text-foreground bg-accent hover:bg-accent/80 border border-border rounded-none transition cursor-pointer"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={saving}
-                                    className="px-4 py-2 text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 rounded-none transition disabled:opacity-50 cursor-pointer shadow-2xs"
+                                    className="px-4 py-2 text-xs font-semibold bg-primary text-primary-foreground hover:bg-black rounded-none transition disabled:opacity-50 cursor-pointer shadow-2xs"
                                 >
                                     {saving ? 'Allocating...' : (editingUser ? 'Update Staff' : 'Allocate Staff')}
                                 </button>

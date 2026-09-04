@@ -11,17 +11,17 @@ const URGENCY_OPTIONS = ['LOW', 'NORMAL', 'HIGH', 'EMERGENCY'];
 const DEPARTMENTS = ['Pharmacy Counter', 'Emergency', 'ICU', 'Cardiology', 'General Ward', 'OT', 'Pediatrics', 'Oncology', 'Lab'];
 
 const STATUS_STYLES = {
-    PENDING: 'bg-amber-50 text-amber-800 border border-amber-300 font-semibold',
-    APPROVED: 'bg-emerald-50 text-emerald-800 border border-emerald-300 font-semibold',
-    REJECTED: 'bg-rose-50 text-rose-800 border border-rose-300 font-semibold',
-    CANCELLED: 'bg-slate-100 text-slate-600 border border-slate-300',
+    PENDING: 'bg-amber-500/10 text-amber-800 border border-amber-500/30 font-semibold',
+    APPROVED: 'bg-emerald-500/10 text-emerald-800 border border-emerald-500/30 font-semibold',
+    REJECTED: 'bg-destructive/10 text-destructive border border-destructive/30 font-semibold',
+    CANCELLED: 'bg-accent/50 text-muted-foreground border border-border',
 };
 
 const URGENCY_STYLES = {
-    LOW: 'bg-slate-100 text-slate-700 border border-slate-200',
-    NORMAL: 'bg-slate-900 text-white border border-slate-900',
-    HIGH: 'bg-amber-100 text-amber-900 border border-amber-300 font-bold',
-    EMERGENCY: 'bg-rose-600 text-white border border-rose-600 font-bold animate-pulse',
+    LOW: 'bg-accent/50 text-foreground border border-border',
+    NORMAL: 'bg-primary text-primary-foreground border border-primary',
+    HIGH: 'bg-amber-500/20 text-amber-900 border border-amber-500/40 font-bold',
+    EMERGENCY: 'bg-[#F26A4B] text-white border border-[#F26A4B] font-bold animate-pulse',
 };
 
 const StaffRequisition = () => {
@@ -175,11 +175,11 @@ const StaffRequisition = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-100/70 text-slate-900 p-4 md:p-8 font-sans">
+        <div className="min-h-screen bg-background text-foreground p-4 md:p-8 font-sans">
             <div className="max-w-5xl mx-auto space-y-6">
 
-                {/* ── Top Header / User Context Bar (Sharp Minimal Zoho Theme) ──────────────── */}
-                <div className="bg-white border border-slate-300 p-5 rounded-none shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+                {/* ── Top Header / User Context Bar (Warm Editorial Theme) ──────────────── */}
+                <div className="bg-card border border-border p-5 rounded-none shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <img
                             src="/logo.png"
@@ -188,20 +188,20 @@ const StaffRequisition = () => {
                         />
                         <div>
                             <div className="flex items-center gap-2">
-                                <span className="px-2 py-0.5 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider rounded-none">
+                                <span className="px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider rounded-none">
                                     Staff Portal
                                 </span>
-                                <span className="text-xs text-slate-300">|</span>
-                                <div className="flex items-center gap-1 text-xs font-semibold text-slate-700">
-                                    <Building2 size={13} className="text-slate-600" />
+                                <span className="text-xs text-border">|</span>
+                                <div className="flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+                                    <Building2 size={13} className="text-foreground" />
                                     <span>{user?.organization_name || 'Assigned Pharmacy Network'}</span>
                                 </div>
                             </div>
-                            <h1 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight mt-0.5">
+                            <h1 className="text-base sm:text-lg font-sans font-bold text-foreground tracking-tight mt-0.5">
                                 Medicine Requisition &amp; Stock Intake
                             </h1>
-                            <p className="text-xs text-slate-500">
-                                Operator: <strong className="text-slate-900">{user?.full_name || user?.username}</strong>
+                            <p className="text-xs text-muted-foreground">
+                                Operator: <strong className="text-foreground">{user?.full_name || user?.username}</strong>
                             </p>
                         </div>
                     </div>
@@ -209,15 +209,15 @@ const StaffRequisition = () => {
                     <div className="flex items-center gap-2">
                         <Link
                             to="/staff/billing"
-                            className="flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-800 text-xs font-bold border border-slate-300 rounded-none transition"
+                            className="flex items-center gap-1.5 px-3.5 py-2 bg-card hover:bg-accent text-foreground text-xs font-bold border border-border rounded-none transition"
                         >
-                            <ScanBarcode size={14} className="text-slate-700" />
+                            <ScanBarcode size={14} className="text-foreground" />
                             <span>Billing Counter</span>
                         </Link>
 
                         <button
                             onClick={handleLogout}
-                            className="flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-rose-50 hover:text-rose-700 text-slate-600 text-xs font-semibold border border-slate-300 rounded-none transition"
+                            className="flex items-center gap-1.5 px-3.5 py-2 bg-card hover:bg-destructive/10 hover:text-destructive text-muted-foreground text-xs font-semibold border border-border rounded-none transition cursor-pointer"
                         >
                             <LogOut size={14} />
                             <span>Sign Out</span>
@@ -227,7 +227,7 @@ const StaffRequisition = () => {
 
                 {/* ── Unassigned Warning (If no org) ────────────────────── */}
                 {!user?.org_id && (
-                    <div className="p-4 bg-amber-50 border border-amber-300 rounded-none flex items-start gap-3">
+                    <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-none flex items-start gap-3">
                         <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
                         <div>
                             <h4 className="text-xs font-bold text-amber-900">Unallocated Staff Account</h4>
@@ -239,55 +239,55 @@ const StaffRequisition = () => {
                 )}
 
                 {/* Navigation Tabs */}
-                <div className="flex bg-white border border-slate-300 rounded-none p-1 shadow-2xs">
+                <div className="flex bg-card border border-border rounded-none p-1 shadow-2xs">
                     <button
                         onClick={() => setActiveTab('form')}
-                        className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider transition rounded-none ${
+                        className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider transition rounded-none cursor-pointer ${
                             activeTab === 'form'
-                                ? 'bg-slate-900 text-white'
-                                : 'text-slate-600 hover:bg-slate-100'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'text-muted-foreground hover:bg-accent/40'
                         }`}
                     >
                         <Send size={13} className="inline mr-1.5" /> New Requisition
                     </button>
                     <button
                         onClick={() => setActiveTab('history')}
-                        className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider transition rounded-none ${
+                        className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider transition rounded-none cursor-pointer ${
                             activeTab === 'history'
-                                ? 'bg-slate-900 text-white'
-                                : 'text-slate-600 hover:bg-slate-100'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'text-muted-foreground hover:bg-accent/40'
                         }`}
                     >
                         <Clock size={13} className="inline mr-1.5" /> My Request History
                     </button>
                 </div>
 
-                {/* ─── NEW REQUEST FORM (Sharp Zoho Theme) ─── */}
+                {/* ─── NEW REQUEST FORM (Warm Editorial Theme) ─── */}
                 {activeTab === 'form' && (
-                    <form onSubmit={handleSubmit} className="bg-white rounded-none border border-slate-300 shadow-xs overflow-hidden">
-                        <div className="p-6 border-b border-slate-200 bg-slate-50 space-y-4">
+                    <form onSubmit={handleSubmit} className="bg-card rounded-none border border-border shadow-xs overflow-hidden">
+                        <div className="p-6 border-b border-border bg-accent/20 space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                        Requester Name <span className="text-red-500">*</span>
+                                    <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-1">
+                                        Requester Name <span className="text-destructive">*</span>
                                     </label>
                                     <input
                                         required
                                         type="text"
                                         placeholder="e.g. Pharmacist Rahul"
-                                        className="w-full px-3 py-2 border border-slate-300 rounded-none text-xs bg-white text-slate-900 focus:outline-none focus:border-slate-900"
+                                        className="w-full px-3 py-2 border border-border rounded-none text-xs bg-background text-foreground focus:outline-none focus:border-primary"
                                         value={form.requested_by}
                                         onChange={(e) => setForm({ ...form, requested_by: e.target.value })}
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                        Department <span className="text-red-500">*</span>
+                                    <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-1">
+                                        Department <span className="text-destructive">*</span>
                                     </label>
                                     <select
                                         required
-                                        className="w-full px-3 py-2 border border-slate-300 rounded-none text-xs bg-white text-slate-900 focus:outline-none focus:border-slate-900"
+                                        className="w-full px-3 py-2 border border-border rounded-none text-xs bg-background text-foreground focus:outline-none focus:border-primary"
                                         value={form.department}
                                         onChange={(e) => setForm({ ...form, department: e.target.value })}
                                     >
@@ -297,12 +297,12 @@ const StaffRequisition = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                        Location / Counter <span className="text-red-500">*</span>
+                                    <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-1">
+                                        Location / Counter <span className="text-destructive">*</span>
                                     </label>
                                     <select
                                         required
-                                        className="w-full px-3 py-2 border border-slate-300 rounded-none text-xs bg-white text-slate-900 focus:outline-none focus:border-slate-900"
+                                        className="w-full px-3 py-2 border border-border rounded-none text-xs bg-background text-foreground focus:outline-none focus:border-primary"
                                         value={form.location_id}
                                         onChange={(e) => setForm({ ...form, location_id: e.target.value })}
                                     >
@@ -312,19 +312,19 @@ const StaffRequisition = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-1">
                                         Urgency Level
                                     </label>
                                     <div className="grid grid-cols-4 gap-1.5">
                                         {URGENCY_OPTIONS.map(u => (
-                                            <button
+                                             <button
                                                 key={u}
                                                 type="button"
                                                 onClick={() => setForm({ ...form, urgency: u })}
-                                                className={`py-2 rounded-none text-[11px] font-bold uppercase transition border ${
+                                                className={`py-2 rounded-none text-[11px] font-bold uppercase transition border cursor-pointer ${
                                                     form.urgency === u
                                                         ? URGENCY_STYLES[u]
-                                                        : 'bg-white text-slate-500 border-slate-200 hover:border-slate-400'
+                                                        : 'bg-card text-muted-foreground border-border hover:border-foreground/40'
                                                 }`}
                                             >
                                                 {u}
@@ -335,13 +335,13 @@ const StaffRequisition = () => {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-1">
                                     Notes (Optional)
                                 </label>
                                 <textarea
                                     rows={2}
                                     placeholder="Add batch preference, cold-chain handling note, or urgent requirements..."
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-none text-xs bg-white text-slate-900 focus:outline-none focus:border-slate-900 resize-none"
+                                    className="w-full px-3 py-2 border border-border rounded-none text-xs bg-background text-foreground focus:outline-none focus:border-primary resize-none"
                                     value={form.notes}
                                     onChange={(e) => setForm({ ...form, notes: e.target.value })}
                                 />
@@ -351,31 +351,31 @@ const StaffRequisition = () => {
                         {/* Items Section */}
                         <div className="p-6 space-y-4">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                                <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">
                                     Requisition Medicine List
                                 </h3>
-                                <span className="text-[11px] text-slate-500">
+                                <span className="text-[11px] text-muted-foreground">
                                     {form.items.length} Item line(s)
                                 </span>
                             </div>
 
                             {error && (
-                                <div className="p-3 bg-rose-50 border border-rose-300 text-rose-800 text-xs rounded-none">
+                                <div className="p-3 bg-destructive/10 border border-destructive/30 text-destructive text-xs rounded-none">
                                     {error}
                                 </div>
                             )}
 
                             {success && (
-                                <div className="p-3 bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs rounded-none flex items-center gap-2">
+                                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 text-xs rounded-none flex items-center gap-2">
                                     <CheckCircle2 size={16} className="text-emerald-700 shrink-0" />
                                     <span>{success}</span>
                                 </div>
                             )}
 
-                            <div className="border border-slate-200 overflow-x-auto">
+                            <div className="border border-border overflow-x-auto">
                                 <table className="w-full text-left text-xs border-collapse">
                                     <thead>
-                                        <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase text-[10px]">
+                                        <tr className="bg-accent/40 border-b border-border text-foreground font-bold uppercase text-[10px]">
                                             <th className="py-2.5 px-3">Medicine / Item</th>
                                             <th className="py-2.5 px-3 w-28 text-center">Quantity</th>
                                             <th className="py-2.5 px-3 w-36">Unit (e.g. strip/box)</th>
@@ -383,13 +383,13 @@ const StaffRequisition = () => {
                                             <th className="py-2.5 px-3 w-12 text-center">Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-100">
+                                    <tbody className="divide-y divide-border/50">
                                         {form.items.map((row, index) => (
-                                            <tr key={index} className="hover:bg-slate-50">
+                                            <tr key={index} className="hover:bg-accent/20">
                                                 <td className="p-2">
                                                     <select
                                                         required
-                                                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded-none text-xs bg-white text-slate-900 focus:outline-none focus:border-slate-800"
+                                                        className="w-full px-2.5 py-1.5 border border-border rounded-none text-xs bg-background text-foreground focus:outline-none focus:border-primary"
                                                         value={row.item_id}
                                                         onChange={(e) => updateItemRow(index, 'item_id', e.target.value)}
                                                     >
@@ -406,7 +406,7 @@ const StaffRequisition = () => {
                                                         type="number"
                                                         min="1"
                                                         required
-                                                        className="w-full px-2 py-1.5 border border-slate-300 rounded-none text-center text-xs bg-white text-slate-900 focus:outline-none focus:border-slate-800"
+                                                        className="w-full px-2 py-1.5 border border-border rounded-none text-center text-xs bg-background text-foreground focus:outline-none focus:border-primary"
                                                         value={row.quantity}
                                                         onChange={(e) => updateItemRow(index, 'quantity', parseInt(e.target.value) || 1)}
                                                     />
@@ -415,7 +415,7 @@ const StaffRequisition = () => {
                                                     <input
                                                         type="text"
                                                         placeholder="strip, box, vial"
-                                                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded-none text-xs bg-white text-slate-900 focus:outline-none focus:border-slate-800"
+                                                        className="w-full px-2.5 py-1.5 border border-border rounded-none text-xs bg-background text-foreground focus:outline-none focus:border-primary"
                                                         value={row.packaging_unit || ''}
                                                         onChange={(e) => updateItemRow(index, 'packaging_unit', e.target.value)}
                                                     />
@@ -424,7 +424,7 @@ const StaffRequisition = () => {
                                                     <input
                                                         type="text"
                                                         placeholder="Optional item note"
-                                                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded-none text-xs bg-white text-slate-900 focus:outline-none focus:border-slate-800"
+                                                        className="w-full px-2.5 py-1.5 border border-border rounded-none text-xs bg-background text-foreground focus:outline-none focus:border-primary"
                                                         value={row.notes}
                                                         onChange={(e) => updateItemRow(index, 'notes', e.target.value)}
                                                     />
@@ -434,7 +434,7 @@ const StaffRequisition = () => {
                                                         type="button"
                                                         onClick={() => removeItemRow(index)}
                                                         disabled={form.items.length === 1}
-                                                        className="text-slate-400 hover:text-rose-600 disabled:opacity-20 transition"
+                                                        className="text-muted-foreground hover:text-destructive disabled:opacity-20 transition cursor-pointer"
                                                         title="Remove Row"
                                                     >
                                                         <Trash2 size={15} />
@@ -449,18 +449,18 @@ const StaffRequisition = () => {
                             <button
                                 type="button"
                                 onClick={addItemRow}
-                                className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-300 px-3 py-1.5 rounded-none transition"
+                                className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground bg-accent/40 hover:bg-accent border border-border px-3 py-1.5 rounded-none transition cursor-pointer"
                             >
                                 <Plus size={14} />
                                 <span>Add Another Medicine</span>
                             </button>
                         </div>
 
-                        <div className="p-5 bg-slate-50 border-t border-slate-200 flex justify-end">
+                        <div className="p-5 bg-accent/20 border-t border-border flex justify-end">
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="flex items-center gap-2 bg-slate-900 hover:bg-black text-white px-6 py-2.5 rounded-none font-bold text-xs uppercase tracking-wider transition disabled:opacity-50"
+                                className="flex items-center gap-2 bg-primary hover:bg-black text-primary-foreground px-6 py-2.5 rounded-none font-bold text-xs uppercase tracking-wider transition disabled:opacity-50 cursor-pointer"
                             >
                                 {loading ? 'Submitting Requisition...' : (
                                     <>
@@ -473,28 +473,28 @@ const StaffRequisition = () => {
                     </form>
                 )}
 
-                {/* ─── MY REQUESTS HISTORY (Sharp Zoho Theme) ─── */}
+                {/* ─── MY REQUESTS HISTORY (Warm Editorial Theme) ─── */}
                 {activeTab === 'history' && (
                     <div className="space-y-3">
                         {!form.requested_by && (
-                            <div className="p-8 bg-white border border-slate-300 rounded-none text-center text-slate-500 text-xs">
+                            <div className="p-8 bg-card border border-border rounded-none text-center text-muted-foreground text-xs">
                                 Enter your requester name in the form first to view your requisitions.
                             </div>
                         )}
 
                         {form.requested_by && myRequests.length === 0 && (
-                            <div className="p-10 bg-white border border-slate-300 rounded-none text-center text-slate-500">
-                                <ClipboardList size={36} className="mx-auto mb-2 text-slate-400" />
-                                <p className="text-xs font-semibold text-slate-700">No requisitions recorded yet.</p>
-                                <p className="text-[11px] text-slate-400 mt-0.5">Submit your first medicine requisition above.</p>
+                            <div className="p-10 bg-card border border-border rounded-none text-center text-muted-foreground">
+                                <ClipboardList size={36} className="mx-auto mb-2 text-muted-foreground/50" />
+                                <p className="text-xs font-semibold text-foreground">No requisitions recorded yet.</p>
+                                <p className="text-[11px] text-muted-foreground mt-0.5">Submit your first medicine requisition above.</p>
                             </div>
                         )}
 
                         {myRequests.map(req => (
-                            <div key={req.id} className="bg-white rounded-none border border-slate-300 p-4 shadow-2xs space-y-2">
+                            <div key={req.id} className="bg-card rounded-none border border-border p-4 shadow-2xs space-y-2">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2.5">
-                                        <span className="font-mono text-xs font-bold text-slate-900">{req.requisition_number}</span>
+                                        <span className="font-mono text-xs font-bold text-foreground">{req.requisition_number}</span>
                                         <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-none ${STATUS_STYLES[req.status]}`}>
                                             {req.status}
                                         </span>
@@ -502,16 +502,16 @@ const StaffRequisition = () => {
                                             {req.urgency}
                                         </span>
                                     </div>
-                                    <span className="text-[11px] text-slate-400">{new Date(req.created_at).toLocaleDateString()}</span>
+                                    <span className="text-[11px] text-muted-foreground">{new Date(req.created_at).toLocaleDateString()}</span>
                                 </div>
                                 
-                                <div className="text-xs text-slate-600">
-                                    <span className="font-semibold text-slate-800">{req.department}</span> • Counter: {req.location_name} • {req.items?.length || 0} Line item(s)
+                                <div className="text-xs text-muted-foreground">
+                                    <span className="font-semibold text-foreground">{req.department}</span> • Counter: {req.location_name} • {req.items?.length || 0} Line item(s)
                                 </div>
 
                                 {req.rejection_reason && (
-                                    <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 p-2.5 flex items-start gap-2 rounded-none">
-                                        <XCircle size={15} className="mt-0.5 shrink-0 text-rose-600" />
+                                    <div className="text-xs text-destructive bg-destructive/10 border border-destructive/30 p-2.5 flex items-start gap-2 rounded-none">
+                                        <XCircle size={15} className="mt-0.5 shrink-0 text-destructive" />
                                         <span>Rejection Reason: {req.rejection_reason}</span>
                                     </div>
                                 )}
@@ -520,7 +520,7 @@ const StaffRequisition = () => {
                                     <div className="pt-1">
                                         <button
                                             onClick={() => handleCancel(req.id)}
-                                            className="text-xs text-rose-600 hover:text-rose-800 font-semibold transition"
+                                            className="text-xs text-destructive hover:underline font-semibold transition cursor-pointer"
                                         >
                                             Cancel Request
                                         </button>

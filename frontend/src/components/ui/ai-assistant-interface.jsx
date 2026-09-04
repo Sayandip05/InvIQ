@@ -184,19 +184,19 @@ export function AIAssistantInterface({ onQuerySubmit, isPreview = false }) {
   const pharmacyName = user?.organization_name || "your pharmacy store";
 
   return (
-    <div className="relative w-full h-full flex flex-col justify-between bg-white p-4 sm:p-6 font-sans overflow-hidden border border-slate-200 rounded-none text-slate-900">
+    <div className="relative w-full h-full flex flex-col justify-between bg-card p-4 sm:p-6 font-sans overflow-hidden border border-border rounded-none text-foreground">
       
       {/* ── Top Header with History Button in Top Right ── */}
-      <div className="shrink-0 flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+      <div className="shrink-0 flex items-center justify-between border-b border-border pb-3 mb-4">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-slate-900 text-white flex items-center justify-center rounded-none font-bold">
+          <div className="w-8 h-8 bg-primary text-[#F26A4B] flex items-center justify-center rounded-none font-bold">
             <Sparkles size={16} />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-slate-900 tracking-tight">
+            <h2 className="text-sm font-sans font-bold text-foreground tracking-tight">
               InvIQ Intelligence Copilot
             </h2>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-muted-foreground">
               Personalized for {adminName} • {pharmacyName}
             </p>
           </div>
@@ -208,7 +208,7 @@ export function AIAssistantInterface({ onQuerySubmit, isPreview = false }) {
             type="button"
             onClick={handleStartNewChat}
             title="Start New Chat"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs font-semibold rounded-none hover:bg-slate-50 transition"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border text-foreground text-xs font-semibold rounded-none hover:bg-accent transition cursor-pointer"
           >
             <Plus size={13} />
             <span className="hidden sm:inline">New Chat</span>
@@ -216,10 +216,10 @@ export function AIAssistantInterface({ onQuerySubmit, isPreview = false }) {
           <button
             type="button"
             onClick={toggleHistory}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border rounded-none transition ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border rounded-none transition cursor-pointer ${
               isHistoryOpen
-                ? "bg-slate-900 text-white border-slate-900"
-                : "bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200"
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-accent/50 text-foreground border-border hover:bg-accent"
             }`}
           >
             <History size={13} />
@@ -236,44 +236,44 @@ export function AIAssistantInterface({ onQuerySubmit, isPreview = false }) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.2 }}
-            className="absolute top-0 right-0 w-80 max-w-full h-full bg-white border-l border-slate-200 z-40 flex flex-col shadow-xl"
+            className="absolute top-0 right-0 w-80 max-w-full h-full bg-card border-l border-border z-40 flex flex-col shadow-xl"
           >
-            <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-accent/30">
               <div className="flex items-center gap-2">
-                <Clock size={15} className="text-slate-700" />
-                <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                <Clock size={15} className="text-foreground" />
+                <span className="text-xs font-bold text-foreground uppercase tracking-wider">
                   Chat History
                 </span>
               </div>
               <button
                 onClick={() => setIsHistoryOpen(false)}
-                className="p-1 text-slate-400 hover:text-slate-700 rounded-none"
+                className="p-1 text-muted-foreground hover:text-foreground rounded-none cursor-pointer"
               >
                 <X size={16} />
               </button>
             </div>
 
-            <div className="p-3 border-b border-slate-100 bg-white">
+            <div className="p-3 border-b border-border bg-card">
               <button
                 onClick={handleStartNewChat}
-                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-slate-900 text-white text-xs font-bold rounded-none hover:bg-slate-800 transition"
+                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-primary text-primary-foreground text-xs font-bold rounded-none hover:bg-black transition cursor-pointer"
               >
                 <Plus size={14} />
                 <span>+ Start Fresh Conversation</span>
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-2 space-y-1 divide-y divide-slate-50">
+            <div className="flex-1 overflow-y-auto p-2 space-y-1 divide-y divide-border/50">
               {sessionsLoading ? (
-                <div className="flex items-center justify-center py-8 text-xs text-slate-400 gap-2">
-                  <Loader2 size={14} className="animate-spin text-slate-700" />
+                <div className="flex items-center justify-center py-8 text-xs text-muted-foreground gap-2">
+                  <Loader2 size={14} className="animate-spin text-[#F26A4B]" />
                   <span>Loading conversations…</span>
                 </div>
               ) : sessions.length === 0 ? (
-                <div className="text-center py-10 px-4 text-slate-400 text-xs">
+                <div className="text-center py-10 px-4 text-muted-foreground text-xs">
                   <MessageSquare size={24} className="mx-auto mb-2 opacity-40" />
                   <p>No past chat sessions found.</p>
-                  <p className="text-[11px] text-slate-400 mt-1">Start chatting to build your memory.</p>
+                  <p className="text-[11px] text-muted-foreground mt-1">Start chatting to build your memory.</p>
                 </div>
               ) : (
                 sessions.map((s) => (
@@ -282,15 +282,15 @@ export function AIAssistantInterface({ onQuerySubmit, isPreview = false }) {
                     onClick={() => handleSelectSession(s.id)}
                     className={`group w-full p-2.5 text-left text-xs cursor-pointer border rounded-none transition flex items-start justify-between gap-2 ${
                       conversationId === s.id
-                        ? "bg-slate-100 border-slate-800 border-l-4 border-l-slate-900"
-                        : "bg-white border-transparent hover:bg-slate-50 hover:border-slate-200"
+                        ? "bg-accent border-primary border-l-4"
+                        : "bg-card border-transparent hover:bg-accent/40 hover:border-border"
                     }`}
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-slate-900 truncate">
+                      <p className="font-semibold text-foreground truncate">
                         {s.preview || "Chat Session"}
                       </p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
                         {s.message_count} messages
                       </p>
                     </div>
@@ -298,7 +298,7 @@ export function AIAssistantInterface({ onQuerySubmit, isPreview = false }) {
                       type="button"
                       onClick={(e) => handleDeleteSession(e, s.id)}
                       title="Delete chat"
-                      className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-600 p-1 transition"
+                      className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive p-1 transition cursor-pointer"
                     >
                       <Trash2 size={13} />
                     </button>
@@ -313,14 +313,14 @@ export function AIAssistantInterface({ onQuerySubmit, isPreview = false }) {
       {/* ── Main Chat Stream or Hero Greeting ── */}
       {messages.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center p-4 my-auto">
-          <div className="w-14 h-14 bg-slate-900 text-white flex items-center justify-center rounded-none font-bold mb-4 shadow-sm">
+          <div className="w-14 h-14 bg-primary text-[#F26A4B] flex items-center justify-center rounded-none font-bold mb-4 shadow-xs">
             <Bot size={28} />
           </div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight mb-2">
+          <h1 className="text-xl sm:text-2xl font-sans font-bold text-foreground tracking-tight mb-2">
             Welcome to InvIQ, {adminName}!
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 max-w-lg leading-relaxed mb-6 font-normal">
-            I am your personal inventory intelligence assistant for <span className="font-bold text-slate-800">{pharmacyName}</span>.
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-lg leading-relaxed mb-6 font-normal">
+            I am your personal inventory intelligence assistant for <span className="font-bold text-foreground">{pharmacyName}</span>.
             Ask about medicine stock levels, batch expiries, reorder recommendations, or cold-chain compliance.
           </p>
 
@@ -335,16 +335,16 @@ export function AIAssistantInterface({ onQuerySubmit, isPreview = false }) {
               <button
                 key={q}
                 onClick={() => handleSendMessage(q)}
-                className="p-2.5 text-left text-xs bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-800 rounded-none transition flex items-center justify-between group"
+                className="p-2.5 text-left text-xs bg-accent/30 hover:bg-accent border border-border text-foreground rounded-none transition flex items-center justify-between group cursor-pointer"
               >
                 <span className="truncate">{q}</span>
-                <ChevronRight size={13} className="text-slate-400 group-hover:text-slate-800 shrink-0 ml-1" />
+                <ChevronRight size={13} className="text-muted-foreground group-hover:text-foreground shrink-0 ml-1" />
               </button>
             ))}
           </div>
         </div>
       ) : (
-        <div className="flex-1 min-h-0 overflow-y-auto p-4 bg-slate-50/70 border border-slate-200 space-y-4 mb-4 rounded-none">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 bg-background border border-border space-y-4 mb-4 rounded-none">
           {messages.map((m, idx) => (
             <div
               key={idx}
@@ -354,19 +354,19 @@ export function AIAssistantInterface({ onQuerySubmit, isPreview = false }) {
             >
               {m.role === "user" ? (
                 <>
-                  <div className="py-2.5 px-4 text-xs sm:text-sm leading-relaxed max-w-[85%] rounded-none whitespace-pre-wrap bg-slate-100 text-slate-900 border border-slate-200 font-medium text-right sm:text-left">
+                  <div className="py-2.5 px-4 text-xs sm:text-sm leading-relaxed max-w-[85%] rounded-none whitespace-pre-wrap bg-card text-foreground border border-border font-medium text-right sm:text-left shadow-2xs">
                     {m.content}
                   </div>
-                  <div className="w-7 h-7 bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-700 shrink-0 rounded-none mt-0.5">
+                  <div className="w-7 h-7 bg-accent border border-border flex items-center justify-center text-foreground shrink-0 rounded-none mt-0.5">
                     <User size={14} />
                   </div>
                 </>
               ) : (
                 <>
-                  <div className="w-7 h-7 bg-slate-900 flex items-center justify-center text-white shrink-0 rounded-none mt-0.5">
+                  <div className="w-7 h-7 bg-primary flex items-center justify-center text-[#F26A4B] shrink-0 rounded-none mt-0.5">
                     <Bot size={14} />
                   </div>
-                  <div className="p-3.5 text-xs sm:text-sm leading-relaxed max-w-[85%] rounded-none whitespace-pre-wrap bg-white text-slate-900 border border-slate-200 font-normal">
+                  <div className="p-3.5 text-xs sm:text-sm leading-relaxed max-w-[85%] rounded-none whitespace-pre-wrap bg-card text-foreground border border-border font-normal shadow-2xs">
                     {m.content}
                   </div>
                 </>
@@ -374,8 +374,8 @@ export function AIAssistantInterface({ onQuerySubmit, isPreview = false }) {
             </div>
           ))}
           {isLoading && (
-            <div className="flex gap-2.5 items-center text-xs text-slate-500 italic pl-1">
-              <Loader2 size={14} className="animate-spin text-slate-800" />
+            <div className="flex gap-2.5 items-center text-xs text-muted-foreground italic pl-1">
+              <Loader2 size={14} className="animate-spin text-[#F26A4B]" />
               <span>InvIQ is analyzing {pharmacyName} inventory data…</span>
             </div>
           )}
@@ -383,10 +383,10 @@ export function AIAssistantInterface({ onQuerySubmit, isPreview = false }) {
         </div>
       )}
 
-      {/* ── Bottom Input Area (Sharp Corners, Minimal Black/Grey Palette) ── */}
+      {/* ── Bottom Input Area (Warm Parchment Theme) ── */}
       <div 
         onClick={handleInputClick}
-        className="shrink-0 w-full bg-white border border-slate-300 rounded-none shadow-none overflow-hidden"
+        className="shrink-0 w-full bg-card border border-border rounded-none shadow-none overflow-hidden"
       >
         <div className="p-3 relative flex items-center gap-2">
           <input
@@ -397,18 +397,18 @@ export function AIAssistantInterface({ onQuerySubmit, isPreview = false }) {
             onKeyDown={handleKeyDown}
             disabled={isLoading || isPreviewMode}
             placeholder={`Ask InvIQ about ${pharmacyName} stock, expiries, or reorders…`}
-            className="w-full bg-transparent text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none"
+            className="w-full bg-transparent text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
 
           <button
             type="button"
             onClick={() => handleSendMessage()}
             disabled={!inputValue.trim() || isLoading || isPreviewMode}
-            className="p-2 bg-slate-900 hover:bg-slate-800 text-white rounded-none disabled:opacity-30 disabled:pointer-events-none transition shrink-0"
+            className="p-2 bg-primary hover:bg-black text-primary-foreground rounded-none disabled:opacity-30 disabled:pointer-events-none transition shrink-0 cursor-pointer"
             title="Send Message"
           >
             {isLoading ? (
-              <Loader2 size={16} className="animate-spin" />
+              <Loader2 size={16} className="animate-spin text-[#F26A4B]" />
             ) : (
               <ArrowUp size={16} />
             )}

@@ -175,20 +175,21 @@ const Inventory = () => {
     };
 
     return (
-        <div className="flex flex-col min-h-full">
+        <div className="flex flex-col min-h-full bg-background text-foreground">
             {/* Full-Width Top Navbar */}
-            <div className="sticky top-0 z-30 bg-white border-b border-slate-200 px-6 py-3.5 shadow-2xs">
+            <div className="sticky top-0 z-30 bg-card/90 backdrop-blur border-b border-border px-6 py-3.5 shadow-2xs">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900 tracking-tight">Inventory Management</h2>
+                        <h2 className="text-xl font-sans font-bold text-foreground tracking-tight">Inventory Management</h2>
+                        <p className="text-xs text-muted-foreground mt-0.5">Real-time SKU catalog and packaging unit configurations</p>
                     </div>
 
                     <div className="flex items-center gap-2.5 flex-wrap">
                         {/* Facility / Location Selector */}
                         <div className="relative flex items-center">
-                            <Building2 size={14} className="absolute left-3 text-slate-400 pointer-events-none" />
+                            <Building2 size={14} className="absolute left-3 text-muted-foreground pointer-events-none" />
                             <select
-                                className="text-xs font-medium bg-slate-50 border border-slate-300 text-slate-800 rounded-none pl-8 pr-7 py-2 hover:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 cursor-pointer"
+                                className="text-xs font-medium bg-background border border-border text-foreground rounded-md pl-8 pr-7 py-2 hover:bg-accent/40 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
                                 value={selectedLocation}
                                 onChange={(e) => setSelectedLocation(e.target.value)}
                             >
@@ -199,7 +200,7 @@ const Inventory = () => {
                         </div>
 
                         {/* Notification Alerts Bell Dropdown */}
-                        <div className="pl-1 border-l border-slate-200">
+                        <div className="pl-1 border-l border-border">
                             <AlertsDropdown />
                         </div>
                     </div>
@@ -208,27 +209,27 @@ const Inventory = () => {
 
             {/* Page Content Container */}
             <div className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6 flex-1">
-                <div className="bg-white border border-slate-200 rounded-none overflow-hidden shadow-none">
+                <div className="bg-card border border-border rounded-lg overflow-hidden shadow-xs">
 
-                <div className="p-4 border-b border-slate-100 flex items-center justify-between gap-4">
+                <div className="p-4 border-b border-border flex items-center justify-between gap-4">
                     <div className="relative flex-1 max-w-md">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
                         <input
                             type="text"
                             placeholder="Search by medicine name or category..."
-                            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm text-sm"
+                            className="w-full pl-10 pr-4 py-2 border border-input rounded-md focus:outline-none focus:ring-1 focus:ring-ring bg-background text-foreground text-sm"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <div className="text-xs text-slate-500 font-medium">
+                    <div className="text-xs text-muted-foreground font-mono font-medium">
                         Showing {filteredItems.length} items
                     </div>
                 </div>
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-slate-50 text-slate-600 font-medium text-xs uppercase tracking-wider">
+                        <thead className="bg-muted/40 text-muted-foreground font-semibold text-[11px] uppercase tracking-wider font-mono">
                             <tr>
                                 <th className="px-6 py-3.5">Medicine Name</th>
                                 <th className="px-6 py-3.5">Category</th>
@@ -239,26 +240,26 @@ const Inventory = () => {
                                 <th className="px-6 py-3.5 text-center">UOM Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 text-sm">
+                        <tbody className="divide-y divide-border/60 text-sm">
                             {loading ? (
-                                <tr><td colSpan="7" className="text-center py-8 text-slate-400">Loading inventory...</td></tr>
+                                <tr><td colSpan="7" className="text-center py-8 text-muted-foreground">Loading inventory...</td></tr>
                             ) : filteredItems.length === 0 ? (
-                                <tr><td colSpan="7" className="text-center py-8 text-slate-400">No items found matching your filter.</td></tr>
+                                <tr><td colSpan="7" className="text-center py-8 text-muted-foreground">No items found matching your filter.</td></tr>
                             ) : (
                                 filteredItems.map((item) => (
-                                    <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                                    <tr key={item.id} className="hover:bg-accent/40 transition-colors">
                                         <td className="px-6 py-4">
-                                            <div className="font-semibold text-slate-900">{item.name}</div>
-                                            <div className="text-xs text-slate-400">Base Unit: <span className="font-medium text-slate-600">{item.base_unit || item.unit}</span></div>
+                                            <div className="font-semibold text-foreground">{item.name}</div>
+                                            <div className="text-xs text-muted-foreground">Base Unit: <span className="font-mono text-foreground">{item.base_unit || item.unit}</span></div>
                                         </td>
-                                        <td className="px-6 py-4 text-slate-600 capitalize">{item.category}</td>
+                                        <td className="px-6 py-4 text-muted-foreground capitalize">{item.category}</td>
                                         <td className="px-6 py-4 text-center">{getStatusBadge(item.status)}</td>
                                         <td className="px-6 py-4 text-right">
-                                            <div className="font-bold text-slate-900">
-                                                {item.current_stock?.toLocaleString()} <span className="text-xs font-normal text-slate-500">{item.base_unit || item.unit}</span>
+                                            <div className="font-bold text-foreground">
+                                                {item.current_stock?.toLocaleString()} <span className="text-xs font-normal text-muted-foreground">{item.base_unit || item.unit}</span>
                                             </div>
                                             {item.stock_breakdown && (
-                                                <div className="text-xs text-blue-600 font-medium mt-0.5">
+                                                <div className="text-xs text-amber-700 font-medium mt-0.5">
                                                     {item.stock_breakdown}
                                                 </div>
                                             )}
@@ -267,22 +268,22 @@ const Inventory = () => {
                                             <div className="flex flex-wrap gap-1">
                                                 {item.packagings && item.packagings.length > 0 ? (
                                                     item.packagings.map(p => (
-                                                        <span key={p.id} className="inline-flex items-center px-2 py-0.5 text-xs bg-slate-100 text-slate-700 border border-slate-200 rounded">
+                                                        <span key={p.id} className="inline-flex items-center px-2 py-0.5 text-xs bg-secondary text-secondary-foreground border border-border rounded font-mono">
                                                             {p.unit_name} ({p.multiplier}x)
                                                         </span>
                                                     ))
                                                 ) : (
-                                                    <span className="text-xs text-slate-400 italic">Base unit only</span>
+                                                    <span className="text-xs text-muted-foreground italic">Base unit only</span>
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-right text-slate-500 font-medium">
+                                        <td className="px-6 py-4 text-right text-muted-foreground font-mono font-medium">
                                             {item.min_stock} {item.base_unit || item.unit}
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             <button
                                                 onClick={() => openPackagingModal(item)}
-                                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 transition-colors"
+                                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-secondary-foreground bg-secondary border border-border rounded-md hover:bg-accent transition-colors cursor-pointer"
                                             >
                                                 <Layers size={13} />
                                                 Packaging
@@ -300,20 +301,20 @@ const Inventory = () => {
             {/* Packaging Configuration Modal */}
             {selectedItemForPkg && (
                 <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
-                        <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                    <div className="bg-card text-card-foreground rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-border animate-in fade-in zoom-in-95 duration-150">
+                        <div className="p-5 border-b border-border flex items-center justify-between bg-muted/20">
                             <div>
-                                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                                    <Layers className="text-blue-600" size={18} />
+                                <h3 className="text-base font-sans font-bold text-foreground flex items-center gap-2">
+                                    <Layers className="text-primary" size={18} />
                                     Packaging Tiers for {selectedItemForPkg.name}
                                 </h3>
-                                <p className="text-xs text-slate-500 mt-0.5">
-                                    Base Unit: <span className="font-semibold text-slate-700">{selectedItemForPkg.base_unit || selectedItemForPkg.unit}</span> (Atomic Count)
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                    Base Unit: <span className="font-semibold text-foreground font-mono">{selectedItemForPkg.base_unit || selectedItemForPkg.unit}</span> (Atomic Count)
                                 </p>
                             </div>
                             <button
                                 onClick={() => setSelectedItemForPkg(null)}
-                                className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-200"
+                                className="p-1 text-muted-foreground hover:text-foreground rounded-md hover:bg-accent cursor-pointer"
                             >
                                 <X size={18} />
                             </button>
@@ -321,42 +322,42 @@ const Inventory = () => {
 
                         <div className="p-5 overflow-y-auto space-y-6 flex-1">
                             {pkgError && (
-                                <div className="p-3 text-xs bg-red-50 text-red-700 border border-red-200 rounded">
+                                <div className="p-3 text-xs bg-destructive/10 text-destructive border border-destructive/20 rounded-md">
                                     {pkgError}
                                 </div>
                             )}
                             {pkgSuccess && (
-                                <div className="p-3 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 rounded">
+                                <div className="p-3 text-xs bg-emerald-100/70 text-emerald-800 border border-emerald-300 rounded-md">
                                     {pkgSuccess}
                                 </div>
                             )}
 
                             {/* Existing Tiers List */}
                             <div>
-                                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Registered Packaging Tiers</h4>
+                                <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-2 font-mono">Registered Packaging Tiers</h4>
                                 {loadingPkg ? (
-                                    <div className="text-xs text-slate-400 py-3">Loading packaging tiers...</div>
+                                    <div className="text-xs text-muted-foreground py-3">Loading packaging tiers...</div>
                                 ) : packagings.length === 0 ? (
-                                    <div className="text-xs text-slate-500 italic p-3 bg-slate-50 rounded border border-slate-200">
+                                    <div className="text-xs text-muted-foreground italic p-3 bg-background rounded-md border border-border">
                                         No secondary packaging defined. This medicine is currently tracked solely in loose <span className="font-semibold">{selectedItemForPkg.base_unit || selectedItemForPkg.unit}</span>.
                                     </div>
                                 ) : (
                                     <div className="space-y-2">
                                         {packagings.map(pkg => (
-                                            <div key={pkg.id} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded text-xs">
+                                            <div key={pkg.id} className="flex items-center justify-between p-3 bg-background border border-border rounded-md text-xs">
                                                 <div>
-                                                    <div className="font-bold text-slate-900 capitalize">
+                                                    <div className="font-bold text-foreground capitalize">
                                                         1 {pkg.unit_name} = {pkg.multiplier} {selectedItemForPkg.base_unit || selectedItemForPkg.unit}
                                                     </div>
-                                                    <div className="text-slate-500 flex items-center gap-3 mt-1">
-                                                        {pkg.barcode && <span>Barcode: <code className="bg-slate-200 px-1 py-0.5 rounded text-slate-800">{pkg.barcode}</code></span>}
+                                                    <div className="text-muted-foreground flex items-center gap-3 mt-1 font-mono">
+                                                        {pkg.barcode && <span>Barcode: <code className="bg-accent px-1 py-0.5 rounded text-foreground">{pkg.barcode}</code></span>}
                                                         {pkg.mrp != null && <span>MRP: ₹{parseFloat(pkg.mrp).toFixed(2)}</span>}
                                                         {pkg.purchase_rate != null && <span>Purchase: ₹{parseFloat(pkg.purchase_rate).toFixed(2)}</span>}
                                                     </div>
                                                 </div>
                                                 <button
                                                     onClick={() => handleDeletePackaging(pkg.id)}
-                                                    className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
+                                                    className="p-1.5 text-destructive hover:bg-destructive/10 rounded cursor-pointer"
                                                     title="Delete tier"
                                                 >
                                                     <Trash2 size={14} />
@@ -368,60 +369,60 @@ const Inventory = () => {
                             </div>
 
                             {/* Add New Packaging Tier Form */}
-                            <form onSubmit={handleAddPackaging} className="p-4 bg-blue-50/50 border border-blue-100 rounded-lg space-y-3">
-                                <h4 className="text-xs font-bold text-blue-900 uppercase tracking-wider flex items-center gap-1.5">
+                            <form onSubmit={handleAddPackaging} className="p-4 bg-muted/30 border border-border rounded-lg space-y-3">
+                                <h4 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5 font-mono">
                                     <Plus size={14} /> Add Packaging Tier (e.g. Strip = 10, Box = 100)
                                 </h4>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                     <div>
-                                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">Packaging Name *</label>
+                                        <label className="block text-[11px] font-semibold text-foreground mb-1">Packaging Name *</label>
                                         <input
                                             type="text"
                                             placeholder="strip, box, vial..."
                                             value={pkgForm.unit_name}
                                             onChange={e => setPkgForm({...pkgForm, unit_name: e.target.value})}
-                                            className="w-full text-xs p-2 bg-white border border-slate-300 rounded focus:ring-1 focus:ring-blue-500"
+                                            className="w-full text-xs p-2 bg-background border border-input rounded-md text-foreground focus:ring-1 focus:ring-ring"
                                             required
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">Multiplier ({selectedItemForPkg.base_unit || 'base units'}) *</label>
+                                        <label className="block text-[11px] font-semibold text-foreground mb-1">Multiplier ({selectedItemForPkg.base_unit || 'base units'}) *</label>
                                         <input
                                             type="number"
                                             min="1"
                                             placeholder="e.g. 10"
                                             value={pkgForm.multiplier}
                                             onChange={e => setPkgForm({...pkgForm, multiplier: e.target.value})}
-                                            className="w-full text-xs p-2 bg-white border border-slate-300 rounded focus:ring-1 focus:ring-blue-500"
+                                            className="w-full text-xs p-2 bg-background border border-input rounded-md text-foreground focus:ring-1 focus:ring-ring"
                                             required
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">Package Barcode (EAN)</label>
+                                        <label className="block text-[11px] font-semibold text-foreground mb-1">Package Barcode (EAN)</label>
                                         <input
                                             type="text"
                                             placeholder="EAN printed on pack"
                                             value={pkgForm.barcode}
                                             onChange={e => setPkgForm({...pkgForm, barcode: e.target.value})}
-                                            className="w-full text-xs p-2 bg-white border border-slate-300 rounded focus:ring-1 focus:ring-blue-500"
+                                            className="w-full text-xs p-2 bg-background border border-input rounded-md text-foreground focus:ring-1 focus:ring-ring"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">Package MRP (₹)</label>
+                                        <label className="block text-[11px] font-semibold text-foreground mb-1">Package MRP (₹)</label>
                                         <input
                                             type="number"
                                             step="0.01"
                                             placeholder="Auto if empty"
                                             value={pkgForm.mrp}
                                             onChange={e => setPkgForm({...pkgForm, mrp: e.target.value})}
-                                            className="w-full text-xs p-2 bg-white border border-slate-300 rounded focus:ring-1 focus:ring-blue-500"
+                                            className="w-full text-xs p-2 bg-background border border-input rounded-md text-foreground focus:ring-1 focus:ring-ring"
                                         />
                                     </div>
                                 </div>
                                 <div className="flex justify-end pt-2">
                                     <button
                                         type="submit"
-                                        className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors flex items-center gap-1.5 shadow-sm"
+                                        className="px-4 py-2 text-xs font-semibold text-primary-foreground bg-primary hover:opacity-90 rounded-md transition-opacity flex items-center gap-1.5 shadow-xs cursor-pointer"
                                     >
                                         <Plus size={14} /> Add Packaging Tier
                                     </button>

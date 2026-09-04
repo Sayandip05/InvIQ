@@ -29,12 +29,10 @@ export const LightSignIn = () => {
         loginWithGoogle(token)
           .then((userData) => {
             const role = userData?.role || "admin";
-            if (role === "super_admin") {
-              navigate("/super-admin", { replace: true });
-            } else if (role === "staff" || role === "vendor") {
+            if (role === "staff" || role === "vendor") {
               navigate("/staff", { replace: true });
             } else {
-              navigate(from || "/dashboard", { replace: true });
+              navigate(from || "/admin/dashboard", { replace: true });
             }
           })
           .catch((err) => {
@@ -85,46 +83,46 @@ export const LightSignIn = () => {
 
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] relative overflow-hidden p-4">
-      {/* Clean Subtle Grid Lines & Soft Ambient Glow */}
+    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden p-4">
+      {/* Clean Subtle Grid Lines & Warm Glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-indigo-100/40 rounded-full blur-[100px]" />
-        <div className="absolute top-[20%] right-[-10%] w-[60vw] h-[60vw] bg-blue-50/40 rounded-full blur-[120px]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-[#F26A4B]/5 rounded-full blur-[120px]" />
+        <div className="absolute top-[20%] right-[-10%] w-[60vw] h-[60vw] bg-[#2E2E2E]/5 rounded-full blur-[140px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000008_1px,transparent_1px),linear-gradient(to_bottom,#00000008_1px,transparent_1px)] bg-[size:40px_40px]" />
       </div>
 
       <button
         onClick={() => navigate('/')}
-        className="absolute top-6 left-6 z-20 flex items-center gap-2 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white/90 hover:bg-white backdrop-blur-md px-4 py-2 rounded-full border border-slate-200 shadow-xs transition-all"
+        className="absolute top-6 left-6 z-20 flex items-center gap-2 text-xs font-semibold text-foreground bg-card/90 hover:bg-card backdrop-blur-md px-4 py-2 rounded-full border border-border shadow-xs transition-all cursor-pointer"
       >
         <ArrowLeft size={14} />
         <span>Back to Home</span>
       </button>
 
-      <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-7 sm:p-9 shadow-xl relative z-10">
+      <div className="w-full max-w-md bg-card border border-border rounded-2xl p-7 sm:p-9 shadow-lg relative z-10">
         <div className="mb-7 flex flex-col items-center">
           <div className="flex items-center gap-2.5 mb-2">
             <img src="/logo.png" alt="InvIQ Logo" className="w-8 h-8 object-contain" />
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">InvIQ</h1>
+            <h1 className="text-2xl font-sans font-bold tracking-tight text-foreground">InvIQ</h1>
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 text-center">
+          <h2 className="text-2xl font-sans font-bold text-foreground text-center">
             Welcome Back
           </h2>
-          <p className="text-center text-slate-500 text-xs sm:text-sm mt-1">
-            Sign in to access pharmacy & warehouse analytics
+          <p className="text-center text-muted-foreground text-xs sm:text-sm mt-1">
+            Sign in to access pharmacy &amp; warehouse analytics
           </p>
         </div>
 
         {error && (
-          <div className="mb-5 flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm rounded-xl px-4 py-3 shadow-xs">
-            <AlertCircle size={16} className="shrink-0 text-red-500" />
+          <div className="mb-5 flex items-center gap-2 bg-destructive/10 border border-destructive/30 text-destructive text-xs sm:text-sm rounded-xl px-4 py-3 shadow-xs">
+            <AlertCircle size={16} className="shrink-0 text-destructive" />
             <span>{error}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+            <label className="text-xs font-bold text-foreground uppercase tracking-wider">
               Email Address
             </label>
             <input
@@ -132,21 +130,20 @@ export const LightSignIn = () => {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15 transition-all"
+              className="w-full px-3.5 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               placeholder="enter your email"
             />
           </div>
 
-
           <div className="space-y-1.5">
             <div className="flex justify-between items-center">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+              <label className="text-xs font-bold text-foreground uppercase tracking-wider">
                 Password
               </label>
               <button 
                 type="button"
                 onClick={() => navigate("/forgot-password")}
-                className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+                className="text-xs font-semibold text-[#F26A4B] hover:underline cursor-pointer"
               >
                 Forgot password?
               </button>
@@ -157,12 +154,12 @@ export const LightSignIn = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3.5 py-2.5 pr-12 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15 transition-all"
+                className="w-full px-3.5 py-2.5 pr-12 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                 placeholder="••••••••"
               />
               <button
                 type="button"
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 hover:text-slate-700 px-2 py-1 rounded transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground hover:text-foreground px-2 py-1 rounded transition-colors cursor-pointer"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? "Hide" : "Show"}
@@ -173,7 +170,7 @@ export const LightSignIn = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-blue-600/25 active:scale-[0.99] flex items-center justify-center disabled:opacity-60 disabled:pointer-events-none"
+            className="w-full py-3 bg-primary hover:bg-black text-primary-foreground font-bold text-sm rounded-xl transition-all shadow-md active:scale-[0.99] flex items-center justify-center disabled:opacity-60 disabled:pointer-events-none cursor-pointer"
           >
             {loading ? (
               <>
@@ -186,21 +183,21 @@ export const LightSignIn = () => {
           </button>
 
           <div className="flex items-center my-4">
-            <div className="flex-1 h-px bg-slate-200" />
-            <span className="px-3 text-xs font-medium text-slate-400 uppercase tracking-wider">
+            <div className="flex-1 h-px bg-border" />
+            <span className="px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
               or continue with
             </span>
-            <div className="flex-1 h-px bg-slate-200" />
+            <div className="flex-1 h-px bg-border" />
           </div>
 
           <button 
             type="button"
             onClick={handleGoogleLogin}
             disabled={googleLoading}
-            className="w-full h-11 bg-white hover:bg-slate-50 border border-slate-300 hover:border-slate-400 text-slate-700 rounded-xl flex items-center justify-center gap-2.5 text-sm font-semibold transition-all shadow-2xs disabled:opacity-50 cursor-pointer"
+            className="w-full h-11 bg-background hover:bg-accent/40 border border-border text-foreground rounded-xl flex items-center justify-center gap-2.5 text-sm font-semibold transition-all shadow-2xs disabled:opacity-50 cursor-pointer"
           >
             {googleLoading ? (
-              <Loader2 size={16} className="animate-spin text-blue-600" />
+              <Loader2 size={16} className="animate-spin text-primary" />
             ) : (
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -212,10 +209,9 @@ export const LightSignIn = () => {
             <span>{googleLoading ? "Signing in with Google..." : "Continue with Google"}</span>
           </button>
 
-
-          <p className="text-xs text-center text-slate-500 pt-3">
+          <p className="text-xs text-center text-muted-foreground pt-3">
             Don't have an account?{" "}
-            <a href="/signup" className="text-blue-600 font-bold hover:underline">
+            <a href="/signup" className="text-[#F26A4B] font-bold hover:underline">
               Sign up
             </a>
           </p>

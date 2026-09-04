@@ -32,7 +32,6 @@ import OnboardingWizard from './components/ui/OnboardingWizard';
  * Role → home-page map.
  */
 const ROLE_HOME = {
-  super_admin: '/superadmin/dashboard',
   admin:       '/admin/dashboard',
   manager:     '/admin/dashboard',
   staff:       '/staff',
@@ -118,26 +117,6 @@ function AppContent() {
 
 
 
-          {/* ── Super Admin (auth required) ───────────────────────── */}
-          <Route element={<ProtectedRoute requiredRole="super_admin" />}>
-            <Route path="/superadmin" element={<AdminLayout />}>
-              <Route index element={<Navigate to="/superadmin/dashboard" replace />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="organizations" element={
-                <div className="p-8">
-                  <h2 className="text-2xl font-bold">Organizations</h2>
-                  <p className="text-slate-500 mt-2">Manage organizations (coming soon)</p>
-                </div>
-              } />
-              <Route path="users" element={
-                <div className="p-8">
-                  <h2 className="text-2xl font-bold">User Management</h2>
-                  <p className="text-slate-500 mt-2">Manage all users (coming soon)</p>
-                </div>
-              } />
-              <Route path="chat" element={<Chatbot />} />
-            </Route>
-          </Route>
 
           {/* ── Catch-all: guests land on demo, not /signin ────────── */}
           <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
