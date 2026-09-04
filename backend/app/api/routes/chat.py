@@ -354,11 +354,11 @@ def chat_query(
     if not chat_request.question or len(chat_request.question.strip()) < 3:
         raise ValidationError("Question must be at least 3 characters")
 
-    if current_user.role not in ["super_admin", "admin"]:
+    if current_user.role != "admin":
         raise AuthorizationError("The AI Assistant is reserved for Pharmacy Administrators and Store Owners.")
 
-    # Non-super_admins must be assigned to an organization
-    if current_user.role != "super_admin" and current_user.org_id is None:
+    # All users must be assigned to an organization
+    if current_user.org_id is None:
         raise AuthorizationError("User is not assigned to an organization")
 
     # Verify ownership if continuing an existing conversation
@@ -366,7 +366,7 @@ def chat_query(
         _verify_session_ownership(db, chat_request.conversation_id, current_user.id)
 
     try:
-        caller_org_id = None if current_user.role == "super_admin" else current_user.org_id
+        caller_org_id = current_user.org_id
         result = _build_agent_response(
             chat_request.question,
             db,

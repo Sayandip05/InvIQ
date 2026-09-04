@@ -58,7 +58,7 @@ class TestRoleRequirements:
         user = test_user["user"]
         user.role = "staff"
         # Staff role should be allowed
-        assert user.role in ["staff", "admin", "super_admin"]
+        assert user.role in ["staff", "admin"]
 
 
     def test_require_staff_with_viewer(self):

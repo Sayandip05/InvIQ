@@ -206,7 +206,7 @@ def register(
 
     # Validate location_ids against the target organization
     loc_ids = request_body.location_ids or []
-    if loc_ids and current_user.role != "super_admin":
+    if loc_ids:
         if target_org_id is None:
             raise AuthorizationError("User is not assigned to an organization")
         valid_locs = db.db.query(Location.id).filter(
@@ -819,7 +819,9 @@ def list_users(
     if limit > 100:
         limit = 100  # Cap to prevent abuse
 
-    target_org_id = current_user.org_id if current_user.role == "admin" else None
+    if current_user.org_id is None:
+        raise AuthorizationError("User is not assigned to an organization")
+    target_org_id = current_user.org_id
     users = db.get_all_filtered(role=role, is_active=is_active, org_id=target_org_id, skip=skip, limit=limit)
     total = db.count_filtered(role=role, is_active=is_active, org_id=target_org_id)
 
@@ -840,17 +842,9 @@ def list_users(
 def _enforce_tenant_user_access(target_user: User, current_user: User) -> None:
     """
     Strict multi-tenant security barrier:
-    - Super-admins ('super_admin') have global cross-tenant access.
     - Tenant admins ('admin') are strictly constrained to their own organization (target_user.org_id == current_user.org_id).
     - Tenant admins can NEVER view, modify, reset, or delete users belonging to another organization.
-    - Tenant admins can NEVER modify super-admin accounts.
     """
-    if current_user.role == "super_admin":
-        return
-
-    if target_user.role == "super_admin":
-        raise AuthorizationError("You do not have permission to manage platform super-admin accounts")
-
     if current_user.org_id is None or target_user.org_id != current_user.org_id:
         raise AuthorizationError("Cross-tenant operation denied: user belongs to another organization")
 
@@ -918,10 +912,8 @@ def update_user_profile_by_admin(
 
     # 4. Role
     if request_body.role is not None:
-        if request_body.role not in ["admin", "staff", "vendor", "super_admin"]:
+        if request_body.role not in ["admin", "staff", "vendor"]:
             raise ValidationError(f"Invalid role: {request_body.role}")
-        if request_body.role == "super_admin" and current_user.role != "super_admin":
-            raise AuthorizationError("Only platform super-admins can assign the super_admin role")
         user.role = request_body.role
 
     # 5. Is active
@@ -934,7 +926,7 @@ def update_user_profile_by_admin(
     if request_body.location_ids is not None:
         loc_ids = request_body.location_ids
         target_org = user.org_id or current_user.org_id
-        if loc_ids and current_user.role != "super_admin":
+        if loc_ids:
             if target_org is None:
                 raise AuthorizationError("User is not assigned to an organization")
             valid_locs = db.db.query(Location.id).filter(
@@ -987,11 +979,8 @@ def update_user_role(
 
     _enforce_tenant_user_access(user, current_user)
 
-    if request_body.role not in ["admin", "staff", "vendor", "super_admin"]:
+    if request_body.role not in ["admin", "staff", "vendor"]:
         raise ValidationError(f"Invalid role: {request_body.role}")
-
-    if request_body.role == "super_admin" and current_user.role != "super_admin":
-        raise AuthorizationError("Only platform super-admins can assign the super_admin role")
 
     old_role = user.role
     user.role = request_body.role
@@ -1479,23 +1468,10 @@ def google_auth(
     if not aud or aud != client_id:
         raise AuthenticationError("Google ID token audience mismatch")
 
-    is_super_admin = (
-        bool(settings.SUPER_ADMIN_EMAIL)
-        and google_email.lower() == settings.SUPER_ADMIN_EMAIL.strip().lower()
-    )
-
-    # Check if user exists
-    user = db.get_by_email(google_email)
-
     if user:
         # Existing user - log them in
         if not user.is_active:
             raise AuthenticationError("User account is disabled")
-
-        if is_super_admin and user.role != "super_admin":
-            user.role = "super_admin"
-            user.org_id = None
-            db.update(user)
 
         db.record_login(user)
 
@@ -1551,41 +1527,35 @@ def google_auth(
         username = f"{base_username}_{counter}"
         counter += 1
 
-    org_name = None
-    if not is_super_admin:
-        # Create Organization for regular tenant user
-        base_slug = username.replace("_", "-")
-        slug = base_slug
-        counter = 1
-        while db.db.query(Organization).filter(Organization.slug == slug).first():
-            slug = f"{base_slug}-{counter}"
-            counter += 1
+    # Create Organization for regular tenant user
+    base_slug = username.replace("_", "-")
+    slug = base_slug
+    counter = 1
+    while db.db.query(Organization).filter(Organization.slug == slug).first():
+        slug = f"{base_slug}-{counter}"
+        counter += 1
 
-        org_name = f"{google_name or username}'s Pharmacy & Medical Store"
-        new_org = Organization(name=org_name, slug=slug, is_active=True)
-        db.db.add(new_org)
-        db.db.commit()
-        db.db.refresh(new_org)
+    org_name = f"{google_name or username}'s Pharmacy & Medical Store"
+    new_org = Organization(name=org_name, slug=slug, is_active=True)
+    db.db.add(new_org)
+    db.db.commit()
+    db.db.refresh(new_org)
 
-        # Create default Main Pharmacy Counter location
-        default_location = Location(
-            org_id=new_org.id,
-            name=f"{google_name or username} - Main Counter",
-            type="retail_counter",
-            region="Default Region",
-            address="Main Store Location",
-        )
-        db.db.add(default_location)
-        db.db.commit()
-        db.db.refresh(default_location)
+    # Create default Main Pharmacy Counter location
+    default_location = Location(
+        org_id=new_org.id,
+        name=f"{google_name or username} - Main Counter",
+        type="retail_counter",
+        region="Default Region",
+        address="Main Store Location",
+    )
+    db.db.add(default_location)
+    db.db.commit()
+    db.db.refresh(default_location)
 
-        assigned_org_id = new_org.id
-        assigned_locs = [default_location.id]
-        role = "admin"
-    else:
-        assigned_org_id = None
-        assigned_locs = []
-        role = "super_admin"
+    assigned_org_id = new_org.id
+    assigned_locs = [default_location.id]
+    role = "admin"
 
     # Create user with Google OAuth
     user = db.create(

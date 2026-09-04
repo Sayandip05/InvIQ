@@ -120,7 +120,7 @@ def upload_and_map_file(
         target_entity=target_entity,
     )
 
-    if current_user.role != "super_admin" and current_user.org_id is None:
+    if current_user.org_id is None:
         raise AuthorizationError("User is not assigned to an organization")
 
     # Upload raw file to Azure Blob Storage if configured
@@ -193,11 +193,10 @@ def confirm_and_execute_import(
         raise NotFoundError("DataImportJob", body.job_id)
 
     # ── Tenant isolation and user ownership checks ──
-    if current_user.role != "super_admin":
-        if current_user.org_id is None or job.org_id != current_user.org_id:
-            raise AuthorizationError("Import job does not belong to your organization")
-        if job.uploaded_by_user_id != current_user.id and current_user.role != "admin":
-            raise AuthorizationError("You do not have permission to execute this import job")
+    if current_user.org_id is None or job.org_id != current_user.org_id:
+        raise AuthorizationError("Import job does not belong to your organization")
+    if job.uploaded_by_user_id != current_user.id and current_user.role != "admin":
+        raise AuthorizationError("You do not have permission to execute this import job")
 
     if job.status not in ("PENDING", "FAILED"):
         raise ValidationError(f"Job #{job.id} cannot be confirmed (current status: {job.status})")
@@ -205,19 +204,14 @@ def confirm_and_execute_import(
 
     # ── Default location validation against tenant ──
     if body.default_location_id is not None:
-        if current_user.role != "super_admin":
-            if current_user.org_id is None:
-                raise AuthorizationError("User is not assigned to an organization")
-            loc = db.query(Location).filter(
-                Location.id == body.default_location_id,
-                Location.org_id == current_user.org_id,
-            ).first()
-            if not loc:
-                raise ValidationError(f"Default location {body.default_location_id} not found or does not belong to your organization")
-        else:
-            loc = db.query(Location).filter(Location.id == body.default_location_id).first()
-            if not loc:
-                raise NotFoundError("Location", body.default_location_id)
+        if current_user.org_id is None:
+            raise AuthorizationError("User is not assigned to an organization")
+        loc = db.query(Location).filter(
+            Location.id == body.default_location_id,
+            Location.org_id == current_user.org_id,
+        ).first()
+        if not loc:
+            raise ValidationError(f"Default location {body.default_location_id} not found or does not belong to your organization")
 
     # Use confirmed mapping from request or saved mapping
     confirmed_mapping = body.mapping or job.mapping_result
@@ -329,11 +323,10 @@ def get_import_job_status(
     if not job:
         raise NotFoundError("DataImportJob", job_id)
 
-    if current_user.role != "super_admin":
-        if current_user.org_id is None or job.org_id != current_user.org_id:
-            raise AuthorizationError("Import job does not belong to your organization")
-        if job.uploaded_by_user_id != current_user.id and current_user.role != "admin":
-            raise AuthorizationError("You do not have permission to view this import job")
+    if current_user.org_id is None or job.org_id != current_user.org_id:
+        raise AuthorizationError("Import job does not belong to your organization")
+    if job.uploaded_by_user_id != current_user.id and current_user.role != "admin":
+        raise AuthorizationError("You do not have permission to view this import job")
 
     return ImportStatusResponse(
         success=True,
@@ -367,11 +360,10 @@ def get_quarantined_rows(
     if not job:
         raise NotFoundError("DataImportJob", job_id)
 
-    if current_user.role != "super_admin":
-        if current_user.org_id is None or job.org_id != current_user.org_id:
-            raise AuthorizationError("Import job does not belong to your organization")
-        if job.uploaded_by_user_id != current_user.id and current_user.role != "admin":
-            raise AuthorizationError("You do not have permission to view this import job")
+    if current_user.org_id is None or job.org_id != current_user.org_id:
+        raise AuthorizationError("Import job does not belong to your organization")
+    if job.uploaded_by_user_id != current_user.id and current_user.role != "admin":
+        raise AuthorizationError("You do not have permission to view this import job")
 
     rows = service.import_repo.get_quarantined_rows(job_id=job_id, limit=limit, skip=skip)
     total_count = service.import_repo.count_quarantined(job_id=job_id)

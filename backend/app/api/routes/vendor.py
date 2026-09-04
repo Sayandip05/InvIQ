@@ -25,8 +25,8 @@ router = APIRouter(prefix="/vendor", tags=["Vendor"])
 
 
 def _require_vendor_role(current_user: User) -> None:
-    """Ensure user has vendor, admin, or super_admin role."""
-    if current_user.role not in {"vendor", "admin", "super_admin"}:
+    """Ensure user has vendor or admin role."""
+    if current_user.role not in {"vendor", "admin"}:
         raise AuthorizationError("Vendor access required")
 
 
@@ -84,12 +84,9 @@ def upload_delivery(
         raise ValidationError("Only .xlsx or .xls files are accepted")
 
     # Validate location exists and belongs to the caller's organization
-    if current_user.role != "super_admin":
-        if current_user.org_id is None:
-            raise AuthorizationError("User is not assigned to an organization")
-        location = db.query(Location).filter(Location.id == location_id, Location.org_id == current_user.org_id).first()
-    else:
-        location = db.query(Location).filter(Location.id == location_id).first()
+    if current_user.org_id is None:
+        raise AuthorizationError("User is not assigned to an organization")
+    location = db.query(Location).filter(Location.id == location_id, Location.org_id == current_user.org_id).first()
 
     if not location:
         raise AuthorizationError(f"Location {location_id} not found or does not belong to your organization")
@@ -208,14 +205,13 @@ def list_invoices(
     from app.infrastructure.database.invoice_repo import InvoiceRepository
     invoice_repo = InvoiceRepository(db)
 
-    # Vendors only see their own invoices
-    if current_user.role != "super_admin":
-        if current_user.org_id is None:
-            raise AuthorizationError("User is not assigned to an organization")
+    # Scoped strictly to caller organization
+    if current_user.org_id is None:
+        raise AuthorizationError("User is not assigned to an organization")
 
     vendor_filter = current_user.id if current_user.role == "vendor" else None
     invoices, total = invoice_repo.list_invoices(
-        org_id=current_user.org_id if current_user.role != "super_admin" else None,
+        org_id=current_user.org_id,
         vendor_user_id=vendor_filter,
         status=status,
         skip=skip,
@@ -274,10 +270,9 @@ def get_invoice_detail(
     if current_user.role == "vendor" and invoice.vendor_user_id != current_user.id:
         raise AuthorizationError("You do not have permission to view this invoice")
 
-    # Non-super_admins can only view invoices belonging to their own organization
-    if current_user.role != "super_admin":
-        if current_user.org_id is None or invoice.org_id != current_user.org_id:
-            raise AuthorizationError("Invoice does not belong to your organization")
+    # Users can only view invoices belonging to their own organization
+    if current_user.org_id is None or invoice.org_id != current_user.org_id:
+        raise AuthorizationError("Invoice does not belong to your organization")
 
     vendor_name = invoice.vendor.full_name if invoice.vendor else (invoice.vendor.username if invoice.vendor else "Vendor")
 
@@ -331,10 +326,9 @@ def download_invoice_pdf(
     if current_user.role == "vendor" and invoice.vendor_user_id != current_user.id:
         raise AuthorizationError("You do not have permission to download this invoice")
 
-    # Non-super_admins can only download invoices belonging to their own organization
-    if current_user.role != "super_admin":
-        if current_user.org_id is None or invoice.org_id != current_user.org_id:
-            raise AuthorizationError("Invoice does not belong to your organization")
+    # Users can only download invoices belonging to their own organization
+    if current_user.org_id is None or invoice.org_id != current_user.org_id:
+        raise AuthorizationError("Invoice does not belong to your organization")
 
 
     pdf_bytes = None

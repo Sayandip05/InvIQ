@@ -52,14 +52,12 @@ from app.api.graphql.types import (
 logger = logging.getLogger("smart_inventory.graphql")
 
 # Roles that may receive the privileged forecasting fields.
-_PRIVILEGED_ROLES = {"admin", "super_admin"}
+_PRIVILEGED_ROLES = {"admin"}
 
 
 def _resolve_caller_org_id(user: Optional[User]) -> Optional[int]:
-    """Resolve caller org_id. If non-super_admin has org_id=None, deny access."""
+    """Resolve caller org_id. If user has org_id=None, deny access."""
     if user is None:
-        return None
-    if getattr(user, "role", None) == "super_admin":
         return None
     if getattr(user, "org_id", None) is None:
         raise AuthorizationError("User is not assigned to an organization")

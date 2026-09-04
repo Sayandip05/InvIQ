@@ -36,7 +36,7 @@ class NotificationService:
         Args:
             to_email: User's email address
             username: User's username for login
-            role: User's role (super_admin, admin, staff, vendor)
+            role: User's role (admin, staff, vendor)
             full_name: User's full name (optional)
             activation_link: Secure link to set password and activate account (optional)
 
@@ -48,7 +48,6 @@ class NotificationService:
 
         # Role-specific portal URLs
         role_portals = {
-            "super_admin": "/superadmin/dashboard",
             "admin": "/admin/dashboard",
             "staff": "/staff",
             "vendor": "/vendor",

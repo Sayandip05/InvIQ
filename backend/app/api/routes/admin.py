@@ -47,7 +47,7 @@ def get_pharmacy_organization(
     current_user: User = Depends(require_admin),
 ):
     """Get the current pharmacy owner's organization profile & branch metrics."""
-    if current_user.role != "super_admin" and current_user.org_id is None:
+    if current_user.org_id is None:
         raise AuthorizationError("User is not assigned to an organization")
 
     org_id = current_user.org_id
@@ -102,7 +102,7 @@ def update_pharmacy_organization(
     current_user: User = Depends(require_admin),
 ):
     """Update pharmacy organization profile (name, address, phone, GSTIN, DL number, settings)."""
-    if current_user.role != "super_admin" and current_user.org_id is None:
+    if current_user.org_id is None:
         raise AuthorizationError("User is not assigned to an organization")
 
     org_id = current_user.org_id
@@ -195,9 +195,9 @@ def get_platform_overview(
     user_repo = UserRepository(db)
     audit_repo = AuditRepository(db)
 
-    target_org_id = current_user.org_id if current_user.role != "super_admin" else None
-    if current_user.role != "super_admin" and target_org_id is None:
-        target_org_id = -1
+    target_org_id = current_user.org_id
+    if target_org_id is None:
+        raise AuthorizationError("User is not assigned to an organization")
 
     # Consolidated single-query aggregation across roles and active statuses scoped to tenant org
     from sqlalchemy import func
@@ -282,9 +282,9 @@ def get_audit_logs(
     View audit trail — filterable by user, action type, or resource.
     Scoped strictly by organization for tenant admins.
     """
-    target_org_id = current_user.org_id if current_user.role != "super_admin" else None
-    if current_user.role != "super_admin" and target_org_id is None:
-        target_org_id = -1
+    target_org_id = current_user.org_id
+    if target_org_id is None:
+        raise AuthorizationError("User is not assigned to an organization")
 
     audit_repo = AuditRepository(db)
     logs = audit_repo.get_filtered(
@@ -326,9 +326,9 @@ def get_users_summary(
     """
     Detailed user summary scoped by tenant organization for admin user management.
     """
-    target_org_id = current_user.org_id if current_user.role != "super_admin" else None
-    if current_user.role != "super_admin" and target_org_id is None:
-        target_org_id = -1
+    target_org_id = current_user.org_id
+    if target_org_id is None:
+        raise AuthorizationError("User is not assigned to an organization")
 
     user_repo = UserRepository(db)
     all_users = user_repo.get_all_filtered(org_id=target_org_id, limit=1000)
@@ -467,7 +467,7 @@ def create_supplier(
 
     # Validate location_ids if supplied
     loc_ids = body.location_ids or []
-    if loc_ids and current_user.role != "super_admin":
+    if loc_ids:
         if current_user.org_id is None:
             raise AuthorizationError("User is not assigned to an organization")
         valid_locs = db.query(Location.id).filter(
@@ -537,7 +537,7 @@ def update_supplier(
     if body.email is not None:
         supplier.email = body.email
     if body.location_ids is not None:
-        if body.location_ids and current_user.role != "super_admin":
+        if body.location_ids:
             if current_user.org_id is None:
                 raise AuthorizationError("User is not assigned to an organization")
             valid_locs = db.query(Location.id).filter(
@@ -633,8 +633,8 @@ def generate_pdf_report(
         raise HTTPException(status_code=500, detail="reportlab is not installed on the server")
 
     # ── Tenant boundary check ──────────────────────────────────────────
-    caller_org_id = current_user.org_id if current_user.role != "super_admin" else None
-    if current_user.role != "super_admin" and caller_org_id is None:
+    caller_org_id = current_user.org_id
+    if caller_org_id is None:
         raise AuthorizationError("User is not assigned to an organization")
 
     # Validate location ownership if filtered

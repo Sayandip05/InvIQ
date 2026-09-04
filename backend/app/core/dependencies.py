@@ -203,22 +203,10 @@ def require_staff(
     return current_user
 
 
-def require_super_admin(
-    current_user: Annotated[User, Depends(get_current_user)],
-) -> User:
-    """Only the platform super_admin can access these endpoints."""
-    if current_user.role != "super_admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Super Admin access required.",
-        )
-    return current_user
-
-
 def require_vendor(
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> User:
-    """Vendor or higher role (vendor → staff → admin → super_admin)."""
+    """Vendor or higher role (vendor → staff → admin)."""
     if not check_role_permission(current_user.role, "vendor"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -227,14 +215,13 @@ def require_vendor(
     return current_user
 
 
-def get_caller_org_id(user: User) -> Optional[int]:
+def get_caller_org_id(user: User) -> int:
     """
     Return org_id for tenant-scoped operations.
-    - super_admin bypasses org scoping (returns None).
-    - All normal users must belong to an organization; if org_id is None, raises AuthorizationError (403).
+    Every user (including admins) belongs strictly to their own organization.
+    If org_id is None, raises AuthorizationError (403).
+    Cross-tenant access is strictly forbidden.
     """
-    if user.role == "super_admin":
-        return None
     if user.org_id is None:
         raise AuthorizationError("User is not assigned to an organization")
     return user.org_id

@@ -2,7 +2,7 @@
 Requisition API routes.
 
 Routes receive pre-configured RequisitionService via FastAPI's Depends() system.
-All routes are org-scoped: non-super_admin users can only see/mutate their own
+All routes are strictly org-scoped: users can only see/mutate their own
 organization's requisitions.
 """
 

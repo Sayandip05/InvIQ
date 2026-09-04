@@ -150,7 +150,7 @@ class ConnectionManager:
     async def broadcast_to_org(self, org_id: Optional[int], message: dict):
         """
         Send a message only to clients belonging to the given org.
-        - If org_id is provided: sends ONLY to clients in that organization (or platform super_admins).
+        - If org_id is provided: sends ONLY to clients in that organization.
         - If org_id is None: unassigned tenant events are DROPPED entirely to prevent data leaks.
         """
         if org_id is None:
@@ -162,7 +162,7 @@ class ConnectionManager:
             client_org = meta.get("org_id")
             client_role = meta.get("role")
 
-            if client_org != org_id and client_role != "super_admin":
+            if client_org != org_id:
                 continue
 
             try:
@@ -200,7 +200,7 @@ def queue_websocket_alert(alert: dict, org_id: Optional[int] = None) -> None:
     """
     Queue a real-time alert for delivery to WebSocket clients of the given org.
 
-    org_id=None → broadcast to all orgs (super_admin / system events).
+    org_id must be provided for tenant-scoped events.
 
     Routing priority:
       1. In-process queue → immediate local socket consumption (<1ms)
@@ -359,7 +359,7 @@ async def websocket_alerts(websocket: WebSocket):
                     await websocket.close(code=4001, reason="User account disabled")
                     raise AuthenticationError("User account disabled")
                 if user:
-                    org_id_for_ws = user.org_id  # None for super_admin
+                    org_id_for_ws = user.org_id
                     role_for_ws = user.role
         except AuthenticationError:
             raise

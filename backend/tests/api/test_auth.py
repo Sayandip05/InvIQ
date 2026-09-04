@@ -192,7 +192,7 @@ class TestRBACAndTenantIsolation:
             mock_blk_refresh.assert_called_once_with("dummy-refresh-token")
 
     def test_role_update_allowed_and_disallowed_roles(self, client, admin_user, test_user):
-        """Role update permits super_admin, admin, staff, vendor and rejects manager."""
+        """Role update permits admin, staff, vendor and rejects manager."""
         admin_headers = get_auth_header(client, admin_user["username"], admin_user["password"])
         user_id = test_user["user"].id
 

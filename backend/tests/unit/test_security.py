@@ -86,15 +86,15 @@ class TestRoleHierarchy:
 
     def test_role_hierarchy_permissions(self):
         """Verify role hierarchy matrix and permission boundaries."""
-        assert ROLE_HIERARCHY["super_admin"] == 4
+        assert "super_admin" not in ROLE_HIERARCHY
         assert ROLE_HIERARCHY["admin"] == 3
         assert ROLE_HIERARCHY["staff"] == 2
         assert ROLE_HIERARCHY["vendor"] == 1
-        assert ALLOWED_ROLES == {"super_admin", "admin", "staff", "vendor"}
+        assert ALLOWED_ROLES == {"admin", "staff", "vendor"}
 
-        # Super admin has all permissions
+        # Admin has top permissions
         for role in ALLOWED_ROLES:
-            assert check_role_permission("super_admin", role) is True
+            assert check_role_permission("admin", role) is True
 
         # Same level & lower level checks
         assert check_role_permission("admin", "staff") is True

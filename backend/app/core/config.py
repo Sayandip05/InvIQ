@@ -71,6 +71,7 @@ class Settings(BaseSettings):
 
     # ── Database ───────────────────────────────────────────────────────
     DATABASE_URL: str = ""
+    DIRECT_URL: Optional[str] = None
     DB_POOL_SIZE: int = 5
     DB_MAX_OVERFLOW: int = 5
     DB_POOL_TIMEOUT: int = 30
@@ -121,8 +122,6 @@ class Settings(BaseSettings):
     MAX_LOGIN_ATTEMPTS: int = 5
     LOCKOUT_DURATION_MINUTES: int = 15
 
-    # ── Super Admin ────────────────────────────────────────────────────
-    SUPER_ADMIN_EMAIL: str = "admin@example.com"
 
     # ── Admin Seed (first startup only) ───────────────────────────────
     ADMIN_EMAIL: str = "admin@inventory.local"

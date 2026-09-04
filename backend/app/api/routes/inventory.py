@@ -4,8 +4,7 @@ Inventory API routes.
 Routes receive pre-configured services via FastAPI's Depends() system.
 No direct DB queries here — everything goes through the service layer.
 
-All routes are org-scoped: super_admin sees all tenants (org_id=None),
-all other roles see only their own organization's data.
+All routes are strictly org-scoped to the caller's organization.
 """
 
 from fastapi import APIRouter, Depends, Request
@@ -17,7 +16,6 @@ from app.core.dependencies import (
     get_current_user,
     require_staff,
     require_admin,
-    require_super_admin,
     get_caller_org_id,
 )
 
@@ -805,8 +803,7 @@ def reset_inventory_data(
     repo: InventoryRepository = Depends(get_inventory_repo),
     current_user: User = Depends(require_admin),
 ):
-    """Delete inventory data for the caller's organization only.
-    super_admin can delete all-tenant data; regular admins are strictly org-scoped."""
+    """Delete inventory data for the caller's organization only. Strictly org-scoped."""
     if not body.confirm:
         from app.core.exceptions import ValidationError
         raise ValidationError("Set confirm=true to reset data")

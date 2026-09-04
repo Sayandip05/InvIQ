@@ -1,7 +1,7 @@
 """
 Analytics API routes — heatmap, alerts, summary, dashboard stats.
 
-All responses are org-scoped: non-super_admin users see only their own
+All responses are strictly org-scoped: users see only their own
 organization's inventory data. Cache keys include org_id to prevent
 cross-tenant cache poisoning.
 """

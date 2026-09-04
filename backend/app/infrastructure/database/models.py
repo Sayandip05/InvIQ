@@ -19,7 +19,7 @@ from app.infrastructure.database.connection import Base
 
 # ── Enum types (enforced at DB driver level) ───────────────────────────────
 _UserRoleEnum = Enum(
-    "super_admin", "admin", "staff", "vendor",
+    "admin", "staff", "vendor",
     name="user_role",
 )
 _OrgPlanEnum = Enum(

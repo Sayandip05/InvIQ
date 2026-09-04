@@ -11,7 +11,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 
 from app.api.routes import analytics, chat, inventory, requisition, auth, admin
-from app.api.routes import superadmin as superadmin_routes
 from app.api.routes import vendor as vendor_routes
 from app.api.routes import data_import as data_import_routes
 from app.api.routes import billing as billing_routes
@@ -36,19 +35,31 @@ logger = logging.getLogger("smart_inventory")
 def seed_admin_user():
     """
     Seed initial tenant admin user ONLY in development/testing environments.
-    Super-admin provisioning is strictly performed out-of-band via secure CLI scripts
-    (e.g., backend/scripts/provision_super_admin.py) to prevent predictable credential attacks.
+    Admin provisioning is performed securely with strong credentials.
     """
     if settings.ENVIRONMENT not in ["development", "testing"]:
         return
 
     try:
         from app.infrastructure.database.connection import SessionLocal
+        from app.infrastructure.database.models import User, Organization
 
         with SessionLocal() as db:
             # Seed Admin for local development/testing only if configured
             existing_admin = db.query(User).filter(User.role == "admin").first()
             if not existing_admin and settings.ADMIN_EMAIL and settings.ADMIN_PASSWORD:
+                org = db.query(Organization).first()
+                if not org:
+                    org = Organization(
+                        name="Apex Care Pharmacy",
+                        slug="apex-care",
+                        plan="single_pharmacy",
+                        is_active=True,
+                    )
+                    db.add(org)
+                    db.commit()
+                    db.refresh(org)
+
                 admin_user = User(
                     email=settings.ADMIN_EMAIL,
                     username=settings.ADMIN_USERNAME or "admin",
@@ -57,7 +68,7 @@ def seed_admin_user():
                     role="admin",
                     is_active=True,
                     is_verified=True,
-                    org_id=1,
+                    org_id=org.id,
                 )
                 db.add(admin_user)
                 db.commit()
@@ -145,7 +156,6 @@ app.include_router(chat.router, prefix=settings.API_V1_PREFIX)
 app.include_router(inventory.router, prefix=settings.API_V1_PREFIX)
 app.include_router(requisition.router, prefix=settings.API_V1_PREFIX)
 app.include_router(admin.router, prefix=settings.API_V1_PREFIX)
-app.include_router(superadmin_routes.router, prefix=settings.API_V1_PREFIX)
 app.include_router(vendor_routes.router, prefix=settings.API_V1_PREFIX)
 app.include_router(data_import_routes.router, prefix=settings.API_V1_PREFIX)
 app.include_router(billing_routes.router, prefix=settings.API_V1_PREFIX)

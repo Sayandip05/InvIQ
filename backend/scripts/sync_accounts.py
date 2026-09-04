@@ -36,28 +36,7 @@ def sync_accounts():
                         db.commit()
                         print(f"   Cleaned up isolated organization ID: {org_id}")
 
-        # 2. Demote any other accounts claiming super_admin
-        other_superadmins = db.query(User).filter(
-            User.role == "super_admin",
-            ~User.email.ilike("sayandipbar05@gmail.com")
-        ).all()
-        for sa in other_superadmins:
-            print(f"⚠️  Demoting user {sa.email} from super_admin to admin")
-            sa.role = "admin"
-        db.commit()
-
-        # 3. Ensure sayandipbar05@gmail.com is configured as the unique super_admin
-        sa_user = db.query(User).filter(User.email.ilike("sayandipbar05@gmail.com")).first()
-        if sa_user:
-            print(f"👑 Configuring sayandipbar05@gmail.com as super_admin (current role: {sa_user.role})...")
-            sa_user.role = "super_admin"
-            sa_user.org_id = None  # Super admin is platform-wide
-            sa_user.is_active = True
-            sa_user.is_verified = True
-            db.commit()
-            print("   sayandipbar05@gmail.com is active platform super_admin.")
-        else:
-            print("ℹ️  sayandipbar05@gmail.com is not yet in DB (will receive super_admin on login/registration).")
+        # 2. Summary of current users in database
 
         # 4. Summary of current users in database
         print("-" * 60)

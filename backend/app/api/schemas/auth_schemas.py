@@ -36,7 +36,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8, max_length=100)
-    role: Optional[str] = Field(default=None, pattern="^(super_admin|admin|staff|vendor)$")
+    role: Optional[str] = Field(default=None, pattern="^(admin|staff|vendor)$")
     location_ids: Optional[List[int]] = Field(default_factory=list)
 
     @field_validator("password")
@@ -49,7 +49,7 @@ class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     username: Optional[str] = Field(None, min_length=3, max_length=100)
     full_name: Optional[str] = None
-    role: Optional[str] = Field(None, pattern="^(super_admin|admin|staff|vendor)$")
+    role: Optional[str] = Field(None, pattern="^(admin|staff|vendor)$")
     is_active: Optional[bool] = None
     location_ids: Optional[List[int]] = None
 
@@ -135,7 +135,7 @@ class PasswordChangeRequest(BaseModel):
 
 
 class RoleUpdate(BaseModel):
-    role: str = Field(..., pattern="^(super_admin|admin|staff|vendor)$")
+    role: str = Field(..., pattern="^(admin|staff|vendor)$")
 
 
 class VerifyEmailRequest(BaseModel):

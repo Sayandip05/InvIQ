@@ -42,7 +42,7 @@ class InventoryService:
             try:
                 from app.infrastructure.database.models import User
                 query = self.repo.db.query(User).filter(
-                    User.role.in_(["admin", "super_admin"]),
+                    User.role == "admin",
                     User.is_active.is_(True),
                     User.email.isnot(None),
                 )
