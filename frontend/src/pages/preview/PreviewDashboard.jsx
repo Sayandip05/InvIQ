@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AIAssistantInterface from '../../components/ui/ai-assistant-interface';
+import MonoRoundedDonut from '../../components/ui/mono-rounded-donut';
 import {
     LayoutDashboard, Package, ClipboardList, MessageSquare,
     PanelLeftClose, Bell, Search, LogIn, UserPlus,
@@ -339,36 +340,27 @@ export default function PreviewDashboard() {
 
                             {/* Connected Charts Grid Matrix */}
                             <div className="bg-card border border-border rounded-lg grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border shadow-xs">
-                                {/* Stock Health Distribution */}
-                                <div className="p-6">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <h4 className="font-sans text-base font-bold text-foreground">Inventory Health Breakdown</h4>
-                                        <span className="text-xs font-semibold text-foreground bg-accent px-2 py-0.5 border border-border rounded flex items-center gap-0.5 font-mono">
-                                            <ArrowUpRight size={12} className="text-[#F26A4B]" /> 94.4% Healthy
-                                        </span>
+                                {/* Stock Health Distribution - "Mono Rounded" Style */}
+                                <div className="p-6 flex flex-col justify-between">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <h4 className="font-sans text-base font-bold text-foreground">Inventory Health Breakdown</h4>
+                                            <span className="text-xs font-semibold text-foreground bg-accent px-2 py-0.5 border border-border rounded flex items-center gap-0.5 font-mono">
+                                                <ArrowUpRight size={12} className="text-[#F26A4B]" /> 94.4% Healthy
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground mb-4">Real-time batch stock status across warehouse locations.</p>
                                     </div>
-                                    <p className="text-xs text-muted-foreground mb-6">Real-time batch stock status across warehouse locations.</p>
-                                    <div className="h-64">
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <PieChart>
-                                                <Pie
-                                                    data={MOCK_STATS.status_distribution}
-                                                    cx="50%"
-                                                    cy="50%"
-                                                    innerRadius={60}
-                                                    outerRadius={85}
-                                                    paddingAngle={3}
-                                                    dataKey="value"
-                                                >
-                                                    {MOCK_STATS.status_distribution.map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.name] || '#2E2E2E'} />
-                                                    ))}
-                                                </Pie>
-                                                <Tooltip contentStyle={{ backgroundColor: '#F4EFE4', borderColor: '#D2CBBB', borderRadius: '8px', color: '#1E1E1E' }} />
-                                                <Legend />
-                                            </PieChart>
-                                        </ResponsiveContainer>
-                                    </div>
+
+                                    <MonoRoundedDonut
+                                        data={MOCK_STATS.status_distribution}
+                                        title="Stock Health"
+                                        height={240}
+                                        innerRadius={68}
+                                        outerRadius={92}
+                                        cornerRadius={8}
+                                        paddingAngle={6}
+                                    />
                                 </div>
 
                                 {/* Therapeutic Category Distribution */}
@@ -385,13 +377,35 @@ export default function PreviewDashboard() {
                                             <BarChart
                                                 data={MOCK_STATS.category_distribution}
                                                 layout="vertical"
-                                                margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                                                margin={{ top: 8, right: 20, left: 10, bottom: 8 }}
+                                                barCategoryGap="20%"
                                             >
-                                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#D2CBBB" />
+                                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E5DFD5" opacity={0.6} />
                                                 <XAxis type="number" tick={{ fontSize: 11, fill: '#5E5A52' }} stroke="#D2CBBB" />
-                                                <YAxis dataKey="name" type="category" width={130} tick={{ fontSize: 11, fill: '#5E5A52' }} stroke="#D2CBBB" />
-                                                <Tooltip contentStyle={{ backgroundColor: '#F4EFE4', borderColor: '#D2CBBB', borderRadius: '8px', color: '#1E1E1E' }} />
-                                                <Bar dataKey="value" fill="#F26A4B" radius={[0, 4, 4, 0]} />
+                                                <YAxis dataKey="name" type="category" width={130} tick={{ fontSize: 11, fill: '#1E1E1E' }} stroke="#D2CBBB" />
+                                                <Tooltip
+                                                    cursor={{ fill: 'rgba(0, 0, 0, 0.03)', radius: [999, 999, 999, 999] }}
+                                                    content={({ active, payload, label }) => {
+                                                        if (!active || !payload || !payload.length) return null;
+                                                        return (
+                                                            <div className="bg-card border border-border rounded-xl p-3 shadow-lg min-w-[130px]">
+                                                                <p className="text-xs font-semibold text-foreground">{label}</p>
+                                                                <div className="h-[1px] bg-border my-1.5" />
+                                                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                                    <span className="w-2 h-2 rounded-full bg-[#F26A4B] shrink-0" />
+                                                                    <span>Volume: <strong className="text-foreground font-bold font-mono">{payload[0].value}</strong></span>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    }}
+                                                />
+                                                <Bar
+                                                    dataKey="value"
+                                                    fill="#F26A4B"
+                                                    radius={[999, 999, 999, 999]}
+                                                    barSize={14}
+                                                    background={{ fill: 'rgba(0, 0, 0, 0.04)', radius: [999, 999, 999, 999] }}
+                                                />
                                             </BarChart>
                                         </ResponsiveContainer>
                                     </div>

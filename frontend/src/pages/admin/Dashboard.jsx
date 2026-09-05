@@ -19,6 +19,7 @@ const STATUS_COLORS = {
 };
 
 import { Skeleton } from '../../components/ui/skeleton';
+import MonoRoundedDonut from '../../components/ui/mono-rounded-donut';
 
 export const DashboardSkeleton = () => {
     return (
@@ -342,56 +343,29 @@ const Dashboard = () => {
 
             {/* Connected Charts Grid Matrix */}
             <div className="bg-card border border-border rounded-lg grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border shadow-xs">
-                {/* Status Distribution */}
-                <div className="p-6">
-                    <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-base font-sans font-bold text-foreground">Inventory Health Breakdown</h3>
-                        {totalItems > 0 && (
-                            <span className="text-xs font-semibold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 border border-emerald-300 rounded-md flex items-center gap-0.5">
-                                <ArrowUpRight size={12} /> {totalItems > 0 ? (((totalItems - criticalItems) / totalItems) * 100).toFixed(1) : 0}% Healthy
-                            </span>
-                        )}
+                {/* Status Distribution - "Mono Rounded" Style */}
+                <div className="p-6 flex flex-col justify-between">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-base font-sans font-bold text-foreground">Inventory Health Breakdown</h3>
+                            {totalItems > 0 && (
+                                <span className="text-xs font-semibold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 border border-emerald-300 rounded-md flex items-center gap-0.5">
+                                    <ArrowUpRight size={12} /> {totalItems > 0 ? (((totalItems - criticalItems) / totalItems) * 100).toFixed(1) : 0}% Healthy
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-4">Real-time batch stock status across warehouse locations.</p>
                     </div>
-                    <p className="text-xs text-muted-foreground mb-6">Real-time batch stock status across warehouse locations.</p>
-                    <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={status_distribution}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80}
-                                    paddingAngle={4}
-                                    dataKey="value"
-                                >
-                                    {status_distribution.map((entry, index) => {
-                                        const colorMap = {
-                                            HEALTHY: '#2E2E2E',
-                                            WARNING: '#F59E0B',
-                                            CRITICAL: '#F26A4B',
-                                        };
-                                        return (
-                                            <Cell
-                                                key={`cell-${index}`}
-                                                fill={entry.color || colorMap[entry.name] || THEME_CHART_COLORS[index % THEME_CHART_COLORS.length]}
-                                            />
-                                        );
-                                    })}
-                                </Pie>
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: '#F4EFE4',
-                                        borderColor: '#D2CBBB',
-                                        borderRadius: '0.5rem',
-                                        color: '#1E1E1E',
-                                        fontSize: '0.75rem',
-                                    }}
-                                />
-                                <Legend />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
+
+                    <MonoRoundedDonut
+                        data={status_distribution}
+                        title="Stock Health"
+                        height={240}
+                        innerRadius={68}
+                        outerRadius={92}
+                        cornerRadius={8}
+                        paddingAngle={6}
+                    />
                 </div>
 
                 {/* Category Distribution with Adaptive Scroll */}
@@ -414,27 +388,42 @@ const Dashboard = () => {
                                 <BarChart
                                     data={category_distribution}
                                     layout="vertical"
-                                    margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                                    margin={{ top: 8, right: 20, left: 10, bottom: 8 }}
+                                    barCategoryGap="20%"
                                 >
-                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#D2CBBB" />
-                                    <XAxis type="number" tick={{ fontSize: 11, fill: '#5E5A52' }} />
+                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E5DFD5" opacity={0.6} />
+                                    <XAxis type="number" tick={{ fontSize: 11, fill: '#5E5A52' }} axisLine={{ stroke: '#D2CBBB' }} />
                                     <YAxis
                                         dataKey="name"
                                         type="category"
                                         width={140}
                                         interval={0}
                                         tick={{ fontSize: 11, fill: '#1E1E1E' }}
+                                        axisLine={{ stroke: '#D2CBBB' }}
                                     />
                                     <Tooltip
-                                        contentStyle={{
-                                            backgroundColor: '#F4EFE4',
-                                            borderColor: '#D2CBBB',
-                                            borderRadius: '0.5rem',
-                                            color: '#1E1E1E',
-                                            fontSize: '0.75rem',
+                                        cursor={{ fill: 'rgba(0, 0, 0, 0.03)', radius: [999, 999, 999, 999] }}
+                                        content={({ active, payload, label }) => {
+                                            if (!active || !payload || !payload.length) return null;
+                                            return (
+                                                <div className="bg-card border border-border rounded-xl p-3 shadow-lg min-w-[130px]">
+                                                    <p className="text-xs font-semibold text-foreground">{label}</p>
+                                                    <div className="h-[1px] bg-border my-1.5" />
+                                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                        <span className="w-2 h-2 rounded-full bg-[#F26A4B] shrink-0" />
+                                                        <span>Volume: <strong className="text-foreground font-bold font-mono">{payload[0].value}</strong></span>
+                                                    </div>
+                                                </div>
+                                            );
                                         }}
                                     />
-                                    <Bar dataKey="value" fill="#F26A4B" radius={[0, 4, 4, 0]} />
+                                    <Bar
+                                        dataKey="value"
+                                        fill="#F26A4B"
+                                        radius={[999, 999, 999, 999]}
+                                        barSize={14}
+                                        background={{ fill: 'rgba(0, 0, 0, 0.04)', radius: [999, 999, 999, 999] }}
+                                    />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
