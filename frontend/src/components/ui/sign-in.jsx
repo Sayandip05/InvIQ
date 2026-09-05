@@ -99,7 +99,7 @@ export const LightSignIn = () => {
         <span>Back to Home</span>
       </button>
 
-      <div className="w-full max-w-md bg-card border border-border rounded-2xl p-7 sm:p-9 shadow-lg relative z-10">
+      <div className="w-full max-w-md bg-card border border-border rounded-none p-7 sm:p-9 shadow-lg relative z-10">
         <div className="mb-7 flex flex-col items-center">
           <div className="flex items-center gap-2.5 mb-2">
             <img src="/logo.png" alt="InvIQ Logo" className="w-8 h-8 object-contain" />

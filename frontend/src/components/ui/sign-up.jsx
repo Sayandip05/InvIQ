@@ -123,7 +123,7 @@ export const LightSignUp = () => {
         <span>Back to Home</span>
       </button>
 
-      <div className="w-full max-w-[420px] bg-card rounded-2xl shadow-lg border border-border overflow-hidden relative z-10 p-8 sm:p-9">
+      <div className="w-full max-w-[420px] bg-card rounded-none shadow-lg border border-border overflow-hidden relative z-10 p-8 sm:p-9">
         <div className="flex flex-col items-center mb-6">
           <div className="flex items-center gap-2.5 mb-3">
             <img src="/logo.png" alt="InvIQ Logo" className="w-9 h-9 object-contain" />

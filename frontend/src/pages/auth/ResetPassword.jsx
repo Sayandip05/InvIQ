@@ -44,7 +44,7 @@ const ResetPassword = () => {
   if (!token) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <div className="w-full max-w-[400px] bg-card rounded-2xl shadow-lg p-7 border border-border">
+        <div className="w-full max-w-[400px] bg-card rounded-none shadow-lg p-7 border border-border">
           <div className="flex flex-col items-center">
             <AlertCircle size={48} className="text-destructive mb-4" />
             <h2 className="text-2xl font-sans font-bold text-foreground">Invalid Link</h2>
@@ -66,7 +66,7 @@ const ResetPassword = () => {
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <div className="w-full max-w-[400px] bg-card rounded-2xl shadow-lg p-7 border border-border">
+        <div className="w-full max-w-[400px] bg-card rounded-none shadow-lg p-7 border border-border">
           <div className="flex flex-col items-center">
             <CheckCircle size={48} className="text-[#F26A4B] mb-4" />
             <h2 className="text-2xl font-sans font-bold text-foreground">Password Reset</h2>
@@ -87,7 +87,7 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-[400px] bg-card rounded-2xl shadow-lg p-7 border border-border">
+      <div className="w-full max-w-[400px] bg-card rounded-none shadow-lg p-7 border border-border">
         <div className="flex flex-col items-center mb-6">
           <h2 className="text-2xl font-sans font-bold text-foreground">Set New Password</h2>
           <p className="text-center text-muted-foreground mt-2 text-sm">

@@ -34,7 +34,7 @@ const VerifyEmail = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-[400px] bg-card rounded-2xl shadow-lg p-7 border border-border">
+      <div className="w-full max-w-[400px] bg-card rounded-none shadow-lg p-7 border border-border">
         <div className="flex flex-col items-center">
           {status === "loading" && (
             <>
