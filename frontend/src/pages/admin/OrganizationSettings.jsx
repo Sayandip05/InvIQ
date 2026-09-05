@@ -386,7 +386,7 @@ export default function OrganizationSettings() {
     };
 
     return (
-        <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-150">
+        <div className="p-6 md:p-8 max-w-[1560px] mx-auto space-y-6 animate-in fade-in duration-150">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
                 <div>
@@ -394,10 +394,18 @@ export default function OrganizationSettings() {
                         <Store size={14} className="text-foreground" />
                         <span>Pharmacy Business & Branches</span>
                     </div>
-                    <h1 className="font-sans text-2xl font-bold text-foreground tracking-tight">
-                        Store Profile & Counter Setup
-                    </h1>
-                    <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <h1 className="font-sans text-2xl font-bold text-foreground tracking-tight">
+                            Store Profile & Counter Setup
+                        </h1>
+                        {/* Brand / Branch Summary in small text in header */}
+                        <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-accent/60 border border-border rounded-none text-xs font-mono text-muted-foreground">
+                            <span><strong className="text-foreground font-bold">{orgData.total_branches}</strong> Total Branches</span>
+                            <span>•</span>
+                            <span><strong className="text-emerald-700 font-bold">{orgData.active_branches}</strong> Active Counters</span>
+                        </div>
+                    </div>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                         Manage your chemist legal profile, drug licenses, GSTIN, and branch locations.
                     </p>
                 </div>
@@ -446,12 +454,10 @@ export default function OrganizationSettings() {
                 </div>
             )}
 
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* ── Left Column: Pharmacy Business Profile & Discount Policy ── */}
-                <div className="lg:col-span-1 space-y-6">
-                    {/* Store Profile Card */}
-                    <div className="bg-card border border-border rounded-none p-6 space-y-5">
+            {/* Main Content Grid: 3 Cards Side by Side */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                {/* ── 1. Store Profile ── */}
+                <div className="bg-card border border-border rounded-none p-6 space-y-5">
                         <div className="flex items-center justify-between border-b border-border pb-3">
                             <div className="flex items-center gap-2">
                                 <Building2 size={16} className="text-foreground" />
@@ -569,22 +575,7 @@ export default function OrganizationSettings() {
                         </form>
                     </div>
 
-                    {/* Summary metrics card */}
-                    <div className="bg-card border border-border rounded-none p-4 space-y-3">
-                        <h3 className="text-xs font-bold text-foreground uppercase tracking-wider font-mono">Branch Summary</h3>
-                        <div className="grid grid-cols-2 gap-3 text-center">
-                            <div className="p-3 bg-background border border-border rounded-none">
-                                <p className="font-sans text-2xl font-bold text-foreground">{orgData.total_branches}</p>
-                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider font-mono">Total Branches</p>
-                            </div>
-                            <div className="p-3 bg-background border border-border rounded-none">
-                                <p className="font-sans text-2xl font-bold text-foreground">{orgData.active_branches}</p>
-                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider font-mono">Active Counters</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* ── Customer Discount Policy Card ─────────────────────────── */}
+                    {/* ── 2. Customer Discount Policy ── */}
                     <div className="bg-card border border-border rounded-none p-6 space-y-4">
                         <div className="flex items-center gap-2 border-b border-border pb-3">
                             <Tag size={16} className="text-foreground" />
@@ -717,11 +708,9 @@ export default function OrganizationSettings() {
                             <span>{discountSaving ? 'Saving Policy...' : 'Save Discount Policy'}</span>
                         </button>
                     </div>
-                </div>
 
-                {/* ── Right Column: Branch & Counter Management ───────────────── */}
-                <div className="lg:col-span-2 space-y-4">
-                    <div className="bg-card border border-border rounded-none p-6 space-y-5">
+                {/* ── 3. Branch & Counter Locations ── */}
+                <div className="bg-card border border-border rounded-none p-6 space-y-5">
                         <div className="flex items-center justify-between border-b border-border pb-4">
                             <div>
                                 <h2 className="font-mono text-sm font-bold text-foreground uppercase tracking-wider">Branch & Counter Locations</h2>
@@ -757,7 +746,7 @@ export default function OrganizationSettings() {
                                 </button>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="flex flex-col gap-3.5">
                                 {orgData.branches.map((b) => (
                                     <div
                                         key={b.id}
@@ -842,7 +831,6 @@ export default function OrganizationSettings() {
                             </div>
                         )}
                     </div>
-                </div>
             </div>
 
             {/* ── Modal: Add / Edit Branch ──────────────────────────────────────── */}
