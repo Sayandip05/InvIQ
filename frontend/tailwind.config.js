@@ -11,6 +11,7 @@ export default {
         sans: ['var(--font-sans)', 'Inter', 'sans-serif'],
         serif: ['Inter', 'sans-serif'],
         mono: ['var(--font-mono)', 'JetBrains Mono', 'monospace'],
+        poppins: ['Poppins', 'sans-serif'],
       },
       colors: {
         // Keeping legacy theme elements for backward compatibility:

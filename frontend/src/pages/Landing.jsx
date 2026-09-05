@@ -92,7 +92,7 @@ export default function Landing() {
   ];
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden font-sans text-foreground">
+    <div className="min-h-screen bg-background relative overflow-hidden font-poppins text-foreground">
       {/* Background Gradients & Grid */}
       <div className="absolute inset-0 z-0 pointer-events-none flex justify-center">
         <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-accent/50 rounded-full blur-[100px]" />
@@ -113,7 +113,7 @@ export default function Landing() {
             <div className="group-hover:scale-110 transition-transform duration-200">
               <LogoIcon />
             </div>
-            <span className="font-sans font-bold text-lg sm:text-xl tracking-tight text-foreground group-hover:text-[#F26A4B] transition-colors">InvIQ</span>
+            <span className="font-poppins font-bold text-lg sm:text-xl tracking-tight text-foreground group-hover:text-[#F26A4B] transition-colors">InvIQ</span>
           </div>
           <div className="hidden md:flex items-center gap-1 lg:gap-2 text-sm font-medium text-muted-foreground">
             {['features', 'process', 'pricing', 'faq', 'customers'].map((id) => (
@@ -156,7 +156,7 @@ export default function Landing() {
           <div className="flex items-center justify-between pb-3 border-b border-border">
             <div className="flex items-center gap-2">
               <LogoIcon />
-              <span className="font-sans font-bold text-lg text-foreground">InvIQ Menu</span>
+              <span className="font-poppins font-bold text-lg text-foreground">InvIQ Menu</span>
             </div>
             <button onClick={() => setMobileMenuOpen(false)} className="p-1 rounded-full text-muted-foreground hover:bg-accent cursor-pointer">
               <X className="w-5 h-5" />
@@ -197,7 +197,7 @@ export default function Landing() {
             <span>Built for Medical Store &amp; Pharmacy Owners</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl md:text-7xl font-sans font-bold tracking-tight text-foreground mb-5 md:mb-7 leading-[1.15] cursor-default">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-poppins font-bold tracking-tight text-foreground mb-5 md:mb-7 leading-[1.15] cursor-default">
             Never Lose Money on<br />
             <span className="text-[#F26A4B] inline-block min-h-[1.2em]">
               <Typewriter
@@ -249,12 +249,15 @@ export default function Landing() {
             color={["#F26A4B", "#2E2E2E", "#D8D2C4", "#A89F8F"]}
             className="w-full p-0 overflow-hidden shadow-2xl group-hover:-translate-y-1.5 rounded-2xl md:rounded-3xl border border-border group-hover:border-primary/40 transition-all duration-500"
           >
-            <div className="w-full bg-card select-none pointer-events-none cursor-default overflow-hidden">
+            <div className="w-full bg-card select-none pointer-events-none cursor-default overflow-hidden aspect-[2684/1870]">
               <img
                 src="/PreviewCard.png"
                 alt="InvIQ Smart Pharmacy Dashboard Preview"
-                className="w-full h-auto object-cover select-none pointer-events-none block group-hover:scale-[1.01] transition-transform duration-500"
+                width={2684}
+                height={1870}
+                className="w-full h-full object-contain select-none pointer-events-none block group-hover:scale-[1.01] transition-transform duration-500"
                 loading="eager"
+                decoding="async"
               />
             </div>
           </ShineBorder>
@@ -270,7 +273,7 @@ export default function Landing() {
             <Star className="w-4 h-4 mr-2 text-[#F26A4B]" />
             Features
           </div>
-          <h2 className="text-4xl md:text-5xl font-sans font-bold text-foreground mb-6 tracking-tight">
+          <h2 className="text-4xl md:text-5xl font-poppins font-bold text-foreground mb-6 tracking-tight">
             Smart Pharmacy Inventory Intelligence
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
@@ -355,7 +358,7 @@ export default function Landing() {
             <TrendingUp className="w-4 h-4 mr-2 text-[#F26A4B]" />
             Process
           </div>
-          <h2 className="text-4xl md:text-5xl font-sans font-bold text-foreground mb-6 tracking-tight">
+          <h2 className="text-4xl md:text-5xl font-poppins font-bold text-foreground mb-6 tracking-tight">
             Get Started in 3 Simple Steps
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
@@ -437,7 +440,7 @@ export default function Landing() {
             <CreditCard className="w-3.5 h-3.5 text-[#F26A4B]" />
             Pricing
           </div>
-          <h2 className="text-4xl md:text-5xl font-sans font-bold text-foreground mb-4 tracking-tight">
+          <h2 className="text-4xl md:text-5xl font-poppins font-bold text-foreground mb-4 tracking-tight">
             Prices that make sense!
           </h2>
           <p className="text-lg leading-relaxed text-muted-foreground max-w-xl mx-auto">
@@ -451,14 +454,14 @@ export default function Landing() {
           {/* Card 1: Starter Chemist */}
           <div className="rounded-xl border border-border bg-background shadow-xs hover:-translate-y-1.5 hover:shadow-xl hover:border-primary/40 transition-all duration-300 flex flex-col">
             <div className="p-6 pb-0 flex flex-col gap-1.5">
-              <h3 className="text-2xl font-sans font-semibold text-foreground tracking-tight">Starter Chemist</h3>
+              <h3 className="text-2xl font-poppins font-semibold text-foreground tracking-tight">Starter Chemist</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Perfect for small retail counters starting digital stock management at zero cost.
               </p>
             </div>
             <div className="p-6 flex flex-col gap-8 flex-1">
               <p className="flex flex-row items-center gap-2">
-                <span className="text-5xl font-sans font-bold text-foreground tracking-tight">₹0</span>
+                <span className="text-5xl font-poppins font-bold text-foreground tracking-tight">₹0</span>
                 <span className="text-sm text-muted-foreground"> / forever</span>
               </p>
               <div className="flex flex-col gap-4">
@@ -494,14 +497,14 @@ export default function Landing() {
               Popular
             </div>
             <div className="p-6 pb-0 flex flex-col gap-1.5">
-              <h3 className="text-2xl font-sans font-semibold text-foreground tracking-tight">Single Pharmacy</h3>
+              <h3 className="text-2xl font-poppins font-semibold text-foreground tracking-tight">Single Pharmacy</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Ideal for standalone chemist shops wanting live stock tracking and expiry loss prevention.
               </p>
             </div>
             <div className="p-6 flex flex-col gap-8 flex-1">
               <p className="flex flex-row items-center gap-2">
-                <span className="text-5xl font-sans font-bold text-foreground tracking-tight">₹999</span>
+                <span className="text-5xl font-poppins font-bold text-foreground tracking-tight">₹999</span>
                 <span className="text-sm text-muted-foreground"> / month</span>
               </p>
               <div className="flex flex-col gap-4">
@@ -535,14 +538,14 @@ export default function Landing() {
           {/* Card 3: Multiple Pharmacy Chain */}
           <div className="rounded-xl border border-border bg-background shadow-xs hover:-translate-y-1.5 hover:shadow-xl hover:border-primary/40 transition-all duration-300 flex flex-col">
             <div className="p-6 pb-0 flex flex-col gap-1.5">
-              <h3 className="text-2xl font-sans font-semibold text-foreground tracking-tight">Pharmacy Chain</h3>
+              <h3 className="text-2xl font-poppins font-semibold text-foreground tracking-tight">Pharmacy Chain</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 For chemist owners managing 2+ branches with central supplier ordering and live sync.
               </p>
             </div>
             <div className="p-6 flex flex-col gap-8 flex-1">
               <p className="flex flex-row items-center gap-2">
-                <span className="text-5xl font-sans font-bold text-foreground tracking-tight">₹2499</span>
+                <span className="text-5xl font-poppins font-bold text-foreground tracking-tight">₹2499</span>
                 <span className="text-sm text-muted-foreground"> / month</span>
               </p>
               <div className="flex flex-col gap-4">
@@ -588,7 +591,7 @@ export default function Landing() {
         />
 
         <div className="text-center max-w-3xl mx-auto mb-12 relative z-10 px-4">
-          <h2 className="text-4xl md:text-5xl font-sans font-bold text-foreground mb-4 tracking-tight">
+          <h2 className="text-4xl md:text-5xl font-poppins font-bold text-foreground mb-4 tracking-tight">
             Hear From <span className="text-[#F26A4B]">Our Customers</span>
           </h2>
           <p className="text-[15px] text-muted-foreground leading-relaxed max-w-xl mx-auto">
@@ -641,7 +644,7 @@ export default function Landing() {
                 <HelpCircle className="w-4 h-4 text-[#F26A4B]" />
                 FAQs
               </div>
-              <h2 className="text-4xl md:text-5xl font-sans font-bold text-foreground mb-6 tracking-tight leading-tight">
+              <h2 className="text-4xl md:text-5xl font-poppins font-bold text-foreground mb-6 tracking-tight leading-tight">
                 Frequently asked<br />questions
               </h2>
               <p className="text-muted-foreground mb-8 leading-relaxed">
@@ -706,7 +709,7 @@ export default function Landing() {
                   <Phone className="w-4 h-4 text-[#F26A4B]" />
                   Contact
                 </div>
-                <h2 className="text-4xl md:text-5xl font-sans font-bold mb-4 leading-tight">
+                <h2 className="text-4xl md:text-5xl font-poppins font-bold mb-4 leading-tight">
                   Expand Your Reach with<br />InvIQ's Smart Platform
                 </h2>
                 <p className="text-[#A89F8F] text-lg">
@@ -740,7 +743,7 @@ export default function Landing() {
                   <div className="group-hover:scale-110 transition-transform duration-200">
                     <LogoIcon />
                   </div>
-                  <span className="font-sans font-bold text-xl tracking-tight text-foreground group-hover:text-[#F26A4B] transition-colors">InvIQ</span>
+                  <span className="font-poppins font-bold text-xl tracking-tight text-foreground group-hover:text-[#F26A4B] transition-colors">InvIQ</span>
                 </div>
                 <p className="text-muted-foreground text-sm max-w-sm mb-6 leading-relaxed">
                   Next-generation smart pharmacy inventory management with real-time tracking, AI-powered forecasting, and cold-chain compliance.
