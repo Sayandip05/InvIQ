@@ -80,22 +80,12 @@ def multi_tenant_fixture(db):
         org_id=None,
         is_active=True,
     )
-    super_admin = User(
-        username=f"super_admin_{uid}",
-        email=f"superadmin_{uid}@platform.com",
-        hashed_password=pw_hash,
-        role="super_admin",
-        org_id=None,
-        is_active=True,
-    )
-
-    db.add_all([admin_x, staff_x, admin_y, unassigned_user, super_admin])
+    db.add_all([admin_x, staff_x, admin_y, unassigned_user])
     db.commit()
     db.refresh(admin_x)
     db.refresh(staff_x)
     db.refresh(admin_y)
     db.refresh(unassigned_user)
-    db.refresh(super_admin)
 
     # 3. Locations & Items
     loc_x = Location(org_id=org_x.id, name=f"Clinic X {uid}", type="clinic", region="North")
@@ -267,7 +257,6 @@ def multi_tenant_fixture(db):
         "staff_x": staff_x,
         "admin_y": admin_y,
         "unassigned_user": unassigned_user,
-        "super_admin": super_admin,
         "loc_x": loc_x,
         "loc_y": loc_y,
         "item_x": item_x,
@@ -286,7 +275,6 @@ def multi_tenant_fixture(db):
         "staff_x": staff_x,
         "admin_y": admin_y,
         "unassigned_user": unassigned_user,
-        "super_admin": super_admin,
     }
 
 

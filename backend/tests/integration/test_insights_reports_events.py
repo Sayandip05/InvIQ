@@ -187,12 +187,12 @@ async def test_websocket_manager_broadcast_isolation_and_drop_unassigned():
 
     ws_tenant_10 = MockWebSocket()
     ws_tenant_20 = MockWebSocket()
-    ws_super_admin = MockWebSocket()
+    ws_unassigned = MockWebSocket()
 
     test_manager = type(manager)()
     await test_manager.connect(ws_tenant_10, org_id=10, username="tenant10_user", role="staff")
     await test_manager.connect(ws_tenant_20, org_id=20, username="tenant20_user", role="staff")
-    await test_manager.connect(ws_super_admin, org_id=None, username="superadmin_user", role="super_admin")
+    await test_manager.connect(ws_unassigned, org_id=None, username="unassigned_user", role="staff")
 
     # 1. Broadcast an alert strictly for org_id=10
     alert_10 = {"type": "CRITICAL_STOCK", "item": "Paracetamol", "org_id": 10}
@@ -201,13 +201,13 @@ async def test_websocket_manager_broadcast_isolation_and_drop_unassigned():
     assert len(ws_tenant_10.messages) == 1
     assert ws_tenant_10.messages[0]["item"] == "Paracetamol"
     assert len(ws_tenant_20.messages) == 0  # Tenant 20 got nothing!
-    assert len(ws_super_admin.messages) == 1  # Super Admin sees all
+    assert len(ws_unassigned.messages) == 0  # Unassigned client gets nothing (strict tenant isolation)
 
-    # 2. Broadcast an unassigned tenant event (org_id=None without platform flag) -> Must be DROPPED
+    # 2. Broadcast an unassigned tenant event (org_id=None) -> Must be DROPPED
     unassigned_event = {"type": "ORPHAN_ALERT", "org_id": None}
     await test_manager.broadcast_to_org(None, unassigned_event)
 
     # Confirm neither tenant received the unassigned event
     assert len(ws_tenant_10.messages) == 1
     assert len(ws_tenant_20.messages) == 0
-    assert len(ws_super_admin.messages) == 1
+    assert len(ws_unassigned.messages) == 0
