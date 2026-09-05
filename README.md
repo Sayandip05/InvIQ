@@ -292,23 +292,21 @@ flowchart TD
 
 ```mermaid
 graph LR
-    subgraph Roles["👤 4 Canonical User Roles"]
-        SuperAdmin["👑 Super Admin<br/>(Platform Owner)"]
+    subgraph Roles["👤 User Roles & Scopes"]
         Admin["🛡️ Chemist Store Owner<br/>(Org Admin)"]
-        Staff["💊 Counter Pharmacist<br/>(Branch Scoped)"]
+        Manager["📋 Branch Manager<br/>(Store Operations)"]
+        Staff["💊 Counter Pharmacist<br/>(POS & Dispense)"]
         Vendor["🚚 Wholesaler / Distributor<br/>(Delivery Vendor)"]
     end
 
     subgraph Capabilities["⚡ Scoped Capabilities"]
-        PlatformOps["🏢 Multi-Tenant Provisioning<br/>Global Audit & System Logs"]
         StoreMgmt["💊 Pharmacy Profile & Branch Setup<br/>Supplier Management & Master Data<br/>FEFO Expiry Alerts & Reports<br/>Requisition Approvals"]
         StaffOps["⚡ 1-Click Barcode Dispense<br/>Counter Stock Intake & Transactions<br/>Create Purchase Requisitions"]
         VendorOps["📄 Excel Delivery Manifest Upload<br/>Auto Invoice PDF Generation<br/>Download Delivery Receipts"]
     end
 
-    SuperAdmin --> PlatformOps
-    SuperAdmin --> StoreMgmt
     Admin --> StoreMgmt
+    Manager --> StoreMgmt
     Staff --> StaffOps
     Vendor --> VendorOps
 ```
@@ -365,7 +363,7 @@ InvIQ uses a **REST + GraphQL hybrid** — the industry-standard pattern. REST h
 | Caller | `avgDailyUsage` | `daysRemaining` | `leadTimeDays` |
 |--------|:---:|:---:|:---:|
 | Guest / Vendor | `null` | `null` | `null` |
-| Manager / Admin / Super Admin | ✅ | ✅ | ✅ |
+| Manager / Admin | ✅ | ✅ | ✅ |
 
 ---
 
@@ -427,7 +425,7 @@ InvIQ/
 │   │   ├── core/                 # Config, security (Argon2id, JWT, Google OAuth), middleware
 │   │   ├── infrastructure/       # Database models/repos, Upstash Redis, Azure Blob Storage, Qdrant
 │   │   └── workers/              # Celery background task processing & Celery Beat
-│   ├── scripts/                  # Super-admin provisioning and data seeding utilities
+│   ├── scripts/                  # Database migration fixtures and demo seeding utilities
 │   └── tests/                    # 344 automated test cases & benchmark suite
 │       ├── unit/                 # Domain, service, exception, security unit tests
 │       ├── integration/          # Multi-tenant isolation, UoM, import, event pipeline
@@ -451,7 +449,7 @@ InvIQ/
 
 ## 🔐 Security Features
 
-- **Multi-Tenant Data Isolation** - Strict non-nullable `org_id` on all tenant entities; zero silent fallbacks.
+- **Multi-Tenant Data Isolation** - Strict non-nullable `org_id` on all tenant entities; complete isolation between pharmacy organizations (one admin cannot view or access another pharmacy's data).
 - **JWT Authentication** - Short-lived access tokens (30min) + refresh tokens (7 days) with `iat` revocation on password reset.
 - **Argon2id Password Hashing** - GPU/ASIC cracking resistant algorithm with unified complexity validation.
 - **Google OAuth ID Token Verification** - Cryptographic verification via `google-auth` with mandatory email verification and audience matching.
@@ -459,7 +457,7 @@ InvIQ/
 - **Rate Limiting** - SlowAPI sliding-window limiter backed by Upstash Redis TLS.
 - **Token Blacklist** - Immediate logout token revocation in Redis.
 - **Login Lockout** - 5 failed attempts → 15-minute brute-force lockout.
-- **Role-Based Access Control** - 4-tier role hierarchy (`super_admin`, `admin`, `staff`, `vendor`) with GraphQL field masking.
+- **Role-Based Access Control** - Role hierarchy (`admin`, `manager`, `staff`, `vendor`) with tenant scoping and GraphQL field masking.
 - **Audit Logging** - Tenant-scoped immutable audit trail tracking all state-altering events.
 
 ---

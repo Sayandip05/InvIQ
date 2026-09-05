@@ -605,7 +605,7 @@ def delete_supplier(
 @limiter.limit("10/minute")
 def generate_pdf_report(
     request: Request,
-    report_type: str = Query("inventory", description="inventory | transactions | requisitions | low_stock"),
+    report_type: str = Query("inventory", description="inventory | requisitions | low_stock | monthly_sales"),
     location_id: Optional[int] = Query(None),
     date_from: Optional[str] = Query(None, description="Start date YYYY-MM-DD"),
     date_to: Optional[str] = Query(None, description="End date YYYY-MM-DD"),
@@ -615,7 +615,7 @@ def generate_pdf_report(
 
     """
     Generate and stream a PDF report.
-    Supports: inventory, transactions, requisitions, low_stock
+    Supports: inventory, requisitions, low_stock, monthly_sales
 
     Data fetching is delegated to ReportService (application layer).
     This handler only constructs the PDF from the returned plain dicts.
@@ -657,7 +657,6 @@ def generate_pdf_report(
 
     report_titles = {
         "inventory":     "Inventory Stock Report",
-        "transactions":  "Transaction History Report",
         "requisitions":  "Requisitions Report",
         "low_stock":     "Low Stock Alert Report",
         "monthly_sales": "Monthly Sales & Profit Report",
@@ -725,38 +724,6 @@ def generate_pdf_report(
             t = Table(table_data, colWidths=[2.2*inch, 1*inch, 0.6*inch, 0.9*inch, 0.9*inch, 0.8*inch])
             t.setStyle(TableStyle(HEADER_STYLE))
             elements.append(t)
-
-    # ── TRANSACTIONS REPORT ───────────────────────────────────────────────
-    elif report_type == "transactions":
-        elements.append(Paragraph("Recent Stock Transactions", styles["Heading2"]))
-        rows = svc.get_transaction_rows(
-            location_id=location_id,
-            date_from=date_from,
-            date_to=date_to,
-            org_id=caller_org_id,
-        )
-        if not rows:
-            elements.append(Paragraph("No transactions found for the selected criteria.", styles["Normal"]))
-        else:
-            table_data = [["Date", "Location", "Item", "Open", "In", "Out", "Close", "By"]]
-            for r in rows:
-                table_data.append([
-                    r["date"],
-                    r["location"][:20],
-                    r["item"][:25],
-                    str(r["opening_stock"]),
-                    str(r["received"]),
-                    str(r["issued"]),
-                    str(r["closing_stock"]),
-                    r["entered_by"][:12],
-                ])
-            t = Table(table_data, colWidths=[
-                0.75*inch, 1.4*inch, 1.5*inch,
-                0.5*inch, 0.4*inch, 0.4*inch, 0.5*inch, 0.75*inch,
-            ])
-            t.setStyle(TableStyle(HEADER_STYLE))
-            elements.append(t)
-            elements.append(Paragraph(f"Showing {len(rows)} most recent transactions.", styles["Normal"]))
 
     # ── REQUISITIONS REPORT ───────────────────────────────────────────────
     elif report_type == "requisitions":

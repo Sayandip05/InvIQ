@@ -19,7 +19,6 @@ const LOCATION_TYPE_LABELS = {
 const REPORT_TYPES = [
     { value: 'inventory',     label: 'Inventory Report',       desc: 'Current stock levels across all locations' },
     { value: 'monthly_sales', label: 'Monthly Sales & Profit', desc: 'Gross revenue, discounts, COGS & profit margin' },
-    { value: 'transactions',  label: 'Transaction Report',     desc: 'All stock movements and transactions' },
     { value: 'requisitions',  label: 'Requisition Report',     desc: 'All requisitions and approvals' },
     { value: 'low_stock',     label: 'Low Stock Report',       desc: 'Items below minimum threshold' },
 ];
