@@ -315,7 +315,7 @@ class VendorUpload(Base):
     success_rows = Column(Integer, nullable=False, default=0)
     error_rows = Column(Integer, nullable=False, default=0)
     errors_detail = Column(JSON, nullable=True)
-    status = Column(String(20), nullable=False, default="PROCESSING", index=True)
+    status = Column(String(50), nullable=False, default="PROCESSING", index=True)
     uploaded_at = Column(TIMESTAMP, server_default=func.now(), index=True)
 
     vendor = relationship("User")
