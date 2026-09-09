@@ -22,6 +22,7 @@ import {
     Loader2
 } from 'lucide-react';
 import { useGuest } from '../../context/GuestContext';
+import AlertsDropdown from '../../components/layout/AlertsDropdown';
 
 export default function OrganizationSettings() {
     const { isGuest, showAuthModal } = useGuest();
@@ -384,48 +385,51 @@ export default function OrganizationSettings() {
     };
 
     return (
-        <div className="p-6 md:p-8 max-w-[1560px] mx-auto space-y-6 animate-in fade-in duration-150">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
-                <div>
-                    <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1 font-mono">
-                        <Store size={14} className="text-foreground" />
-                        <span>Pharmacy Business & Branches</span>
+        <div className="flex flex-col min-h-full bg-background font-sans text-foreground">
+            {/* ── Full-Width Sticky Top Navbar (Identical to Dashboard / Inventory) ── */}
+            <div className="sticky top-0 z-30 bg-card/90 backdrop-blur border-b border-border px-6 py-3.5 shadow-2xs">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 className="text-xl font-sans font-bold text-foreground tracking-tight">Store Profile &amp; Branches</h2>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                            Manage pharmacy legal profile, drug licenses, and branch counters
+                        </p>
                     </div>
-                    <div className="flex items-center gap-3 flex-wrap">
-                        <h1 className="font-sans text-2xl font-bold text-foreground tracking-tight">
-                            Store Profile & Counter Setup
-                        </h1>
-                        {/* Brand / Branch Summary in small text in header */}
-                        <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-accent/60 border border-border rounded-none text-xs font-mono text-muted-foreground">
-                            <span><strong className="text-foreground font-bold">{orgData.total_branches}</strong> Total Branches</span>
+
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                        {/* Brand / Branch Summary */}
+                        <div className="inline-flex items-center gap-2 px-2.5 py-1.5 bg-accent/60 border border-border rounded-md text-xs font-mono text-muted-foreground">
+                            <span><strong className="text-foreground font-bold">{orgData.total_branches}</strong> Branches</span>
                             <span>•</span>
                             <span><strong className="text-emerald-700 font-bold">{orgData.active_branches}</strong> Active Counters</span>
                         </div>
-                    </div>
-                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                        Manage your chemist legal profile, drug licenses, GSTIN, and branch locations.
-                    </p>
-                </div>
 
-                <div className="flex items-center gap-2.5">
-                    <button
-                        onClick={fetchOrgData}
-                        disabled={loading}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-foreground bg-accent border border-border rounded-none hover:bg-accent/80 transition-colors cursor-pointer"
-                    >
-                        <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-                        <span>Refresh</span>
-                    </button>
-                    <button
-                        onClick={handleOpenAddBranch}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-primary-foreground bg-primary border border-primary rounded-none hover:bg-black transition-all cursor-pointer"
-                    >
-                        <Plus size={14} />
-                        <span>Add Branch Counter</span>
-                    </button>
+                        <button
+                            onClick={fetchOrgData}
+                            disabled={loading}
+                            className="p-2 bg-accent/50 hover:bg-accent text-foreground rounded-md transition-colors border border-border cursor-pointer"
+                            title="Refresh profile"
+                        >
+                            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+                        </button>
+
+                        <button
+                            onClick={handleOpenAddBranch}
+                            className="flex items-center gap-1.5 px-3.5 py-2 bg-primary hover:bg-black text-primary-foreground text-xs font-semibold rounded-md border border-primary transition-colors cursor-pointer shadow-2xs"
+                        >
+                            <Plus size={14} />
+                            <span>Add Branch Counter</span>
+                        </button>
+
+                        <div className="pl-1 border-l border-border">
+                            <AlertsDropdown />
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            {/* Content Container */}
+            <div className="p-6 md:p-8 max-w-[1560px] mx-auto w-full space-y-6 flex-1 animate-in fade-in duration-150">
 
             {/* Notification messages */}
             {message && (
@@ -1006,6 +1010,7 @@ export default function OrganizationSettings() {
                     </div>
                 </div>
             )}
+            </div>
         </div>
     );
 }

@@ -17,6 +17,7 @@ const Requisitions = lazy(() => import('./pages/admin/Requisitions'));
 const UserManagement = lazy(() => import('./pages/admin/UserManagement'));
 const SupplierManagement = lazy(() => import('./pages/admin/SupplierManagement'));
 const Reports = lazy(() => import('./pages/admin/Reports'));
+const SuppliersAndStaff = lazy(() => import('./pages/admin/SuppliersAndStaff'));
 const OrganizationSettings = lazy(() => import('./pages/admin/OrganizationSettings'));
 const BillingCounter = lazy(() => import('./pages/staff/BillingCounter'));
 const StaffRequisition = lazy(() => import('./pages/staff/StaffRequisition'));
@@ -56,15 +57,15 @@ function AppContent() {
         <Suspense fallback={<RouteLoadingFallback />}>
           <Routes>
             {/* ── Public pages ──────────────────────────────────────── */}
-            <Route path="/"               element={<Landing />} />
-            <Route path="/preview"        element={<PreviewDashboard />} />
-            <Route path="/demo"           element={<PreviewDashboard />} />
-            <Route path="/signin"         element={<LightSignIn />} />
-            <Route path="/signup"         element={<LightSignUp />} />
+            <Route path="/" element={<Landing />} />
+            <Route path="/preview" element={<PreviewDashboard />} />
+            <Route path="/demo" element={<PreviewDashboard />} />
+            <Route path="/signin" element={<LightSignIn />} />
+            <Route path="/signup" element={<LightSignUp />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/verify-email"   element={<VerifyEmail />} />
-            <Route path="/dashboard"      element={<RoleRedirect />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/dashboard" element={<RoleRedirect />} />
 
             {/* ── Vendor (auth required) ────────────────────────────── */}
             <Route element={<ProtectedRoute requiredRole="vendor" />}>
@@ -75,10 +76,10 @@ function AppContent() {
 
             {/* ── Staff (auth required) ─────────────────────────────── */}
             <Route element={<ProtectedRoute requiredRole="staff" />}>
-              <Route path="/staff"         element={<StaffRequisition />} />
-              <Route path="/staff/chat"    element={<Chatbot />} />
+              <Route path="/staff" element={<StaffRequisition />} />
+              <Route path="/staff/chat" element={<Chatbot />} />
               <Route path="/staff/billing" element={<BillingCounter />} />
-              <Route path="/billing"       element={<BillingCounter />} />
+              <Route path="/billing" element={<BillingCounter />} />
             </Route>
 
             {/*
@@ -94,18 +95,19 @@ function AppContent() {
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               {/* Guest-accessible read-only pages */}
-              <Route path="dashboard"         element={<Dashboard />} />
-              <Route path="billing"           element={<BillingCounter />} />
-              <Route path="inventory"         element={<Inventory />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="billing" element={<BillingCounter />} />
+              <Route path="inventory" element={<Inventory />} />
               <Route path="stock-acquisition" element={<DataEntry />} />
-              <Route path="chat"              element={<Chatbot />} />
-              <Route path="requisitions"      element={<Requisitions />} />
-              <Route path="organization"      element={<OrganizationSettings />} />
+              <Route path="chat" element={<Chatbot />} />
+              <Route path="requisitions" element={<Requisitions />} />
+              <Route path="organization" element={<OrganizationSettings />} />
               {/* Auth-required management pages */}
               <Route element={<ProtectedRoute requiredRole="admin" />}>
-                <Route path="suppliers"       element={<SupplierManagement />} />
-                <Route path="users"           element={<UserManagement />} />
-                <Route path="reports"         element={<Reports />} />
+                <Route path="suppliers-and-staff" element={<SuppliersAndStaff />} />
+                <Route path="suppliers" element={<SuppliersAndStaff initialTab="suppliers" />} />
+                <Route path="users" element={<SuppliersAndStaff initialTab="staff" />} />
+                <Route path="reports" element={<Reports />} />
               </Route>
             </Route>
 

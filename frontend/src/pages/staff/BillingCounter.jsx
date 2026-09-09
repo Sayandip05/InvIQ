@@ -15,6 +15,7 @@ import {
     Plus,
 } from 'lucide-react';
 import { useBillingCounter } from '@/features/billing/hooks/useBillingCounter';
+import AlertsDropdown from '@/components/layout/AlertsDropdown';
 
 export default function BillingCounter() {
     const {
@@ -47,37 +48,39 @@ export default function BillingCounter() {
     const fmtCur = (n) => `₹${parseFloat(n || 0).toFixed(2)}`;
 
     return (
-        <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 font-sans text-foreground">
-            
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-border p-5 rounded-lg shadow-xs">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary text-primary-foreground flex items-center justify-center rounded-md font-bold">
-                        <ScanBarcode size={20} />
-                    </div>
+        <div className="flex flex-col min-h-full bg-background font-sans text-foreground">
+            {/* ── Full-Width Sticky Top Navbar (Identical to Dashboard / Inventory) ── */}
+            <div className="sticky top-0 z-30 bg-card/90 backdrop-blur border-b border-border px-6 py-3.5 shadow-2xs">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-base sm:text-lg font-sans font-bold text-foreground tracking-tight">
-                            Retail POS &amp; Billing Counter
-                        </h1>
-                        <p className="text-xs text-muted-foreground">
+                        <h2 className="text-xl font-sans font-bold text-foreground tracking-tight">Retail POS &amp; Billing Counter</h2>
+                        <p className="text-xs text-muted-foreground mt-0.5">
                             Scan medicine barcodes, apply batch discounts, and print bills in real time
                         </p>
                     </div>
-                </div>
 
-                {sessionId && (
-                    <div className="flex items-center gap-2">
-                        <span className="px-3 py-1.5 rounded-md text-xs font-mono font-bold bg-secondary text-secondary-foreground border border-border">
-                            SESSION BILL #{sessionId}
-                        </span>
-                        {status === 'open' && (
-                            <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-emerald-100/70 text-emerald-800 border border-emerald-300 rounded-md">
-                                ACTIVE
-                            </span>
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                        {sessionId && (
+                            <div className="flex items-center gap-2">
+                                <span className="px-3 py-1.5 rounded-md text-xs font-mono font-bold bg-secondary text-secondary-foreground border border-border">
+                                    BILL #{sessionId}
+                                </span>
+                                {status === 'open' && (
+                                    <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-800 border border-emerald-500/30 rounded-md">
+                                        ACTIVE
+                                    </span>
+                                )}
+                            </div>
                         )}
+
+                        <div className="pl-1 border-l border-border">
+                            <AlertsDropdown />
+                        </div>
                     </div>
-                )}
+                </div>
             </div>
+
+            <div className="p-6 md:p-8 max-w-6xl mx-auto w-full space-y-6 flex-1">
 
             {/* Toast Alerts */}
             {error && (
@@ -346,7 +349,7 @@ export default function BillingCounter() {
                     </div>
                 </div>
             )}
-
+            </div>
         </div>
     );
 }
