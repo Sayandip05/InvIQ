@@ -1,10 +1,20 @@
 .PHONY: help dev backend frontend worker beat test clean lint build
 
-ROOT_DIR := $(shell pwd)
-PYTHON   ?= $(ROOT_DIR)/venv/bin/python
-UVICORN  ?= $(ROOT_DIR)/venv/bin/uvicorn
-CELERY   ?= $(ROOT_DIR)/venv/bin/celery
-PYTEST   ?= $(ROOT_DIR)/venv/bin/pytest
+ifeq ($(OS),Windows_NT)
+ROOT_DIR := $(CURDIR)
+VENV     := $(ROOT_DIR)/venv/Scripts
+PYTHON   := $(subst /,\,$(VENV)/python.exe)
+UVICORN  := $(subst /,\,$(VENV)/uvicorn.exe)
+CELERY   := $(subst /,\,$(VENV)/celery.exe)
+PYTEST   := $(subst /,\,$(VENV)/pytest.exe)
+else
+ROOT_DIR := $(CURDIR)
+VENV     := $(ROOT_DIR)/venv/bin
+PYTHON   := $(VENV)/python
+UVICORN  := $(VENV)/uvicorn
+CELERY   := $(VENV)/celery
+PYTEST   := $(VENV)/pytest
+endif
 
 help:
 	@echo "╔═══════════════════════════════════════════════════════════════╗"
@@ -23,17 +33,21 @@ help:
 
 # Run all 3 services concurrently (Backend + Frontend + Worker)
 dev:
+ifeq ($(OS),Windows_NT)
+	@powershell -NoProfile -ExecutionPolicy Bypass -File .\run-dev.ps1
+else
 	@echo "🚀 Starting InvIQ full stack: Backend (8000), Frontend (5173), and Worker..."
 	@trap 'kill 0' SIGINT SIGTERM EXIT; \
-	(cd backend && $(UVICORN) app.main:app --host 127.0.0.1 --port 8000 --reload) & \
+	(cd backend && "$(UVICORN)" app.main:app --host 127.0.0.1 --port 8000 --reload) & \
 	(cd frontend && npm run dev) & \
-	(cd backend && $(CELERY) -A app.workers.celery_app worker --loglevel=info --pool=solo) & \
+	(cd backend && "$(CELERY)" -A app.workers.celery_app worker --loglevel=info --pool=solo) & \
 	wait
+endif
 
 # Individual services
 backend:
 	@echo "⚡ Starting FastAPI Backend on http://127.0.0.1:8000..."
-	@cd backend && $(UVICORN) app.main:app --host 127.0.0.1 --port 8000 --reload
+	@cd backend && "$(UVICORN)" app.main:app --host 127.0.0.1 --port 8000 --reload
 
 frontend:
 	@echo "⚡ Starting Vite Frontend on http://localhost:5173..."
@@ -41,15 +55,15 @@ frontend:
 
 worker:
 	@echo "⚡ Starting Celery Worker..."
-	@cd backend && $(CELERY) -A app.workers.celery_app worker --loglevel=info --pool=solo
+	@cd backend && "$(CELERY)" -A app.workers.celery_app worker --loglevel=info --pool=solo
 
 beat:
 	@echo "⚡ Starting Celery Beat Scheduler..."
-	@cd backend && $(CELERY) -A app.workers.celery_app beat --loglevel=info
+	@cd backend && "$(CELERY)" -A app.workers.celery_app beat --loglevel=info
 
 test:
 	@echo "🧪 Running Pytest Test Suite..."
-	@cd backend && $(PYTEST)
+	@cd backend && "$(PYTEST)"
 
 lint:
 	@echo "🔍 Running Frontend ESLint..."
@@ -60,8 +74,14 @@ build:
 	@cd frontend && npm run build
 
 clean:
+ifeq ($(OS),Windows_NT)
+	@echo "🧹 Cleaning cache files..."
+	@powershell -NoProfile -Command "Get-ChildItem -Recurse -Include __pycache__,.pytest_cache | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue; Get-ChildItem -Recurse -Filter *.pyc | Remove-Item -Force -ErrorAction SilentlyContinue"
+	@echo "✅ Cache cleaned."
+else
 	@echo "🧹 Cleaning cache files..."
 	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	@echo "✅ Cache cleaned."
+endif
