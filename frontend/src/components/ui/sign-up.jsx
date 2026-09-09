@@ -1,23 +1,32 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "../../context/AuthContext";
-import { auth } from "../../services/api";
+import { authApi } from "@/features/auth/api";
+import { signUpSchema } from "@/features/auth/schemas";
 import { AlertCircle, Loader2, ArrowLeft } from "lucide-react";
 
 export const LightSignUp = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { login, loginWithGoogle, isAuthenticated } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
-  const [formData, setFormData] = useState({
-    full_name: "",
-    email: "",
-    username: "",
-    password: "",
-    role: "admin"
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      full_name: "",
+      email: "",
+      username: "",
+      password: "",
+      role: "admin",
+    },
   });
 
   const from = "/dashboard";
@@ -28,8 +37,10 @@ export const LightSignUp = () => {
       const token = hashParams.get("access_token") || hashParams.get("id_token");
       if (token) {
         window.history.replaceState(null, "", window.location.pathname);
-        setGoogleLoading(true);
-        loginWithGoogle(token)
+        Promise.resolve().then(() => {
+          setGoogleLoading(true);
+          return loginWithGoogle(token);
+        })
           .then((userData) => {
             // Route based on role returned from backend
             const role = userData?.role || "admin";
@@ -58,24 +69,18 @@ export const LightSignUp = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
     setError("");
-    setLoading(true);
 
     try {
       const cleanData = {
-        full_name: (formData.full_name || formData.fullName || "").trim(),
-        email: formData.email.trim().toLowerCase(),
-        username: formData.username.trim(),
-        password: formData.password,
+        full_name: data.full_name.trim(),
+        email: data.email.trim().toLowerCase(),
+        username: data.username.trim(),
+        password: data.password,
         role: "admin",
       };
-      await auth.register(cleanData);
+      await authApi.register(cleanData);
       // Automatically sign in upon successful registration using email
       await login(cleanData.email, cleanData.password);
       navigate(from, { replace: true });
@@ -93,8 +98,6 @@ export const LightSignUp = () => {
       } else {
         setError(msg || "Registration failed. Please check your details and try again.");
       }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -105,13 +108,12 @@ export const LightSignUp = () => {
     window.location.href = authUrl;
   };
 
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden p-4">
       {/* Clean Subtle Grid Lines & Warm Ambient Glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-[#F26A4B]/5 rounded-full blur-[120px]" />
-        <div className="absolute top-[20%] right-[-10%] w-[60vw] h-[60vw] bg-[#2E2E2E]/5 rounded-full blur-[140px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-brand-coral/5 rounded-full blur-[120px]" />
+        <div className="absolute top-[20%] right-[-10%] w-[60vw] h-[60vw] bg-brand-charcoal/5 rounded-full blur-[140px]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000008_1px,transparent_1px),linear-gradient(to_bottom,#00000008_1px,transparent_1px)] bg-[size:40px_40px]" />
       </div>
 
@@ -144,20 +146,20 @@ export const LightSignUp = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-foreground uppercase tracking-wider">
               Full Name
             </label>
             <input
               type="text"
-              name="full_name"
-              required
-              value={formData.full_name}
-              onChange={handleChange}
-              className="w-full px-3.5 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              {...register("full_name")}
+              className={`w-full px-3.5 py-2.5 bg-background border ${errors.full_name ? 'border-destructive focus:border-destructive' : 'border-border focus:border-primary'} rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all`}
               placeholder="Enter your full name"
             />
+            {errors.full_name && (
+              <p className="text-xs text-destructive mt-1">{errors.full_name.message}</p>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -166,13 +168,13 @@ export const LightSignUp = () => {
             </label>
             <input
               type="email"
-              name="email"
-              required
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full px-3.5 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              {...register("email")}
+              className={`w-full px-3.5 py-2.5 bg-background border ${errors.email ? 'border-destructive focus:border-destructive' : 'border-border focus:border-primary'} rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all`}
               placeholder="Enter your email"
             />
+            {errors.email && (
+              <p className="text-xs text-destructive mt-1">{errors.email.message}</p>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -181,13 +183,13 @@ export const LightSignUp = () => {
             </label>
             <input
               type="text"
-              name="username"
-              required
-              value={formData.username}
-              onChange={handleChange}
-              className="w-full px-3.5 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              {...register("username")}
+              className={`w-full px-3.5 py-2.5 bg-background border ${errors.username ? 'border-destructive focus:border-destructive' : 'border-border focus:border-primary'} rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all`}
               placeholder="Choose a username"
             />
+            {errors.username && (
+              <p className="text-xs text-destructive mt-1">{errors.username.message}</p>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -197,12 +199,8 @@ export const LightSignUp = () => {
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
-                name="password"
-                required
-                minLength={8}
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full px-3.5 py-2.5 pr-12 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                {...register("password")}
+                className={`w-full px-3.5 py-2.5 pr-12 bg-background border ${errors.password ? 'border-destructive focus:border-destructive' : 'border-border focus:border-primary'} rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all`}
                 placeholder="••••••••"
               />
               <button
@@ -213,14 +211,17 @@ export const LightSignUp = () => {
                 {showPassword ? "Hide" : "Show"}
               </button>
             </div>
+            {errors.password && (
+              <p className="text-xs text-destructive mt-1">{errors.password.message}</p>
+            )}
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="w-full py-3 bg-primary hover:bg-black text-primary-foreground font-bold text-sm rounded-xl transition-all shadow-md active:scale-[0.99] flex items-center justify-center disabled:opacity-60 disabled:pointer-events-none cursor-pointer"
           >
-            {loading ? (
+            {isSubmitting ? (
               <>
                 <Loader2 size={16} className="animate-spin mr-2" />
                 <span>Creating account…</span>
@@ -259,7 +260,7 @@ export const LightSignUp = () => {
 
           <p className="text-xs text-center text-muted-foreground pt-3">
             Already have an account?{" "}
-            <a href="/signin" className="text-[#F26A4B] font-bold hover:underline">
+            <a href="/signin" className="text-brand-coral font-bold hover:underline">
               Sign in
             </a>
           </p>
@@ -268,3 +269,5 @@ export const LightSignUp = () => {
     </div>
   );
 };
+
+export default LightSignUp;

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "../../context/AuthContext";
-import { auth } from "../../services/api";
+import { signInSchema } from "@/features/auth/schemas";
 import { AlertCircle, Loader2, ArrowLeft } from "lucide-react";
 
 export const LightSignIn = () => {
@@ -9,12 +11,21 @@ export const LightSignIn = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(signInSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
   const from = location.state?.from?.pathname || "/dashboard";
 
@@ -25,8 +36,10 @@ export const LightSignIn = () => {
       const token = hashParams.get("access_token") || hashParams.get("id_token");
       if (token) {
         window.history.replaceState(null, "", window.location.pathname);
-        setGoogleLoading(true);
-        loginWithGoogle(token)
+        Promise.resolve().then(() => {
+          setGoogleLoading(true);
+          return loginWithGoogle(token);
+        })
           .then((userData) => {
             const role = userData?.role || "admin";
             if (role === "staff" || role === "vendor") {
@@ -54,13 +67,10 @@ export const LightSignIn = () => {
     }
   }, [isAuthenticated, navigate, from]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
     setError("");
-    setLoading(true);
-
     try {
-      await login(email.trim().toLowerCase(), password);
+      await login(data.email.trim().toLowerCase(), data.password);
       navigate(from, { replace: true });
     } catch (err) {
       const msg =
@@ -68,8 +78,6 @@ export const LightSignIn = () => {
         err?.response?.data?.message ||
         "Invalid email or password";
       setError(msg);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -81,13 +89,12 @@ export const LightSignIn = () => {
     window.location.href = authUrl;
   };
 
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden p-4">
       {/* Clean Subtle Grid Lines & Warm Glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-[#F26A4B]/5 rounded-full blur-[120px]" />
-        <div className="absolute top-[20%] right-[-10%] w-[60vw] h-[60vw] bg-[#2E2E2E]/5 rounded-full blur-[140px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-brand-coral/5 rounded-full blur-[120px]" />
+        <div className="absolute top-[20%] right-[-10%] w-[60vw] h-[60vw] bg-brand-charcoal/5 rounded-full blur-[140px]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000008_1px,transparent_1px),linear-gradient(to_bottom,#00000008_1px,transparent_1px)] bg-[size:40px_40px]" />
       </div>
 
@@ -120,19 +127,20 @@ export const LightSignIn = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-foreground uppercase tracking-wider">
               Email Address
             </label>
             <input
               type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              {...register("email")}
+              className={`w-full px-3.5 py-2.5 bg-background border ${errors.email ? 'border-destructive focus:border-destructive' : 'border-border focus:border-primary'} rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all`}
               placeholder="enter your email"
             />
+            {errors.email && (
+              <p className="text-xs text-destructive mt-1">{errors.email.message}</p>
+            )}
           </div>
 
           <div className="space-y-1.5">
@@ -143,7 +151,7 @@ export const LightSignIn = () => {
               <button 
                 type="button"
                 onClick={() => navigate("/forgot-password")}
-                className="text-xs font-semibold text-[#F26A4B] hover:underline cursor-pointer"
+                className="text-xs font-semibold text-brand-coral hover:underline cursor-pointer"
               >
                 Forgot password?
               </button>
@@ -151,10 +159,8 @@ export const LightSignIn = () => {
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3.5 py-2.5 pr-12 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                {...register("password")}
+                className={`w-full px-3.5 py-2.5 pr-12 bg-background border ${errors.password ? 'border-destructive focus:border-destructive' : 'border-border focus:border-primary'} rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all`}
                 placeholder="••••••••"
               />
               <button
@@ -165,14 +171,17 @@ export const LightSignIn = () => {
                 {showPassword ? "Hide" : "Show"}
               </button>
             </div>
+            {errors.password && (
+              <p className="text-xs text-destructive mt-1">{errors.password.message}</p>
+            )}
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="w-full py-3 bg-primary hover:bg-black text-primary-foreground font-bold text-sm rounded-xl transition-all shadow-md active:scale-[0.99] flex items-center justify-center disabled:opacity-60 disabled:pointer-events-none cursor-pointer"
           >
-            {loading ? (
+            {isSubmitting ? (
               <>
                 <Loader2 size={16} className="animate-spin mr-2" />
                 <span>Signing in…</span>
@@ -211,7 +220,7 @@ export const LightSignIn = () => {
 
           <p className="text-xs text-center text-muted-foreground pt-3">
             Don't have an account?{" "}
-            <a href="/signup" className="text-[#F26A4B] font-bold hover:underline">
+            <a href="/signup" className="text-brand-coral font-bold hover:underline">
               Sign up
             </a>
           </p>
@@ -220,3 +229,5 @@ export const LightSignIn = () => {
     </div>
   );
 };
+
+export default LightSignIn;
