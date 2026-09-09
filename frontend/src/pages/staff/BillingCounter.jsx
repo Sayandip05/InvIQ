@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import {
     ScanBarcode,
     ShoppingCart,
@@ -14,194 +14,35 @@ import {
     Building2,
     Plus,
 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useBillingCounter } from '@/features/billing/hooks/useBillingCounter';
 
 export default function BillingCounter() {
-    const { user } = useAuth();
-
-    // Session state
-    const [sessionId, setSessionId] = useState(null);
-    const [status, setStatus] = useState('idle'); // idle | open | closed | cancelled
-    const [items, setItems] = useState([]);
-    const [billingPreview, setBillingPreview] = useState(null);
-    const [closedSession, setClosedSession] = useState(null);
-
-    // Location
-    const [locations, setLocations] = useState([]);
-    const [locationId, setLocationId] = useState('');
-
-    // Scan
-    const [barcode, setBarcode] = useState('');
-    const [qty, setQty] = useState(1);
-    const [scanning, setScanning] = useState(false);
-    const barcodeRef = useRef(null);
-
-    // Loading / errors
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [success, setSuccess] = useState(null);
-
-    // Auto-focus barcode field when session is open
-    useEffect(() => {
-        if (status === 'open' && barcodeRef.current) {
-            barcodeRef.current.focus();
-        }
-    }, [status]);
-
-    // Fetch locations on mount
-    useEffect(() => {
-        fetch('/api/inventory/locations', { credentials: 'include' })
-            .then(r => r.json())
-            .then(j => {
-                if (j.success) setLocations(j.data || []);
-            })
-            .catch(() => {});
-    }, []);
-
-    const clearMessages = () => { setError(null); setSuccess(null); };
-
-    // ── Open Session ─────────────────────────────────────────────────────────
-    const handleOpen = async () => {
-        if (!locationId) { setError('Select a counter / location first.'); return; }
-        clearMessages();
-        setLoading(true);
-        try {
-            const res = await fetch('/api/billing/sessions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ location_id: parseInt(locationId) }),
-            });
-            const json = await res.json();
-            if (res.ok && json.success) {
-                setSessionId(json.data.session_id);
-                setItems([]);
-                setBillingPreview(null);
-                setClosedSession(null);
-                setStatus('open');
-                setTimeout(() => barcodeRef.current?.focus(), 100);
-            } else {
-                setError(json.detail || json.message || 'Failed to open billing session');
-            }
-        } catch (e) {
-            setError(e.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // ── Scan ─────────────────────────────────────────────────────────────────
-    const handleScan = async (e) => {
-        if (e) e.preventDefault();
-        if (!barcode.trim()) return;
-        clearMessages();
-        setScanning(true);
-        try {
-            const res = await fetch(`/api/billing/sessions/${sessionId}/scan`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ barcode: barcode.trim(), qty: parseInt(qty) || 1 }),
-            });
-            const json = await res.json();
-            if (res.ok && json.success) {
-                setItems(json.data.items);
-                setBillingPreview(json.data);
-                setBarcode('');
-                setQty(1);
-                setSuccess(`Scanned: ${json.data.scanned_item?.item_name || barcode}`);
-                setTimeout(() => setSuccess(null), 2500);
-            } else {
-                setError(json.detail || json.message || 'Item scan failed');
-            }
-        } catch (e) {
-            setError(e.message);
-        } finally {
-            setScanning(false);
-            barcodeRef.current?.focus();
-        }
-    };
-
-    // ── Remove Item ──────────────────────────────────────────────────────────
-    const handleRemove = async (itemId) => {
-        clearMessages();
-        try {
-            const res = await fetch(`/api/billing/sessions/${sessionId}/items/${itemId}`, {
-                method: 'DELETE',
-                credentials: 'include',
-            });
-            const json = await res.json();
-            if (res.ok && json.success) {
-                setItems(json.data.items);
-                setBillingPreview(json.data);
-            } else {
-                setError(json.detail || 'Failed to remove item');
-            }
-        } catch (e) {
-            setError(e.message);
-        }
-    };
-
-    // ── Close / Complete ─────────────────────────────────────────────────────
-    const handleClose = async () => {
-        if (!window.confirm('Confirm payment and close this bill?')) return;
-        clearMessages();
-        setLoading(true);
-        try {
-            const res = await fetch(`/api/billing/sessions/${sessionId}/close`, {
-                method: 'POST',
-                credentials: 'include',
-            });
-            const json = await res.json();
-            if (res.ok && json.success) {
-                setClosedSession(json.data);
-                setStatus('closed');
-                setSuccess(`Bill #${sessionId} closed. Total: ₹${json.data.net_total?.toFixed(2)}`);
-            } else {
-                setError(json.detail || 'Failed to close billing session');
-            }
-        } catch (e) {
-            setError(e.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // ── Cancel ───────────────────────────────────────────────────────────────
-    const handleCancel = async () => {
-        if (!window.confirm('Cancel this billing session? Scanned stock reservations will be restored.')) return;
-        clearMessages();
-        setLoading(true);
-        try {
-            const res = await fetch(`/api/billing/sessions/${sessionId}/cancel`, {
-                method: 'POST',
-                credentials: 'include',
-            });
-            const json = await res.json();
-            if (res.ok && json.success) {
-                setStatus('idle');
-                setSessionId(null);
-                setItems([]);
-                setBillingPreview(null);
-                setSuccess('Billing session cancelled.');
-            } else {
-                setError(json.detail || 'Failed to cancel session');
-            }
-        } catch (e) {
-            setError(e.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleNewBill = () => {
-        setSessionId(null);
-        setStatus('idle');
-        setItems([]);
-        setBillingPreview(null);
-        setClosedSession(null);
-        clearMessages();
-    };
+    const {
+        sessionId,
+        status,
+        items,
+        billingPreview,
+        closedSession,
+        locations,
+        locationId,
+        setLocationId,
+        barcode,
+        setBarcode,
+        qty,
+        setQty,
+        scanning,
+        barcodeRef,
+        loading,
+        error,
+        success,
+        clearMessages,
+        handleOpen,
+        handleScan,
+        handleRemove,
+        handleClose,
+        handleCancel,
+        handleNewBill,
+    } = useBillingCounter();
 
     const fmtCur = (n) => `₹${parseFloat(n || 0).toFixed(2)}`;
 

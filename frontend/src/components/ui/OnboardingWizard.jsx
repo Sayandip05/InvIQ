@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
     Sparkles,
     CheckCircle2,
@@ -20,112 +20,34 @@ import {
     User,
     AlertCircle,
 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { auth } from '../../services/api';
+import { useOnboarding } from '@/features/auth/hooks/useOnboarding';
 
 export default function OnboardingWizard({ isOpen: externalIsOpen, onClose: externalOnClose }) {
-    const { user, updateUser } = useAuth();
-    const navigate = useNavigate();
-    const [step, setStep] = useState(1);
-    const [isOpen, setIsOpen] = useState(false);
-
-    // Form states for step 1
-    const [fullName, setFullName] = useState('');
-    const [pharmacyName, setPharmacyName] = useState('');
-    const [primaryCounter, setPrimaryCounter] = useState('Main Market Counter');
-    const [planType, setPlanType] = useState('single_pharmacy');
-    const [fefoAlertsEnabled, setFefoAlertsEnabled] = useState(true);
-    const [error, setError] = useState('');
-
-    useEffect(() => {
-        if (externalIsOpen !== undefined) {
-            setIsOpen(externalIsOpen);
-            return;
-        }
-
-        // Automatic trigger for new users who have not completed onboarding
-        if (user) {
-            setFullName(user.full_name || '');
-            setPharmacyName(user.organization_name || `${user.full_name || user.username}'s Pharmacy & Medical Store`);
-            const hasCompleted = localStorage.getItem(`inviq_onboarding_completed_${user.id || user.username}`);
-            if (!hasCompleted) {
-                setIsOpen(true);
-            }
-        }
-    }, [user, externalIsOpen]);
+    const {
+        step,
+        isOpen,
+        user,
+        fullName,
+        setFullName,
+        pharmacyName,
+        setPharmacyName,
+        primaryCounter,
+        setPrimaryCounter,
+        planType,
+        setPlanType,
+        fefoAlertsEnabled,
+        setFefoAlertsEnabled,
+        error,
+        handleNext,
+        handleBack,
+        handleClose,
+        handleComplete,
+    } = useOnboarding({ externalIsOpen, externalOnClose });
 
     if (!isOpen || !user) {
         return null;
     }
 
-    const handleClose = () => {
-        setIsOpen(false);
-        localStorage.setItem(`inviq_onboarding_completed_${user.id || user.username}`, 'true');
-        if (externalOnClose) externalOnClose();
-    };
-
-    const handleNext = async () => {
-        setError('');
-        if (step === 1) {
-            if (!fullName.trim()) {
-                setError('Your Full Name is required to personalize your workspace and AI assistant.');
-                return;
-            }
-            if (!pharmacyName.trim()) {
-                setError('Pharmacy / Store Name is required.');
-                return;
-            }
-
-            // Save user full name & organization profile
-            try {
-                await auth.updateProfile({ full_name: fullName.trim() });
-                updateUser({ full_name: fullName.trim() });
-            } catch (e) {
-                console.warn('Failed to update full name during onboarding:', e);
-            }
-
-            if (user.role === 'admin') {
-                try {
-                    await fetch('/api/admin/organization', {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'include',
-                        body: JSON.stringify({
-                            name: pharmacyName.trim(),
-                            settings: {
-                                fefo_alerts_enabled: fefoAlertsEnabled,
-                                primary_counter_name: primaryCounter.trim() || 'Main Counter',
-                                plan_type: planType,
-                            },
-                        }),
-                    });
-                } catch (e) {
-                    console.warn('Failed to save profile during onboarding step 1:', e);
-                }
-            }
-        }
-
-        if (step < 4) {
-            setStep(step + 1);
-        } else {
-            handleComplete();
-        }
-    };
-
-    const handleBack = () => {
-        setError('');
-        if (step > 1) {
-            setStep(step - 1);
-        }
-    };
-
-    const handleComplete = (targetRoute) => {
-        handleClose();
-        if (targetRoute) {
-            navigate(targetRoute);
-        }
-    };
 
     const userRole = user.role || 'admin';
     const roleTitle = userRole.charAt(0).toUpperCase() + userRole.slice(1);
