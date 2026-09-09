@@ -220,7 +220,6 @@ const Dashboard = () => {
 
     const category_distribution = stats.category_distribution || [];
     const low_stock_items = stats.low_stock_items || [];
-    const location_stock = stats.location_stock || [];
     const status_distribution = stats.status_distribution || [];
 
     // Calculate totals for cards

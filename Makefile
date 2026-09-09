@@ -1,4 +1,4 @@
-.PHONY: help dev backend frontend worker beat test clean
+.PHONY: help dev backend frontend worker beat test clean lint build
 
 ROOT_DIR := $(shell pwd)
 PYTHON   ?= $(ROOT_DIR)/venv/bin/python
@@ -50,6 +50,14 @@ beat:
 test:
 	@echo "🧪 Running Pytest Test Suite..."
 	@cd backend && $(PYTEST)
+
+lint:
+	@echo "🔍 Running Frontend ESLint..."
+	@cd frontend && npm run lint
+
+build:
+	@echo "📦 Building Frontend Production Bundle..."
+	@cd frontend && npm run build
 
 clean:
 	@echo "🧹 Cleaning cache files..."

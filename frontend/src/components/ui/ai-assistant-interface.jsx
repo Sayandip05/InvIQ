@@ -17,7 +17,7 @@ import {
   ChevronRight,
   MessageSquare,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { chat } from "../../services/api";
 import { useGuest } from "../../context/GuestContext";
 import { useAuth } from "../../context/AuthContext";

@@ -27,7 +27,7 @@ export function GuestProvider({ children }) {
      * The `message` param is accepted for call-site compatibility but unused —
      * the user is taken directly to /signin without an intermediate modal.
      */
-    const showAuthModal = useCallback((_message) => {
+    const showAuthModal = useCallback(() => {
         navigate('/signin');
     }, [navigate]);
 

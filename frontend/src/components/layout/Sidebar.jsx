@@ -39,7 +39,7 @@ const ALL_NAV_ITEMS = [
 
 const Sidebar = () => {
     const { user, logout } = useAuth();
-    const { isGuest, showAuthModal } = useGuest();
+    const { isGuest } = useGuest();
     const [collapsed, setCollapsed] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
     const [showProfileModal, setShowProfileModal] = useState(false);
@@ -109,7 +109,7 @@ const Sidebar = () => {
 
             {/* ── Navigation Items ──────────────────────────────────────── */}
             <nav className="mt-4 flex-1 space-y-1 overflow-y-auto">
-                {ALL_NAV_ITEMS.map((item, idx) => (
+                {ALL_NAV_ITEMS.map((item) => (
                     <React.Fragment key={item.path}>
                         {item.divider && !collapsed && (
                             <div className="pt-3 pb-1">

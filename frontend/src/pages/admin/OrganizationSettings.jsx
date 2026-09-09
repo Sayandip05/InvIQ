@@ -21,11 +21,9 @@ import {
     X,
     Loader2
 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
 import { useGuest } from '../../context/GuestContext';
 
 export default function OrganizationSettings() {
-    const { user } = useAuth();
     const { isGuest, showAuthModal } = useGuest();
 
     const [loading, setLoading] = useState(true);

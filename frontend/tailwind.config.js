@@ -1,3 +1,5 @@
+import tailwindcssAnimate from 'tailwindcss-animate';
+
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: ["class"],
@@ -14,6 +16,15 @@ export default {
         poppins: ['Poppins', 'sans-serif'],
       },
       colors: {
+        brand: {
+          coral: '#F26A4B',
+          charcoal: '#1E1E1E',
+          muted: '#5E5A52',
+          warm: '#FAF9F6',
+          bg: '#E9E4D8',
+          card: '#F4EFE4',
+          border: '#D2CBBB',
+        },
         // Keeping legacy theme elements for backward compatibility:
         primaryBrand: "#5B65FF", 
         primaryLight: "#EEF0FF",
@@ -108,5 +119,5 @@ export default {
       }
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 }
