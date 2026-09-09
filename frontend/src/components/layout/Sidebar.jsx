@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard, Package, MessageSquare, LogOut, ClipboardList,
     Users, ShieldCheck, Upload, Building2, FileText, Eye, HelpCircle, X,
@@ -28,8 +28,7 @@ const ALL_NAV_ITEMS = [
     { path: '/admin/stock-acquisition', label: 'Stock Acquisition',   icon: Upload,           roles: ['admin', 'vendor', 'guest'] },
     { path: '/admin/requisitions',      label: 'Requisitions',        icon: ClipboardList,    roles: ['admin', 'guest'] },
     { path: '/admin/chat',              label: 'AI Assistant',        icon: MessageSquare,    roles: ['admin'] },
-    { path: '/admin/suppliers',         label: 'Suppliers & Vendors', icon: Truck,            roles: ['admin'] },
-    { path: '/admin/users',             label: 'Users & Staff',       icon: Users,            roles: ['admin'] },
+    { path: '/admin/suppliers-and-staff', label: 'Suppliers & Staff',   icon: Users,            roles: ['admin'] },
     { path: '/admin/organization',      label: 'Store & Branches',    icon: Building2,        roles: ['admin'] },
     { path: '/admin/reports',           label: 'Reports',             icon: FileText,         roles: ['admin'] },
 
@@ -39,11 +38,12 @@ const ALL_NAV_ITEMS = [
 
 const Sidebar = () => {
     const { user, logout } = useAuth();
-    const { isGuest, showAuthModal } = useGuest();
+    const { isGuest } = useGuest();
     const [collapsed, setCollapsed] = useState(false);
     const [showHelp, setShowHelp] = useState(false);
     const [showProfileModal, setShowProfileModal] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
 
     const roleInfo = user?.role ? ROLE_LABELS[user.role] : null;
 
@@ -109,7 +109,7 @@ const Sidebar = () => {
 
             {/* ── Navigation Items ──────────────────────────────────────── */}
             <nav className="mt-4 flex-1 space-y-1 overflow-y-auto">
-                {ALL_NAV_ITEMS.map((item, idx) => (
+                {ALL_NAV_ITEMS.map((item) => (
                     <React.Fragment key={item.path}>
                         {item.divider && !collapsed && (
                             <div className="pt-3 pb-1">
@@ -121,13 +121,17 @@ const Sidebar = () => {
                         <NavLink
                             to={item.path}
                             title={collapsed ? item.label : undefined}
-                            className={({ isActive }) =>
-                                `flex items-center ${collapsed ? 'justify-center px-2' : 'space-x-3 px-3'} py-2.5 transition-colors text-sm font-medium rounded-md ${
-                                    isActive
+                            className={({ isActive }) => {
+                                const isItemActive = isActive || (
+                                    item.path === '/admin/suppliers-and-staff' &&
+                                    (location.pathname === '/admin/suppliers' || location.pathname === '/admin/users')
+                                );
+                                return `flex items-center ${collapsed ? 'justify-center px-2' : 'space-x-3 px-3'} py-2.5 transition-colors text-sm font-medium rounded-md ${
+                                    isItemActive
                                         ? 'bg-sidebar-accent text-sidebar-primary border-l-2 border-primary font-semibold'
                                         : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
-                                }`
-                            }
+                                }`;
+                            }}
                         >
                             <item.icon size={19} className="shrink-0" />
                             {!collapsed && <span className="font-medium truncate">{item.label}</span>}

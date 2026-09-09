@@ -93,7 +93,7 @@ const UserManagement = () => {
         try {
             await authApi.delete(id);
             loadData();
-        } catch (err) {
+        } catch {
             alert('Delete failed');
         }
     };

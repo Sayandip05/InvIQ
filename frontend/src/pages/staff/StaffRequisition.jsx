@@ -6,23 +6,12 @@ import {
   Building2, User, LogOut, ScanBarcode, AlertTriangle, ShieldCheck
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-
-const URGENCY_OPTIONS = ['LOW', 'NORMAL', 'HIGH', 'EMERGENCY'];
-const DEPARTMENTS = ['Pharmacy Counter', 'Emergency', 'ICU', 'Cardiology', 'General Ward', 'OT', 'Pediatrics', 'Oncology', 'Lab'];
-
-const STATUS_STYLES = {
-    PENDING: 'bg-amber-500/10 text-amber-800 border border-amber-500/30 font-semibold',
-    APPROVED: 'bg-emerald-500/10 text-emerald-800 border border-emerald-500/30 font-semibold',
-    REJECTED: 'bg-destructive/10 text-destructive border border-destructive/30 font-semibold',
-    CANCELLED: 'bg-accent/50 text-muted-foreground border border-border',
-};
-
-const URGENCY_STYLES = {
-    LOW: 'bg-accent/50 text-foreground border border-border',
-    NORMAL: 'bg-primary text-primary-foreground border border-primary',
-    HIGH: 'bg-amber-500/20 text-amber-900 border border-amber-500/40 font-bold',
-    EMERGENCY: 'bg-[#F26A4B] text-white border border-[#F26A4B] font-bold animate-pulse',
-};
+import {
+  URGENCY_OPTIONS,
+  DEPARTMENTS,
+  STATUS_STYLES,
+  URGENCY_STYLES,
+} from '@/shared/constants/status';
 
 const StaffRequisition = () => {
     const { user, logout } = useAuth();

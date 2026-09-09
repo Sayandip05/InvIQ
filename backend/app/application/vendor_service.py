@@ -163,6 +163,24 @@ class VendorService:
                     # Try exact match (case-insensitive)
                     matched_item = item_lookup.get(item_name.lower())
 
+                    if not matched_item and org_id:
+                        try:
+                            new_item = Item(
+                                name=item_name,
+                                category="general",
+                                unit=unit or "units",
+                                lead_time_days=3,
+                                min_stock=10,
+                                storage_temp="ambient",
+                                org_id=org_id,
+                            )
+                            self.db.add(new_item)
+                            self.db.flush()
+                            item_lookup[item_name.lower()] = new_item
+                            matched_item = new_item
+                        except Exception as create_err:
+                            logger.warning("Could not auto-create item '%s': %s", item_name, create_err)
+
                     if not matched_item:
                         error_list.append({"row": row_idx, "reason": f"Item not found: '{item_name}'"})
                         continue
@@ -265,7 +283,7 @@ class VendorService:
                 success_rows=success_count,
                 error_rows=len(error_list),
                 errors_detail=error_list if error_list else None,
-                status="COMPLETED" if error_list == [] else "COMPLETED_WITH_ERRORS" if success_count > 0 else "FAILED",
+                status="COMPLETED" if error_list == [] else "PARTIAL" if success_count > 0 else "FAILED",
             )
             self.db.add(upload)
             self.db.commit()

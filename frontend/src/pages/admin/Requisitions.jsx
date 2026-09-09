@@ -1,97 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { requisition } from '../../services/api';
+import React from 'react';
 import { ClipboardCheck, ClipboardX, ChevronDown, ChevronUp, AlertTriangle, Clock, CheckCircle2, XCircle, Filter, Lock } from 'lucide-react';
-import { useGuest } from '../../context/GuestContext';
 import AlertsDropdown from '../../components/layout/AlertsDropdown';
-
-const STATUS_STYLES = {
-    PENDING: 'bg-yellow-100 text-yellow-800',
-    APPROVED: 'bg-green-100 text-green-800',
-    REJECTED: 'bg-red-100 text-red-800',
-    CANCELLED: 'bg-gray-100 text-gray-500',
-};
-
-const URGENCY_STYLES = {
-    LOW: 'bg-slate-100 text-slate-600',
-    NORMAL: 'bg-blue-100 text-blue-700',
-    HIGH: 'bg-orange-100 text-orange-700',
-    EMERGENCY: 'bg-red-100 text-red-700 font-bold',
-};
+import { STATUS_STYLES, URGENCY_STYLES } from '@/shared/constants/status';
+import { useRequisitions } from '@/features/requisitions/hooks/useRequisitions';
 
 const Requisitions = () => {
-    const { isGuest, showAuthModal } = useGuest();
-    const [requests, setRequests] = useState([]);
-    const [stats, setStats] = useState(null);
-    const [filter, setFilter] = useState('');
-    const [expandedId, setExpandedId] = useState(null);
-    const [approverName, setApproverName] = useState('');
-    const [rejectReason, setRejectReason] = useState('');
-    const [actionLoading, setActionLoading] = useState(null);
-    const [showRejectModal, setShowRejectModal] = useState(null);
-
-    const loadData = async () => {
-        try {
-            const [reqRes, statRes] = await Promise.all([
-                requisition.list(),
-                requisition.stats(),
-            ]);
-            if (reqRes.data.success) {
-                setRequests(reqRes.data.data);
-            }
-            if (statRes.data.success) {
-                setStats(statRes.data.data);
-            }
-        } catch (err) {
-            console.error('Failed to load requisition data', err);
-        }
-    };
-
-    useEffect(() => {
-        loadData();
-    }, []);
-
-    const handleApprove = async (id) => {
-        if (isGuest) {
-            showAuthModal('Sign in to approve stock requisitions.');
-            return;
-        }
-        setActionLoading(id);
-        try {
-            const res = await requisition.approve(id, {
-                approver_name: approverName || 'Store Admin',
-            });
-            if (res.data.success) {
-                loadData();
-            }
-        } catch (err) {
-            alert(err.response?.data?.detail || 'Approval failed');
-        } finally {
-            setActionLoading(null);
-        }
-    };
-
-    const handleReject = async (id) => {
-        if (isGuest) {
-            showAuthModal('Sign in to reject stock requisitions.');
-            return;
-        }
-        setActionLoading(id);
-        try {
-            const res = await requisition.reject(id, {
-                approver_name: approverName || 'Store Admin',
-                reason: rejectReason || 'Stock unavailable',
-            });
-            if (res.data.success) {
-                setShowRejectModal(null);
-                setRejectReason('');
-                loadData();
-            }
-        } catch (err) {
-            alert(err.response?.data?.detail || 'Rejection failed');
-        } finally {
-            setActionLoading(null);
-        }
-    };
+    const {
+        stats,
+        filter,
+        setFilter,
+        expandedId,
+        setExpandedId,
+        approverName,
+        setApproverName,
+        rejectReason,
+        setRejectReason,
+        actionLoading,
+        showRejectModal,
+        setShowRejectModal,
+        handleApprove,
+        handleReject,
+        filteredRequests,
+    } = useRequisitions();
 
     return (
         <div className="flex flex-col min-h-full bg-background text-foreground">
@@ -151,14 +81,14 @@ const Requisitions = () => {
 
                 {/* Requisition List */}
                 <div className="space-y-3">
-                    {requests.length === 0 && (
+                    {filteredRequests.length === 0 && (
                         <div className="bg-card border border-border rounded-lg shadow-xs p-12 text-center text-muted-foreground">
                             <ClipboardCheck size={40} className="mx-auto mb-3 text-muted-foreground/60" />
                             No requisitions found.
                         </div>
                     )}
 
-                    {requests.map(req => {
+                    {filteredRequests.map(req => {
                         const isExpanded = expandedId === req.id;
                         return (
                             <div key={req.id} className={`bg-card rounded-lg shadow-xs border transition ${req.urgency === 'EMERGENCY' && req.status === 'PENDING' ? 'border-destructive ring-1 ring-destructive/20' : 'border-border'}`}>

@@ -76,7 +76,7 @@ export function AuthProvider({ children }) {
                         location_ids: u.location_ids || [],
                     });
                 }
-            } catch (err) {
+            } catch {
                 if (!token) {
                     setAuthToken(null);
                     setUser(null);

@@ -110,7 +110,7 @@ export default function SupplierManagement() {
             await admin.deleteSupplier(id);
             setMessage({ type: 'success', text: `Supplier "${name}" deactivated` });
             loadData();
-        } catch (err) {
+        } catch {
             setMessage({ type: 'error', text: 'Failed to deactivate supplier' });
         }
     };

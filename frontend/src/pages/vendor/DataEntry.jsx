@@ -8,169 +8,39 @@
  * - Download generated official GST delivery invoices & receipts
  */
 
-import React, { useState, useEffect } from 'react';
-import api from '../../services/api';
+import React from 'react';
 import {
   Upload, Download, FileSpreadsheet, History, AlertCircle, CheckCircle,
   Loader2, Building2, Package, RefreshCw, X, FileText, Check, Search, ArrowUpRight
 } from 'lucide-react';
 import AlertsDropdown from '../../components/layout/AlertsDropdown';
+import { useDeliveryUpload } from '@/features/inventory/hooks/useDeliveryUpload';
 
 export default function DataEntry() {
-  const [locations, setLocations] = useState([]);
-  const [selectedLocation, setSelectedLocation] = useState('');
-  const [file, setFile] = useState(null);
-  const [uploads, setUploads] = useState([]);
-  const [invoices, setInvoices] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [dragOver, setDragOver] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    setFetching(true);
-    try {
-      await Promise.all([
-        fetchLocations(),
-        fetchUploadHistory(),
-        fetchInvoices(),
-      ]);
-    } finally {
-      setFetching(false);
-    }
-  };
-
-  const fetchLocations = async () => {
-    try {
-      const response = await api.get('/inventory/locations');
-      const locs = response.data?.data || [];
-      setLocations(locs);
-      if (locs.length > 0 && !selectedLocation) {
-        setSelectedLocation(locs[0].id);
-      }
-    } catch (err) {
-      console.error('Failed to fetch locations:', err);
-    }
-  };
-
-  const fetchUploadHistory = async () => {
-    try {
-      const response = await api.get('/vendor/my-uploads');
-      setUploads(response.data?.data || []);
-    } catch (err) {
-      console.error('Failed to fetch upload history:', err);
-    }
-  };
-
-  const fetchInvoices = async () => {
-    try {
-      const response = await api.get('/vendor/invoices');
-      setInvoices(response.data?.data?.invoices || response.data?.data || []);
-    } catch (err) {
-      // Invoices endpoint optional
-      setInvoices([]);
-    }
-  };
-
-  const handleDownloadTemplate = async () => {
-    try {
-      const response = await api.get('/vendor/template', { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', 'InvIQ_Medicine_Delivery_Template.xlsx');
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      setError('Failed to download template. Please try again.');
-    }
-  };
-
-  const handleDownloadInvoice = async (invoiceId, invoiceNumber) => {
-    try {
-      const response = await api.get(`/vendor/invoices/${invoiceId}/pdf`, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `Invoice_${invoiceNumber || invoiceId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      setError('Failed to download invoice PDF.');
-    }
-  };
-
-  const handleFileChange = (selectedFile) => {
-    if (!selectedFile) return;
-    if (!selectedFile.name.endsWith('.xlsx') && !selectedFile.name.endsWith('.xls') && !selectedFile.name.endsWith('.csv')) {
-      setError('Only .xlsx, .xls, or .csv files are accepted');
-      setFile(null);
-      return;
-    }
-    if (selectedFile.size > 10 * 1024 * 1024) {
-      setError('File size must be under 10MB');
-      setFile(null);
-      return;
-    }
-    setFile(selectedFile);
-    setError('');
-    setSuccess('');
-  };
-
-  const handleInputChange = (e) => handleFileChange(e.target.files[0]);
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setDragOver(false);
-    handleFileChange(e.dataTransfer.files[0]);
-  };
-
-  const handleUpload = async (e) => {
-    e.preventDefault();
-    if (!selectedLocation) {
-      setError('Please select a target pharmacy branch');
-      return;
-    }
-    if (!file) {
-      setError('Please select an Excel or CSV delivery file');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    setSuccess('');
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const res = await api.post(`/vendor/upload-delivery?location_id=${selectedLocation}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      const processedCount = res.data?.data?.rows_processed ?? res.data?.rows_processed ?? 'all';
-      setSuccess(`Delivery manifest uploaded successfully! ${processedCount} medicine items ingested into inventory.`);
-      setFile(null);
-      const fileInput = document.getElementById('file-upload');
-      if (fileInput) fileInput.value = '';
-      fetchUploadHistory();
-      fetchInvoices();
-    } catch (err) {
-      const msg = err?.response?.data?.detail || err?.response?.data?.message || 'Upload failed. Please check file format.';
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    locations,
+    selectedLocation,
+    setSelectedLocation,
+    file,
+    uploads,
+    invoices,
+    loading,
+    fetching,
+    error,
+    setError,
+    success,
+    setSuccess,
+    dragOver,
+    setDragOver,
+    searchQuery,
+    setSearchQuery,
+    loadData,
+    handleDownloadTemplate,
+    handleDownloadInvoice,
+    handleInputChange,
+    handleDrop,
+    handleUpload,
+  } = useDeliveryUpload();
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';

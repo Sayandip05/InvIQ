@@ -13,17 +13,7 @@
 import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
-const ROLE_HIERARCHY = { vendor: 2, staff: 3, manager: 4, admin: 5 };
-
-// Maps each role to its correct landing page.
-// Must stay in sync with ROLE_HOME in App.jsx.
-const ROLE_HOME = {
-    admin:       '/admin/dashboard',
-    manager:     '/manager/dashboard',
-    staff:       '/staff',
-    vendor:      '/vendor',
-};
+import { hasRolePermission, getRoleHome } from '@/shared/constants/roles';
 
 export default function ProtectedRoute({ requiredRole = null }) {
     const { isAuthenticated, user, loading } = useAuth();
@@ -44,14 +34,9 @@ export default function ProtectedRoute({ requiredRole = null }) {
     }
 
     // Role check — if a specific role is required
-    if (requiredRole) {
-        const userLevel    = ROLE_HIERARCHY[user?.role] ?? 0;
-        const requiredLevel = ROLE_HIERARCHY[requiredRole] ?? 999;
-
-        if (userLevel < requiredLevel) {
-            const home = ROLE_HOME[user?.role] ?? '/admin/dashboard';
-            return <Navigate to={home} replace />;
-        }
+    if (requiredRole && !hasRolePermission(user?.role, requiredRole)) {
+        const home = getRoleHome(user?.role);
+        return <Navigate to={home} replace />;
     }
 
     return <Outlet />;

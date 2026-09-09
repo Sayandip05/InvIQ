@@ -82,7 +82,7 @@ const Inventory = () => {
             if (res.data.success) {
                 setPackagings(res.data.data || []);
             }
-        } catch (err) {
+        } catch {
             setPkgError('Failed to load packaging tiers');
         } finally {
             setLoadingPkg(false);
@@ -139,7 +139,7 @@ const Inventory = () => {
                 setPackagings(prev => prev.filter(p => p.id !== pkgId));
                 fetchItems();
             }
-        } catch (err) {
+        } catch {
             setPkgError('Failed to delete packaging tier');
         }
     };
