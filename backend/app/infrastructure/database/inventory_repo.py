@@ -6,7 +6,7 @@ from datetime import date
 from typing import Optional, List, Dict, Any
 
 
-from app.infrastructure.database.models import Location, Item, InventoryTransaction, ItemPackaging
+from app.infrastructure.database.models import Location, Item, InventoryTransaction
 from app.core.exceptions import DatabaseError, DuplicateError, ValidationError
 
 logger = logging.getLogger("smart_inventory.repo.inventory")
@@ -381,67 +381,8 @@ class InventoryRepository:
             logger.error("Database error deleting locations: %s", str(e))
             raise DatabaseError(f"Failed to delete locations: {str(e)}")
 
-    # ── Item Packaging / UOM methods ──────────────────────────────────────
-    def get_item_packagings(self, item_id: int, org_id: Optional[int] = None) -> List[ItemPackaging]:
-        q = self.db.query(ItemPackaging).filter(ItemPackaging.item_id == item_id)
-        if org_id is not None:
-            q = q.filter(ItemPackaging.org_id == org_id)
-        return q.order_by(ItemPackaging.multiplier.asc()).all()
-
-    def get_packaging_by_id(self, packaging_id: int, org_id: Optional[int] = None) -> Optional[ItemPackaging]:
-        q = self.db.query(ItemPackaging).filter(ItemPackaging.id == packaging_id)
-        if org_id is not None:
-            q = q.filter(ItemPackaging.org_id == org_id)
-        return q.first()
-
-    def get_packaging_by_barcode(self, barcode: str, org_id: Optional[int] = None) -> Optional[ItemPackaging]:
-        q = self.db.query(ItemPackaging).filter(ItemPackaging.barcode == barcode.strip())
-        if org_id is not None:
-            q = q.filter(ItemPackaging.org_id == org_id)
-        return q.first()
-
-    def create_packaging(self, **kwargs) -> ItemPackaging:
-        if "org_id" not in kwargs or kwargs["org_id"] is None:
-            raise ValidationError("Organization ID (org_id) is required to create an item packaging")
-        try:
-            pkg = ItemPackaging(**kwargs)
-            self.db.add(pkg)
-            self.db.commit()
-            self.db.refresh(pkg)
-            return pkg
-        except IntegrityError:
-            self.db.rollback()
-            raise DuplicateError("Packaging configuration conflict (e.g. duplicate barcode)")
-        except SQLAlchemyError as e:
-            self.db.rollback()
-            logger.error("Database error creating packaging: %s", str(e))
-            raise DatabaseError(f"Failed to create packaging: {str(e)}")
-
-    def update_packaging(self, pkg: ItemPackaging, **kwargs) -> ItemPackaging:
-        try:
-            for key, val in kwargs.items():
-                if val is not None and hasattr(pkg, key):
-                    setattr(pkg, key, val)
-            self.db.commit()
-            self.db.refresh(pkg)
-            return pkg
-        except IntegrityError:
-            self.db.rollback()
-            raise DuplicateError("Packaging update caused a duplicate constraint violation")
-        except SQLAlchemyError as e:
-            self.db.rollback()
-            logger.error("Database error updating packaging: %s", str(e))
-            raise DatabaseError(f"Failed to update packaging: {str(e)}")
-
-    def delete_packaging(self, pkg: ItemPackaging) -> bool:
-        try:
-            self.db.delete(pkg)
-            self.db.commit()
-            return True
-        except SQLAlchemyError as e:
-            self.db.rollback()
-            logger.error("Database error deleting packaging: %s", str(e))
-            raise DatabaseError(f"Failed to delete packaging: {str(e)}")
+    def get_packaging_by_barcode(self, barcode: str, org_id: Optional[int] = None):
+        return None
 
     def commit(self):
         try:

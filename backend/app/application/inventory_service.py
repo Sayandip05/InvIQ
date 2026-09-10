@@ -268,8 +268,6 @@ class InventoryService:
         N+1 individual queries — critical for performance over remote DB connections.
         Includes UOM packaging tiers and human-readable decomposed stock breakdown.
         """
-        from app.application.uom_service import decompose_stock
-
         items = self.repo.get_all_items(org_id=org_id)
 
         # Single query: {item_id: closing_stock} for all items at this location
@@ -286,33 +284,6 @@ class InventoryService:
             else:
                 status = "HEALTHY"
 
-            raw_packagings = getattr(item, "packagings", None)
-            packagings = raw_packagings if isinstance(raw_packagings, (list, tuple, set)) else []
-            decomp = decompose_stock(latest_stock, getattr(item, "unit", "units"), packagings)
-
-            serialized_packagings = []
-            for p in packagings:
-                try:
-                    p_mult = _safe_int(getattr(p, "multiplier", 1), 1)
-                    p_mrp = getattr(p, "mrp", None)
-                    if p_mrp is None:
-                        item_mrp = _safe_float(getattr(item, "mrp", 0.0), 0.0)
-                        p_mrp = round(item_mrp * p_mult, 2)
-                    else:
-                        p_mrp = _safe_float(p_mrp, 0.0)
-                    serialized_packagings.append({
-                        "id": getattr(p, "id", None),
-                        "unit_name": str(getattr(p, "unit_name", "")),
-                        "multiplier": p_mult,
-                        "barcode": getattr(p, "barcode", None),
-                        "mrp": p_mrp,
-                        "purchase_rate": getattr(p, "purchase_rate", None),
-                        "is_default_dispense": getattr(p, "is_default_dispense", False) is True,
-                        "is_default_purchase": getattr(p, "is_default_purchase", False) is True,
-                    })
-                except Exception:
-                    pass
-
             result.append(
                 {
                     "id": item.id,
@@ -322,10 +293,7 @@ class InventoryService:
                     "base_unit": item.unit,
                     "min_stock": item.min_stock,
                     "current_stock": latest_stock,
-                    "stock_breakdown": decomp["display_string"],
-                    "decomposed": decomp["breakdown"],
                     "status": status,
-                    "packagings": serialized_packagings,
                 }
             )
 

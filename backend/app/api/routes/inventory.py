@@ -33,7 +33,7 @@ from app.application.cache_service import (
     cache_invalidate_pattern,
 )
 from app.infrastructure.database.inventory_repo import InventoryRepository
-from app.infrastructure.database.models import User, ItemPackaging
+from app.infrastructure.database.models import User
 from app.api.schemas.inventory_schemas import (
     TransactionItem,
     SingleTransactionRequest,
@@ -44,8 +44,6 @@ from app.api.schemas.inventory_schemas import (
     UpdateItemRequest,
     ResetDataRequest,
     ScanDispenseRequest,
-    CreateItemPackagingRequest,
-    UpdateItemPackagingRequest,
 )
 
 
@@ -398,31 +396,6 @@ def create_item(
         org_id=org_id,
     )
 
-    created_packagings = []
-    if body.packagings:
-        for p in body.packagings:
-            pkg = repo.create_packaging(
-                item_id=item.id,
-                org_id=org_id,
-                unit_name=p.unit_name.strip().lower(),
-                multiplier=p.multiplier,
-                barcode=p.barcode.strip() if p.barcode else None,
-                mrp=p.mrp,
-                purchase_rate=p.purchase_rate,
-                is_default_dispense=p.is_default_dispense,
-                is_default_purchase=p.is_default_purchase,
-            )
-            created_packagings.append({
-                "id": pkg.id,
-                "unit_name": pkg.unit_name,
-                "multiplier": pkg.multiplier,
-                "barcode": pkg.barcode,
-                "mrp": pkg.mrp,
-                "purchase_rate": pkg.purchase_rate,
-                "is_default_dispense": pkg.is_default_dispense,
-                "is_default_purchase": pkg.is_default_purchase,
-            })
-
     cache_invalidate_pattern("ref:*")
 
     return {
@@ -440,166 +413,7 @@ def create_item(
             "lead_time_days": item.lead_time_days,
             "min_stock": item.min_stock,
             "storage_temp": item.storage_temp,
-            "packagings": created_packagings,
         },
-    }
-
-
-# ── Item Packaging / Multi-UOM Endpoints ─────────────────────────────────────
-
-@router.get("/items/{item_id}/packagings")
-def get_item_packagings(
-    item_id: int,
-    repo: InventoryRepository = Depends(get_inventory_repo),
-    current_user: User = Depends(get_current_user),
-):
-    """List all packaging tiers defined for a medicine."""
-    org_id = _caller_org_id(current_user)
-    item = repo.get_item_by_id(item_id, org_id=org_id)
-    if not item:
-        raise NotFoundError("Item", item_id)
-
-    pkgs = repo.get_item_packagings(item_id, org_id=org_id)
-    return {
-        "success": True,
-        "base_unit": item.unit,
-        "base_mrp": item.mrp,
-        "data": [
-            {
-                "id": p.id,
-                "item_id": p.item_id,
-                "unit_name": p.unit_name,
-                "multiplier": p.multiplier,
-                "barcode": p.barcode,
-                "mrp": p.mrp if p.mrp is not None else round(float(item.mrp or 0.0) * p.multiplier, 2),
-                "purchase_rate": p.purchase_rate if p.purchase_rate is not None else round(float(item.purchase_rate or 0.0) * p.multiplier, 2),
-                "is_default_dispense": p.is_default_dispense,
-                "is_default_purchase": p.is_default_purchase,
-            }
-            for p in pkgs
-        ],
-    }
-
-
-@router.post("/items/{item_id}/packagings")
-@limiter.limit("30/minute")
-def add_item_packaging(
-    request: Request,
-    item_id: int,
-    body: CreateItemPackagingRequest,
-    repo: InventoryRepository = Depends(get_inventory_repo),
-    current_user: User = Depends(require_staff),
-):
-    """Add a packaging tier (e.g. strip = 10 tabs, box = 100 tabs) to a medicine."""
-    org_id = _caller_org_id(current_user)
-    item = repo.get_item_by_id(item_id, org_id=org_id)
-    if not item:
-        raise NotFoundError("Item", item_id)
-
-    pkg = repo.create_packaging(
-        item_id=item.id,
-        org_id=org_id,
-        unit_name=body.unit_name.strip().lower(),
-        multiplier=body.multiplier,
-        barcode=body.barcode.strip() if body.barcode else None,
-        mrp=body.mrp,
-        purchase_rate=body.purchase_rate,
-        is_default_dispense=body.is_default_dispense,
-        is_default_purchase=body.is_default_purchase,
-    )
-    cache_invalidate_pattern("ref:*")
-
-    return {
-        "success": True,
-        "message": f"Packaging unit '{pkg.unit_name}' added successfully",
-        "data": {
-            "id": pkg.id,
-            "item_id": pkg.item_id,
-            "unit_name": pkg.unit_name,
-            "multiplier": pkg.multiplier,
-            "barcode": pkg.barcode,
-            "mrp": pkg.mrp if pkg.mrp is not None else round(float(item.mrp or 0.0) * pkg.multiplier, 2),
-            "purchase_rate": pkg.purchase_rate,
-            "is_default_dispense": pkg.is_default_dispense,
-            "is_default_purchase": pkg.is_default_purchase,
-        },
-    }
-
-
-@router.put("/items/{item_id}/packagings/{pkg_id}")
-@limiter.limit("30/minute")
-def update_item_packaging(
-    request: Request,
-    item_id: int,
-    pkg_id: int,
-    body: UpdateItemPackagingRequest,
-    repo: InventoryRepository = Depends(get_inventory_repo),
-    current_user: User = Depends(require_staff),
-):
-    """Update packaging tier properties (barcode, multiplier, pricing)."""
-    org_id = _caller_org_id(current_user)
-    pkg = repo.get_packaging_by_id(pkg_id, org_id=org_id)
-    if not pkg or pkg.item_id != item_id:
-        raise NotFoundError("ItemPackaging", pkg_id)
-
-    update_kwargs = {}
-    if body.unit_name is not None:
-        update_kwargs["unit_name"] = body.unit_name.strip().lower()
-    if body.multiplier is not None:
-        update_kwargs["multiplier"] = body.multiplier
-    if body.barcode is not None:
-        update_kwargs["barcode"] = body.barcode.strip() if body.barcode else None
-    if body.mrp is not None:
-        update_kwargs["mrp"] = body.mrp
-    if body.purchase_rate is not None:
-        update_kwargs["purchase_rate"] = body.purchase_rate
-    if body.is_default_dispense is not None:
-        update_kwargs["is_default_dispense"] = body.is_default_dispense
-    if body.is_default_purchase is not None:
-        update_kwargs["is_default_purchase"] = body.is_default_purchase
-
-    updated = repo.update_packaging(pkg, **update_kwargs)
-    cache_invalidate_pattern("ref:*")
-
-    return {
-        "success": True,
-        "message": f"Packaging unit '{updated.unit_name}' updated successfully",
-        "data": {
-            "id": updated.id,
-            "item_id": updated.item_id,
-            "unit_name": updated.unit_name,
-            "multiplier": updated.multiplier,
-            "barcode": updated.barcode,
-            "mrp": updated.mrp,
-            "purchase_rate": updated.purchase_rate,
-            "is_default_dispense": updated.is_default_dispense,
-            "is_default_purchase": updated.is_default_purchase,
-        },
-    }
-
-
-@router.delete("/items/{item_id}/packagings/{pkg_id}")
-@limiter.limit("30/minute")
-def delete_item_packaging(
-    request: Request,
-    item_id: int,
-    pkg_id: int,
-    repo: InventoryRepository = Depends(get_inventory_repo),
-    current_user: User = Depends(require_staff),
-):
-    """Delete a packaging tier from an item."""
-    org_id = _caller_org_id(current_user)
-    pkg = repo.get_packaging_by_id(pkg_id, org_id=org_id)
-    if not pkg or pkg.item_id != item_id:
-        raise NotFoundError("ItemPackaging", pkg_id)
-
-    unit_name = pkg.unit_name
-    repo.delete_packaging(pkg)
-    cache_invalidate_pattern("ref:*")
-
-    return {
-        "success": True,
-        "message": f"Packaging unit '{unit_name}' deleted successfully",
     }
 
 
@@ -611,24 +425,12 @@ def get_item_by_barcode(
     repo: InventoryRepository = Depends(get_inventory_repo),
     current_user: User = Depends(require_staff),
 ):
-    """Look up a medicine/item by its barcode or packaging barcode for the caller's organization."""
+    """Look up a medicine/item by its barcode for the caller's organization."""
     org_id = _caller_org_id(current_user)
-    item = None
-    matched_pkg = None
-
-    # Check packaging barcode first
-    pkg_obj = repo.get_packaging_by_barcode(barcode, org_id=org_id)
-    if pkg_obj:
-        matched_pkg = pkg_obj
-        item = pkg_obj.item
-
-    if not item:
-        item = repo.get_item_by_barcode(barcode, org_id=org_id)
-
+    item = repo.get_item_by_barcode(barcode, org_id=org_id)
     if not item:
         raise NotFoundError("Item", barcode)
 
-    packagings = repo.get_item_packagings(item.id, org_id=org_id)
     return {
         "success": True,
         "data": {
@@ -638,32 +440,12 @@ def get_item_by_barcode(
             "unit": item.unit,
             "base_unit": item.unit,
             "barcode": item.barcode,
-            "matched_packaging": {
-                "id": matched_pkg.id,
-                "unit_name": matched_pkg.unit_name,
-                "multiplier": matched_pkg.multiplier,
-                "barcode": matched_pkg.barcode,
-                "mrp": matched_pkg.mrp if matched_pkg.mrp is not None else round(float(item.mrp or 0.0) * matched_pkg.multiplier, 2),
-            } if matched_pkg else None,
             "strength": item.strength,
             "mrp": item.mrp,
             "purchase_rate": item.purchase_rate,
             "lead_time_days": item.lead_time_days,
             "min_stock": item.min_stock,
             "storage_temp": item.storage_temp,
-            "packagings": [
-                {
-                    "id": p.id,
-                    "unit_name": p.unit_name,
-                    "multiplier": p.multiplier,
-                    "barcode": p.barcode,
-                    "mrp": p.mrp if p.mrp is not None else round(float(item.mrp or 0.0) * p.multiplier, 2),
-                    "purchase_rate": p.purchase_rate,
-                    "is_default_dispense": p.is_default_dispense,
-                    "is_default_purchase": p.is_default_purchase,
-                }
-                for p in packagings
-            ],
         },
     }
 

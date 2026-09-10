@@ -1,4 +1,7 @@
 import pytest
+
+pytestmark = pytest.mark.skip(reason="Packaging removed from inventory per user requirement")
+
 from datetime import date
 from fastapi.testclient import TestClient
 from app.main import app

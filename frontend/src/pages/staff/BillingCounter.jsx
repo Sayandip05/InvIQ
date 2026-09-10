@@ -27,18 +27,11 @@ export default function BillingCounter() {
         locations,
         locationId,
         setLocationId,
-        barcode,
-        setBarcode,
-        qty,
-        setQty,
-        scanning,
-        barcodeRef,
         loading,
         error,
         success,
         clearMessages,
         handleOpen,
-        handleScan,
         handleRemove,
         handleClose,
         handleCancel,
@@ -152,43 +145,46 @@ export default function BillingCounter() {
                     {/* Left 2 Cols: Scanner + Scanned Items List */}
                     <div className="lg:col-span-2 space-y-4">
                         
-                        {/* Barcode Input Bar */}
-                        <form onSubmit={handleScan} className="bg-card border border-border p-4 rounded-lg shadow-xs space-y-3">
-                            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider font-mono">
-                                Barcode Scanner &amp; SKU Lookup
-                            </h3>
+                        {/* Barcode Scanner Section (Placeholder / Non-functional) */}
+                        <div className="bg-card border border-border p-4 rounded-lg shadow-xs space-y-3">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-xs font-bold text-foreground uppercase tracking-wider font-mono flex items-center gap-2">
+                                    <ScanBarcode size={15} className="text-muted-foreground" />
+                                    Barcode Scanner (Hardware Placeholder)
+                                </h3>
+                                <span className="text-[10px] font-mono font-medium px-2 py-0.5 bg-muted text-muted-foreground border border-border rounded">
+                                    Placeholder
+                                </span>
+                            </div>
                             <div className="flex gap-2">
                                 <div className="relative flex-1">
-                                    <ScanBarcode className="absolute left-3 top-2.5 text-muted-foreground" size={16} />
+                                    <ScanBarcode className="absolute left-3 top-2.5 text-muted-foreground opacity-50" size={16} />
                                     <input
-                                        ref={barcodeRef}
                                         type="text"
-                                        placeholder="Scan barcode or type SKU (e.g. 890108600112)..."
-                                        value={barcode}
-                                        onChange={e => setBarcode(e.target.value)}
-                                        className="w-full pl-9 pr-3 py-2 text-xs border border-input rounded-md bg-background text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring"
+                                        disabled
+                                        placeholder="Barcode scanner placeholder (connect handheld scanner device)..."
+                                        className="w-full pl-9 pr-3 py-2 text-xs border border-input rounded-md bg-muted/40 text-muted-foreground font-mono cursor-not-allowed select-none"
                                     />
                                 </div>
                                 <div className="w-24">
                                     <input
-                                        type="number"
-                                        min="1"
-                                        placeholder="Qty"
-                                        value={qty}
-                                        onChange={e => setQty(e.target.value)}
-                                        className="w-full px-2 py-2 text-xs border border-input rounded-md text-center font-bold bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                                        type="text"
+                                        disabled
+                                        placeholder="Qty: 1"
+                                        className="w-full px-2 py-2 text-xs border border-input rounded-md text-center bg-muted/40 text-muted-foreground font-mono cursor-not-allowed select-none"
                                     />
                                 </div>
                                 <button
-                                    type="submit"
-                                    disabled={scanning || !barcode.trim()}
-                                    className="px-4 py-2 bg-primary hover:opacity-90 disabled:opacity-50 text-primary-foreground text-xs font-bold uppercase rounded-md transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                                    type="button"
+                                    disabled
+                                    className="px-4 py-2 bg-muted border border-border text-muted-foreground text-xs font-semibold uppercase rounded-md cursor-not-allowed select-none flex items-center gap-1.5 opacity-60"
+                                    title="Barcode scanning is a hardware placeholder"
                                 >
-                                    {scanning ? <Loader2 size={13} className="animate-spin" /> : <Plus size={14} />}
-                                    <span>Add Item</span>
+                                    <ScanBarcode size={14} />
+                                    <span>Scan (Placeholder)</span>
                                 </button>
                             </div>
-                        </form>
+                        </div>
 
                         {/* Items Table */}
                         <div className="bg-card border border-border rounded-lg shadow-xs overflow-hidden">
@@ -207,8 +203,8 @@ export default function BillingCounter() {
                             {items.length === 0 ? (
                                 <div className="p-12 text-center text-muted-foreground">
                                     <ScanBarcode size={32} className="mx-auto mb-2 text-muted-foreground/60" />
-                                    <p className="text-xs font-semibold text-foreground">No items scanned yet</p>
-                                    <p className="text-[11px] text-muted-foreground">Scan any medicine packaging barcode or SKU to add to cart.</p>
+                                    <p className="text-xs font-semibold text-foreground">No items in cart</p>
+                                    <p className="text-[11px] text-muted-foreground">Items will appear here once registered.</p>
                                 </div>
                             ) : (
                                 <div className="overflow-x-auto">

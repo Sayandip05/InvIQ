@@ -55,38 +55,6 @@ class UpdateLocationRequest(BaseModel):
 
 
 
-class ItemPackagingSchema(BaseModel):
-    id: Optional[int] = None
-    item_id: Optional[int] = None
-    unit_name: str = Field(min_length=1, max_length=50, description="Packaging name, e.g. strip, box, carton")
-    multiplier: int = Field(default=1, ge=1, description="Base units in this package (e.g. 10 tabs/strip, 100 tabs/box)")
-    barcode: Optional[str] = Field(default=None, max_length=50, description="Package-specific EAN/UPC barcode")
-    mrp: Optional[float] = Field(default=None, ge=0.0, description="Package MRP (if None, calculated from base MRP)")
-    purchase_rate: Optional[float] = Field(default=None, ge=0.0, description="Package purchase rate from distributor")
-    is_default_dispense: bool = False
-    is_default_purchase: bool = False
-
-
-class CreateItemPackagingRequest(BaseModel):
-    unit_name: str = Field(min_length=1, max_length=50)
-    multiplier: int = Field(default=1, ge=1)
-    barcode: Optional[str] = Field(default=None, max_length=50)
-    mrp: Optional[float] = Field(default=None, ge=0.0)
-    purchase_rate: Optional[float] = Field(default=None, ge=0.0)
-    is_default_dispense: bool = False
-    is_default_purchase: bool = False
-
-
-class UpdateItemPackagingRequest(BaseModel):
-    unit_name: Optional[str] = Field(default=None, min_length=1, max_length=50)
-    multiplier: Optional[int] = Field(default=None, ge=1)
-    barcode: Optional[str] = Field(default=None, max_length=50)
-    mrp: Optional[float] = Field(default=None, ge=0.0)
-    purchase_rate: Optional[float] = Field(default=None, ge=0.0)
-    is_default_dispense: Optional[bool] = None
-    is_default_purchase: Optional[bool] = None
-
-
 class CreateItemRequest(BaseModel):
     name: str = Field(min_length=2, max_length=200)
     category: str = Field(min_length=2, max_length=100)
@@ -99,7 +67,6 @@ class CreateItemRequest(BaseModel):
     min_stock: int = Field(default=10, ge=0, description="Safety threshold in base units")
     # Product-level pharmacy field (all units of this product share the same storage requirement)
     storage_temp: Optional[str] = Field(default="ambient", pattern="^(ambient|cold_chain)$", description="Storage temperature requirement")
-    packagings: Optional[List[CreateItemPackagingRequest]] = Field(default=None, description="Initial packaging tiers (e.g. strip, box)")
 
 
 class UpdateItemRequest(BaseModel):
