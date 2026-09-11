@@ -313,15 +313,15 @@ export function AIAssistantInterface({ onQuerySubmit, isPreview = false }) {
       {/* ── Main Chat Stream or Hero Greeting ── */}
       {messages.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center p-4 my-auto">
-          <div className="w-14 h-14 bg-primary text-[#F26A4B] flex items-center justify-center rounded-none font-bold mb-4 shadow-xs">
+          <div className="w-14 h-14 bg-primary text-[#F26A4B] flex items-center justify-center rounded-xl font-bold mb-4 shadow-xs">
             <Bot size={28} />
           </div>
           <h1 className="text-xl sm:text-2xl font-sans font-bold text-foreground tracking-tight mb-2">
             Welcome to InvIQ, {adminName}!
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground max-w-lg leading-relaxed mb-6 font-normal">
-            I am your personal inventory intelligence assistant for <span className="font-bold text-foreground">{pharmacyName}</span>.
-            Ask about medicine stock levels, batch expiries, reorder recommendations, or cold-chain compliance.
+            I am your personal inventory assistant for <span className="font-bold text-foreground">{pharmacyName}</span>.
+            Ask about medicine stock levels, expiry dates, reorder alerts, or fridge temperatures.
           </p>
 
           {/* Quick Action Suggestion Pills */}

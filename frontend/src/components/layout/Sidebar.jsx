@@ -26,7 +26,6 @@ const ALL_NAV_ITEMS = [
     { path: '/admin/billing',           label: 'Billing Counter',     icon: ScanBarcode,     roles: ['admin', 'staff', 'guest'] },
     { path: '/admin/inventory',         label: 'Inventory',           icon: Package,          roles: ['admin', 'guest'] },
     { path: '/admin/stock-acquisition', label: 'Stock Acquisition',   icon: Upload,           roles: ['admin', 'vendor', 'guest'] },
-    { path: '/admin/requisitions',      label: 'Requisitions',        icon: ClipboardList,    roles: ['admin', 'guest'] },
     { path: '/admin/chat',              label: 'AI Assistant',        icon: MessageSquare,    roles: ['admin'] },
     { path: '/admin/suppliers-and-staff', label: 'Suppliers & Staff',   icon: Users,            roles: ['admin'] },
     { path: '/admin/organization',      label: 'Store & Branches',    icon: Building2,        roles: ['admin'] },
@@ -243,8 +242,8 @@ const Sidebar = () => {
                             </div>
 
                             <div className="p-3 bg-background border border-border rounded-md space-y-1">
-                                <p className="font-semibold text-foreground">Documentation & Guides</p>
-                                <p className="text-muted-foreground">Access cold-chain SOPs, FEFO guides, and automated requisition walkthroughs.</p>
+                                <p className="font-semibold text-foreground">Documentation &amp; Guides</p>
+                                <p className="text-muted-foreground">Access fridge storage tips, expiry guides, and stock request tutorials.</p>
                             </div>
                         </div>
 

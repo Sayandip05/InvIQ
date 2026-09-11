@@ -15,6 +15,7 @@ from app.core.dependencies import (
     get_current_user,
     require_admin,
     get_db_session,
+    get_client_ip,
 )
 from app.core.config import settings
 from app.core.rate_limiter import limiter
@@ -176,12 +177,7 @@ def _user_dict(user: User) -> dict:
     }
 
 
-def _get_client_ip(request: Request) -> str:
-    """Extract client IP for audit logging."""
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return request.client.host if request.client else "unknown"
+_get_client_ip = get_client_ip
 
 
 # ── POST /register ─────────────────────────────────────────────────────────
@@ -1013,27 +1009,25 @@ def update_user_role(
 # ── PUT /users/{user_id}/activate ─────────────────────────────────────────
 
 
-@router.put("/users/{user_id}/activate", response_model=dict)
-def activate_user(
+def _set_user_active_state(
     user_id: int,
+    is_active: bool,
+    action_name: str,
     request: Request,
-    db: Session = Depends(get_user_repo),
-    current_user: User = Depends(require_admin),
-):
+    db: Session,
+    current_user: User,
+) -> dict:
     user = db.get_by_id(user_id)
     if not user:
         raise NotFoundError("User", user_id)
-
     _enforce_tenant_user_access(user, current_user)
-
-    user.is_active = True
+    if not is_active and user.id == current_user.id:
+        raise ValidationError("Cannot deactivate your own account")
+    user.is_active = is_active
     db.update(user)
-
-    # Audit log
-    audit = AuditService(db.db)
-    audit.log(
+    AuditService(db.db).log(
         username=current_user.username,
-        action="USER_ACTIVATED",
+        action=action_name,
         resource_type="user",
         resource_id=str(user.id),
         user_id=current_user.id,
@@ -1041,11 +1035,18 @@ def activate_user(
         details={"target_user": user.username},
         ip_address=_get_client_ip(request),
     )
+    status_label = "activated" if is_active else "deactivated"
+    return {"success": True, "message": f"User {user.username} {status_label}"}
 
-    return {
-        "success": True,
-        "message": f"User {user.username} activated",
-    }
+
+@router.put("/users/{user_id}/activate", response_model=dict)
+def activate_user(
+    user_id: int,
+    request: Request,
+    db: Session = Depends(get_user_repo),
+    current_user: User = Depends(require_admin),
+):
+    return _set_user_active_state(user_id, True, "USER_ACTIVATED", request, db, current_user)
 
 
 # ── PUT /users/{user_id}/deactivate ───────────────────────────────────────
@@ -1058,35 +1059,7 @@ def deactivate_user(
     db: Session = Depends(get_user_repo),
     current_user: User = Depends(require_admin),
 ):
-    user = db.get_by_id(user_id)
-    if not user:
-        raise NotFoundError("User", user_id)
-
-    _enforce_tenant_user_access(user, current_user)
-
-    if user.id == current_user.id:
-        raise ValidationError("Cannot deactivate your own account")
-
-    user.is_active = False
-    db.update(user)
-
-    # Audit log
-    audit = AuditService(db.db)
-    audit.log(
-        username=current_user.username,
-        action="USER_DEACTIVATED",
-        resource_type="user",
-        resource_id=str(user.id),
-        user_id=current_user.id,
-        org_id=user.org_id,
-        details={"target_user": user.username},
-        ip_address=_get_client_ip(request),
-    )
-
-    return {
-        "success": True,
-        "message": f"User {user.username} deactivated",
-    }
+    return _set_user_active_state(user_id, False, "USER_DEACTIVATED", request, db, current_user)
 
 
 # ── POST /users/{user_id}/reset-password ──────────────────────────────────

@@ -7,8 +7,9 @@ No direct DB queries here — everything goes through the service layer.
 All routes are strictly org-scoped to the caller's organization.
 """
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Query
 from typing import Optional
+from sqlalchemy.orm import Session
 from app.core.rate_limiter import limiter
 from app.core.dependencies import (
     get_inventory_service,
@@ -17,6 +18,8 @@ from app.core.dependencies import (
     require_staff,
     require_admin,
     get_caller_org_id,
+    has_location_access,
+    get_db,
 )
 
 from app.core.exceptions import (
@@ -33,7 +36,7 @@ from app.application.cache_service import (
     cache_invalidate_pattern,
 )
 from app.infrastructure.database.inventory_repo import InventoryRepository
-from app.infrastructure.database.models import User
+from app.infrastructure.database.models import User, Item, Location, InventoryTransaction
 from app.api.schemas.inventory_schemas import (
     TransactionItem,
     SingleTransactionRequest,
@@ -46,38 +49,10 @@ from app.api.schemas.inventory_schemas import (
     ScanDispenseRequest,
 )
 
-
-
 router = APIRouter(prefix="/inventory", tags=["Inventory"])
 
-
-def _caller_org_id(user: User) -> Optional[int]:
-    """Return org_id for tenant-scoped operations using central dependency rule."""
-    return get_caller_org_id(user)
-
-
-def _has_location_access(user: User, target_location_id: int) -> bool:
-    """Check if staff or vendor user is permitted to access/mutate this location."""
-    raw = getattr(user, "location_ids", None)
-    if not raw:
-        return True  # None or empty means unrestricted/all branches in user's org
-    if isinstance(raw, str):
-        import json
-        try:
-            raw = json.loads(raw)
-        except Exception:
-            raw = [raw]
-    if isinstance(raw, (list, set, tuple)):
-        allowed_ids = set()
-        for item in raw:
-            try:
-                allowed_ids.add(int(item))
-            except (ValueError, TypeError):
-                pass
-        if not allowed_ids:
-            return True
-        return target_location_id in allowed_ids
-    return True
+_caller_org_id = get_caller_org_id
+_has_location_access = has_location_access
 
 
 
@@ -150,6 +125,7 @@ def get_all_items(
 
 
 
+@router.get("/locations/{location_id}/items")
 @router.get("/location/{location_id}/items")
 def get_location_items(
     location_id: int,
@@ -610,6 +586,7 @@ def reset_inventory_data(
     }
 
 
+@router.post("/transactions")
 @router.post("/transaction")
 @limiter.limit("30/minute")
 def add_single_transaction(
@@ -644,6 +621,7 @@ def add_single_transaction(
     return result
 
 
+@router.post("/transactions/batch")
 @router.post("/bulk-transaction")
 @limiter.limit("10/minute")
 def add_bulk_transactions(
@@ -687,6 +665,7 @@ def add_bulk_transactions(
     return result
 
 
+@router.post("/dispenses")
 @router.post("/scan-dispense")
 @limiter.limit("60/minute")
 def scan_dispense_item(
@@ -718,4 +697,70 @@ def scan_dispense_item(
         entered_by=str(current_user.username),
         org_id=org_id,
     )
+
+
+@router.get("/near-expiry")
+@limiter.limit("30/minute")
+def get_near_expiry_items(
+    request: Request,
+    days: int = Query(60, ge=1, le=365),
+    location_id: Optional[int] = Query(None),
+    category: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    List all medication batches expiring within the specified number of days (default 60).
+    Returns item name, category, batch number, expiry date, location, and days remaining.
+    """
+    from datetime import date, timedelta
+    org_id = _caller_org_id(current_user)
+    cutoff = date.today() + timedelta(days=days)
+
+    q = (
+        db.query(
+            InventoryTransaction.id,
+            InventoryTransaction.batch_number,
+            InventoryTransaction.expiry_date,
+            InventoryTransaction.closing_stock,
+            InventoryTransaction.received,
+            Item.name.label("item_name"),
+            Item.category.label("category"),
+            Location.name.label("location_name"),
+            Location.id.label("location_id"),
+        )
+        .join(Item, InventoryTransaction.item_id == Item.id)
+        .join(Location, InventoryTransaction.location_id == Location.id)
+        .filter(
+            InventoryTransaction.expiry_date != None,
+            InventoryTransaction.expiry_date >= date.today(),
+            InventoryTransaction.expiry_date <= cutoff,
+        )
+    )
+    if org_id is not None:
+        q = q.filter(Location.org_id == org_id)
+    if location_id is not None:
+        q = q.filter(Location.id == location_id)
+    if category:
+        q = q.filter(Item.category == category)
+
+    rows = q.order_by(InventoryTransaction.expiry_date.asc()).limit(100).all()
+
+    return {
+        "success": True,
+        "data": [
+            {
+                "id": row.id,
+                "item_name": row.item_name,
+                "category": row.category,
+                "batch_number": row.batch_number,
+                "expiry_date": str(row.expiry_date),
+                "days_remaining": (row.expiry_date - date.today()).days,
+                "stock": row.closing_stock if (row.closing_stock is not None and row.closing_stock > 0) else (row.received or 1),
+                "location_name": row.location_name,
+                "location_id": row.location_id,
+            }
+            for row in rows
+        ],
+    }
 

@@ -216,14 +216,14 @@ export default function OnboardingWizard({ isOpen: externalIsOpen, onClose: exte
 
                                 <div className="flex items-center justify-between pt-2 border-t border-border">
                                     <div>
-                                        <p className="text-xs font-semibold text-foreground">FEFO Expiry &amp; Low-Stock Alerts</p>
+                                        <p className="text-xs font-semibold text-foreground">Early Expiry &amp; Low-Stock Alerts</p>
                                         <p className="text-xs text-muted-foreground">Receive alerts for 30/60-day expiring batches and shortage warnings</p>
                                     </div>
                                     <input
                                         type="checkbox"
                                         checked={fefoAlertsEnabled}
                                         onChange={(e) => setFefoAlertsEnabled(e.target.checked)}
-                                        className="h-4 w-4 rounded-none border-border text-primary focus:ring-0 cursor-pointer"
+                                        className="h-4 w-4 rounded-md border-border text-primary focus:ring-0 cursor-pointer"
                                     />
                                 </div>
                             </div>
@@ -234,7 +234,7 @@ export default function OnboardingWizard({ isOpen: externalIsOpen, onClose: exte
                     {step === 2 && (
                         <div className="space-y-5 animate-in fade-in duration-200">
                             <div>
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-none text-xs font-semibold bg-accent text-foreground border border-border mb-2">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-accent text-foreground border border-border mb-2">
                                     ⚡ Core Capabilities
                                 </span>
                                 <h3 className="text-xl font-sans font-bold text-foreground tracking-tight">
@@ -246,28 +246,28 @@ export default function OnboardingWizard({ isOpen: externalIsOpen, onClose: exte
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div className="p-4 rounded-none border border-border bg-card hover:border-foreground/40 transition-colors shadow-2xs">
-                                    <div className="w-8 h-8 rounded-none bg-accent flex items-center justify-center text-foreground mb-2.5 border border-border">
+                                <div className="p-4 rounded-lg border border-border bg-card hover:border-foreground/40 transition-colors shadow-2xs">
+                                    <div className="w-8 h-8 rounded-md bg-accent flex items-center justify-center text-foreground mb-2.5 border border-border">
                                         <Clock size={16} className="text-[#F26A4B]" />
                                     </div>
-                                    <h4 className="text-sm font-bold text-foreground">Zero Expiry Loss (FEFO)</h4>
+                                    <h4 className="text-sm font-bold text-foreground">Zero Expiry Loss (Sell Oldest First)</h4>
                                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                                        Automatic 30/60/90-day expiry queue to return near-expiry medicines to distributors for credit before loss.
+                                        Automatic 30/60/90-day alerts to return or sell near-expiry medicines before they expire.
                                     </p>
                                 </div>
 
-                                <div className="p-4 rounded-none border border-border bg-card hover:border-foreground/40 transition-colors shadow-2xs">
-                                    <div className="w-8 h-8 rounded-none bg-accent flex items-center justify-center text-foreground mb-2.5 border border-border">
+                                <div className="p-4 rounded-lg border border-border bg-card hover:border-foreground/40 transition-colors shadow-2xs">
+                                    <div className="w-8 h-8 rounded-md bg-accent flex items-center justify-center text-foreground mb-2.5 border border-border">
                                         <ThermometerSnowflake size={16} className="text-[#2E2E2E]" />
                                     </div>
-                                    <h4 className="text-sm font-bold text-foreground">Cold-Chain Fridge Compliance</h4>
+                                    <h4 className="text-sm font-bold text-foreground">Fridge Temperature Tracking</h4>
                                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                                        Live 2°C–8°C temperature tracking for Insulins, Vaccines, and biological injections with breach alerts.
+                                        Live 2°C–8°C temperature tracking for Insulins, Vaccines, and fridge medicines with temperature alerts.
                                     </p>
                                 </div>
 
-                                <div className="p-4 rounded-none border border-border bg-card hover:border-foreground/40 transition-colors shadow-2xs">
-                                    <div className="w-8 h-8 rounded-none bg-accent flex items-center justify-center text-foreground mb-2.5 border border-border">
+                                <div className="p-4 rounded-lg border border-border bg-card hover:border-foreground/40 transition-colors shadow-2xs">
+                                    <div className="w-8 h-8 rounded-md bg-accent flex items-center justify-center text-foreground mb-2.5 border border-border">
                                         <Bot size={16} className="text-[#F26A4B]" />
                                     </div>
                                     <h4 className="text-sm font-bold text-foreground">Personalized AI Copilot</h4>
@@ -276,13 +276,13 @@ export default function OnboardingWizard({ isOpen: externalIsOpen, onClose: exte
                                     </p>
                                 </div>
 
-                                <div className="p-4 rounded-none border border-border bg-card hover:border-foreground/40 transition-colors shadow-2xs">
-                                    <div className="w-8 h-8 rounded-none bg-accent flex items-center justify-center text-foreground mb-2.5 border border-border">
+                                <div className="p-4 rounded-lg border border-border bg-card hover:border-foreground/40 transition-colors shadow-2xs">
+                                    <div className="w-8 h-8 rounded-md bg-accent flex items-center justify-center text-foreground mb-2.5 border border-border">
                                         <Truck size={16} className="text-[#2E2E2E]" />
                                     </div>
-                                    <h4 className="text-sm font-bold text-foreground">Distributor Portal &amp; POs</h4>
+                                    <h4 className="text-sm font-bold text-foreground">Supplier Portal &amp; Orders</h4>
                                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                                        Connect pharmaceutical distributors and ingest delivery manifests automatically into your inventory.
+                                        Connect medicine suppliers and import delivery bills automatically into your inventory.
                                     </p>
                                 </div>
                             </div>
@@ -342,15 +342,15 @@ export default function OnboardingWizard({ isOpen: externalIsOpen, onClose: exte
 
                                 <div
                                     onClick={() => handleComplete('/admin/inventory')}
-                                    className="p-3.5 rounded-none border border-border hover:border-primary bg-card hover:bg-accent/30 cursor-pointer flex items-center justify-between transition-all"
+                                    className="p-3.5 rounded-lg border border-border hover:border-primary bg-card hover:bg-accent/30 cursor-pointer flex items-center justify-between transition-all"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-none bg-accent text-foreground border border-border flex items-center justify-center">
+                                        <div className="w-8 h-8 rounded-md bg-accent text-foreground border border-border flex items-center justify-center">
                                             <Boxes size={16} />
                                         </div>
                                         <div>
                                             <p className="text-sm font-semibold text-foreground">Inspect Medicine Catalog &amp; Stocks</p>
-                                            <p className="text-xs text-muted-foreground">Review medicines, batch numbers, MRPs, and FEFO expiry queues.</p>
+                                            <p className="text-xs text-muted-foreground">Review medicines, batch numbers, prices, and expiry dates.</p>
                                         </div>
                                     </div>
                                     <ArrowRight size={16} className="text-muted-foreground" />

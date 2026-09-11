@@ -276,7 +276,7 @@ export default function SuppliersAndStaff({ initialTab = 'staff' }) {
                     <div>
                         <h2 className="text-xl font-sans font-bold text-foreground tracking-tight">Suppliers &amp; Staff</h2>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                            Centralized directory for pharmacy personnel and medicine distributors
+                            Directory of your store staff and medicine suppliers
                         </p>
                     </div>
 
@@ -636,8 +636,8 @@ export default function SuppliersAndStaff({ initialTab = 'staff' }) {
                                         value={userForm.role}
                                         onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
                                     >
-                                        <option value="staff">Staff (Pharmacist)</option>
-                                        <option value="vendor">Vendor (Distributor)</option>
+                                        <option value="staff">Store Staff</option>
+                                        <option value="vendor">Medicine Supplier</option>
                                         <option value="manager">Branch Manager</option>
                                         <option value="admin">Store Admin</option>
                                     </select>

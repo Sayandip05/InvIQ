@@ -21,7 +21,7 @@ const AlertsDropdown = () => {
             {isOpen && (
                 <>
                     <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-                    <div className="absolute right-0 mt-2 w-80 bg-card rounded-lg shadow-xl border border-border z-20 overflow-hidden text-card-foreground">
+                    <div className="absolute right-0 mt-2 w-80 bg-card rounded-xl shadow-xl border border-border z-20 overflow-hidden text-card-foreground">
                         <div className="p-3 border-b border-border flex items-center justify-between">
                             <span className="font-semibold text-foreground text-sm">Real-time Alerts</span>
                             {alerts.length > 0 && (

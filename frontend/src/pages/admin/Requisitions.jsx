@@ -29,8 +29,8 @@ const Requisitions = () => {
             <div className="sticky top-0 z-30 bg-card/90 backdrop-blur border-b border-border px-6 py-3.5 shadow-2xs">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-xl font-sans font-bold text-foreground tracking-tight">Requisitions & Orders</h2>
-                        <p className="text-xs text-muted-foreground mt-0.5">Manage dispensary stock fulfillment requests and approvals</p>
+                        <h2 className="text-xl font-sans font-bold text-foreground tracking-tight">Stock Orders &amp; Requests</h2>
+                        <p className="text-xs text-muted-foreground mt-0.5">Manage store stock requests, orders, and approvals</p>
                     </div>
 
                     <div className="flex items-center gap-2.5 flex-wrap">

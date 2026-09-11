@@ -13,7 +13,6 @@ import { getRoleHome } from '@/shared/constants/roles';
 const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
 const Inventory = lazy(() => import('./pages/admin/Inventory'));
 const Chatbot = lazy(() => import('./pages/admin/Chatbot'));
-const Requisitions = lazy(() => import('./pages/admin/Requisitions'));
 const UserManagement = lazy(() => import('./pages/admin/UserManagement'));
 const SupplierManagement = lazy(() => import('./pages/admin/SupplierManagement'));
 const Reports = lazy(() => import('./pages/admin/Reports'));
@@ -100,7 +99,7 @@ function AppContent() {
               <Route path="inventory" element={<Inventory />} />
               <Route path="stock-acquisition" element={<DataEntry />} />
               <Route path="chat" element={<Chatbot />} />
-              <Route path="requisitions" element={<Requisitions />} />
+              <Route path="requisitions" element={<Navigate to="/admin/stock-acquisition" replace />} />
               <Route path="organization" element={<OrganizationSettings />} />
               {/* Auth-required management pages */}
               <Route element={<ProtectedRoute requiredRole="admin" />}>

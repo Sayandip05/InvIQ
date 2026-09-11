@@ -274,10 +274,10 @@ Icon?
 backend/debug_import.py
 goal.md
 
-# ═══════════════════════════════════════════════════════════
-# AI Agent Workspaces & Customizations
-# ═══════════════════════════════════════════════════════════
-.agent/
-.agent
-.agents/
-.agents
+# # ═══════════════════════════════════════════════════════════
+# # AI Agent Workspaces & Customizations
+# # ═══════════════════════════════════════════════════════════
+# .agent/
+# .agent
+# .agents/
+# .agents

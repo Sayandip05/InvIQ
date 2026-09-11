@@ -738,7 +738,7 @@ export default function OrganizationSettings() {
                                 <Store className="w-8 h-8 text-muted-foreground mx-auto" />
                                 <div>
                                     <p className="text-xs font-bold text-foreground uppercase tracking-wider font-mono">No branch counters configured</p>
-                                    <p className="text-xs text-muted-foreground mt-1">Add your main pharmacy counter to begin dispensing medicines.</p>
+                                    <p className="text-xs text-muted-foreground mt-1">Add your main store counter to begin managing and selling medicines.</p>
                                 </div>
                                 <button
                                     onClick={handleOpenAddBranch}
@@ -882,7 +882,7 @@ export default function OrganizationSettings() {
                                         <option value="retail_counter">Retail Counter</option>
                                         <option value="hospital_pharmacy">Hospital Pharmacy</option>
                                         <option value="warehouse">Storage Godown</option>
-                                        <option value="clinic_dispensary">Clinic Dispensary</option>
+                                        <option value="clinic_dispensary">Clinic Store Counter</option>
                                     </select>
                                 </div>
                                 <div>

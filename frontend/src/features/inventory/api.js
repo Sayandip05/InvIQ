@@ -19,6 +19,7 @@ export const inventoryApi = {
     uploadDeliveryManifest: (locationId, formData) => apiClient.post(`/vendor/upload-delivery?location_id=${locationId}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
     }),
+    getNearExpiryItems: (params) => apiClient.get('/inventory/near-expiry', { params }),
 };
 
 export default inventoryApi;

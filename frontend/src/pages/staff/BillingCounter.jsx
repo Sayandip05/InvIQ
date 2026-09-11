@@ -225,7 +225,7 @@ export default function BillingCounter() {
                                                 <tr key={item.id} className="hover:bg-accent/30 transition-colors">
                                                     <td className="p-3">
                                                         <p className="font-bold text-foreground">{item.item_name}</p>
-                                                        <span className="text-[10px] text-muted-foreground font-mono">{item.barcode || item.sku}</span>
+                                                        <span className="text-[10px] text-muted-foreground font-mono">{item.barcode || (item.id ? `ID-${item.id}` : '')}</span>
                                                     </td>
                                                     <td className="p-3">
                                                         <span className="font-mono text-xs font-semibold text-foreground">{item.batch_number || 'BATCH-AUTO'}</span>

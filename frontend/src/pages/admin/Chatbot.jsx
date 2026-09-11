@@ -11,7 +11,7 @@ const Chatbot = () => {
                     <div>
                         <h2 className="text-xl font-sans font-bold text-foreground tracking-tight">AI Assistant &amp; Copilot</h2>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                            Real-time pharmacological queries, inventory intelligence, and guidance
+                            Real-time medicine guidance, stock intelligence, and assistant
                         </p>
                     </div>
 

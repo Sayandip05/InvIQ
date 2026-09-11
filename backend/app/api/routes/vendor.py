@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, UploadFile, File, Request, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from app.core.dependencies import get_db, get_current_user
+from app.core.dependencies import get_db, get_current_user, has_location_access
 from app.core.rate_limiter import limiter
 from app.core.exceptions import ValidationError, AuthorizationError
 from app.infrastructure.database.models import User, Location
@@ -30,34 +30,7 @@ def _require_vendor_role(current_user: User) -> None:
         raise AuthorizationError("Vendor access required")
 
 
-def _has_location_access(user: User, target_location_id: int) -> bool:
-    """
-    Safely check if a user has access to target_location_id.
-    Handles None, empty list/string, Python list of ints or strings, or raw JSON string.
-    """
-    raw = user.location_ids
-    if not raw:
-        return True  # None or empty means no restriction
-
-    if isinstance(raw, str):
-        import json
-        try:
-            raw = json.loads(raw)
-        except Exception:
-            raw = [raw]
-
-    if isinstance(raw, (list, set, tuple)):
-        allowed_ids = set()
-        for item in raw:
-            try:
-                allowed_ids.add(int(item))
-            except (ValueError, TypeError):
-                pass
-        if not allowed_ids:
-            return True
-        return target_location_id in allowed_ids
-
-    return True
+_has_location_access = has_location_access
 
 
 # ── POST /vendor/upload-delivery ───────────────────────────────────────────

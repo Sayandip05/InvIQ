@@ -16,6 +16,7 @@ from app.core.dependencies import (
     require_admin,
     require_staff,
     get_caller_org_id,
+    has_location_access,
 )
 from app.core.exceptions import NotFoundError, AuthorizationError
 from app.application.requisition_service import RequisitionService
@@ -29,36 +30,12 @@ from app.api.schemas.requisition_schemas import (
 
 router = APIRouter(prefix="/requisition", tags=["Requisition"])
 
-
-def _caller_org_id(user: User) -> Optional[int]:
-    """Return org_id for tenant-scoped operations using central dependency rule."""
-    return get_caller_org_id(user)
+_caller_org_id = get_caller_org_id
+_has_location_access = has_location_access
 
 
-def _has_location_access(user: User, target_location_id: int) -> bool:
-    """Check if staff user is permitted to access this location."""
-    raw = getattr(user, "location_ids", None)
-    if not raw:
-        return True
-    if isinstance(raw, str):
-        import json
-        try:
-            raw = json.loads(raw)
-        except Exception:
-            raw = [raw]
-    if isinstance(raw, (list, set, tuple)):
-        allowed_ids = set()
-        for item in raw:
-            try:
-                allowed_ids.add(int(item))
-            except (ValueError, TypeError):
-                pass
-        if not allowed_ids:
-            return True
-        return target_location_id in allowed_ids
-    return True
-
-
+@router.post("", status_code=201)
+@router.post("/")
 @router.post("/create")
 @limiter.limit("20/minute")
 def create_requisition(
@@ -90,6 +67,8 @@ def create_requisition(
 
 
 
+@router.get("")
+@router.get("/")
 @router.get("/list")
 def list_requisitions(
     status: Optional[str] = None,

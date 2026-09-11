@@ -20,6 +20,7 @@ const STATUS_COLORS = {
 
 import { Skeleton } from '../../components/ui/skeleton';
 import MonoRoundedDonut from '../../components/ui/mono-rounded-donut';
+import ExpiryLineChart from '../../components/ui/ExpiryLineChart';
 
 export const DashboardSkeleton = () => {
     return (
@@ -41,7 +42,7 @@ export const DashboardSkeleton = () => {
             {/* Page Content Skeleton Container */}
             <div className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6 flex-1">
                 {/* 4 KPI Matrix Skeleton */}
-                <div className="bg-card border border-border rounded-lg grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border shadow-xs">
+                <div className="bg-card border border-border rounded-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border shadow-xs">
                     {[1, 2, 3, 4].map((i) => (
                         <div key={i} className="p-6 flex flex-col justify-between space-y-4">
                             <div className="space-y-2">
@@ -54,7 +55,7 @@ export const DashboardSkeleton = () => {
                 </div>
 
                 {/* Connected Charts Grid Matrix Skeleton */}
-                <div className="bg-card border border-border rounded-lg grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border shadow-xs">
+                <div className="bg-card border border-border rounded-xl grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border shadow-xs">
                     {/* Left Chart Skeleton (Donut / Pie Chart) */}
                     <div className="p-6 space-y-4">
                         <div className="space-y-1.5">
@@ -70,14 +71,14 @@ export const DashboardSkeleton = () => {
                                 <div className="absolute w-24 h-24 bg-card rounded-full" />
                             </div>
                             <div className="flex items-center gap-4 pt-2">
-                                <Skeleton className="h-3 w-16 rounded-md" />
-                                <Skeleton className="h-3 w-16 rounded-md" />
-                                <Skeleton className="h-3 w-16 rounded-md" />
+                                <Skeleton className="h-3 w-16 rounded-full" />
+                                <Skeleton className="h-3 w-16 rounded-full" />
+                                <Skeleton className="h-3 w-16 rounded-full" />
                             </div>
                         </div>
                     </div>
 
-                    {/* Right Chart Skeleton (Horizontal Bar Chart) */}
+                    {/* Right Chart Skeleton (Dynamic Expiry Line Chart) */}
                     <div className="p-6 space-y-4">
                         <div className="flex items-center justify-between">
                             <div className="space-y-1.5">
@@ -87,24 +88,27 @@ export const DashboardSkeleton = () => {
                                 </div>
                                 <Skeleton className="h-3 w-64 rounded-md" />
                             </div>
-                            <Skeleton className="h-4 w-16 rounded-md" />
+                            <Skeleton className="h-4 w-28 rounded-md" />
                         </div>
-                        <div className="h-64 flex flex-col justify-around pt-3 pr-2">
-                            {[90, 75, 60, 45, 30].map((widthPct, idx) => (
-                                <div key={idx} className="flex items-center gap-3">
-                                    <Skeleton className="h-3 w-28 rounded-md shrink-0" />
-                                    <Skeleton 
-                                        className="h-5 rounded-md" 
-                                        style={{ width: `${widthPct}%` }} 
-                                    />
-                                </div>
-                            ))}
+                        <div className="h-64 rounded-xl bg-accent/20 p-4 flex flex-col justify-between border border-border">
+                            <div className="flex justify-end gap-3">
+                                <Skeleton className="h-3 w-20 rounded" />
+                                <Skeleton className="h-3 w-20 rounded" />
+                            </div>
+                            <div className="h-40 flex items-center justify-center">
+                                <Skeleton className="h-28 w-full rounded-lg" />
+                            </div>
+                            <div className="flex justify-between">
+                                {[1, 2, 3, 4, 5, 6].map((i) => (
+                                    <Skeleton key={i} className="h-2.5 w-8 rounded" />
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Top Critical Shortages Skeleton */}
-                <div className="bg-card border border-border rounded-lg shadow-xs p-6 space-y-4">
+                <div className="bg-card border border-border rounded-xl shadow-xs p-6 space-y-4">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1.5">
                             <Skeleton className="h-5 w-44 rounded-md" />
@@ -130,6 +134,25 @@ export const DashboardSkeleton = () => {
             </div>
         </div>
     );
+};
+
+const formatCategory = (cat) => {
+    if (!cat) return '';
+    const map = {
+        'analgesics': 'Pain Relief',
+        'analgesic': 'Pain Relief',
+        'cardiovascular': 'Heart Care',
+        'cardiac': 'Heart Care',
+        'respiratory': 'Breathing Care',
+        'endocrine': 'Diabetes Care',
+        'gastrointestinal': 'Stomach Care',
+        'gastro': 'Stomach Care',
+        'dermatology': 'Skin Care',
+        'dermatological': 'Skin Care',
+        'ophthalmic': 'Eye Care',
+        'ophthalmology': 'Eye Care',
+    };
+    return map[cat.toLowerCase()] || cat;
 };
 
 const Dashboard = () => {
@@ -178,10 +201,10 @@ const Dashboard = () => {
                 if (response.data && (response.data.success || response.data.data)) {
                     setStats(response.data.data || response.data);
                 } else {
-                    setError(response.data?.error?.message || response.data?.error || "Failed to load stats");
+                    setError("Unable to load dashboard details right now.");
                 }
             } catch (err) {
-                setError("Network error. Is the backend running?");
+                setError("Unable to connect to the server. Please check your internet connection and try again.");
                 console.error(err);
             } finally {
                 setLoading(false);
@@ -204,13 +227,13 @@ const Dashboard = () => {
     if (error && !stats) {
         return (
             <div className="p-8 max-w-7xl mx-auto w-full">
-                <div className="p-6 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg space-y-3">
+                <div className="p-6 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl space-y-3">
                     <p className="font-semibold text-sm">{error}</p>
                     <button
                         onClick={() => window.location.reload()}
                         className="px-4 py-2 bg-destructive text-destructive-foreground text-xs font-semibold hover:opacity-90 transition-opacity rounded-md cursor-pointer"
                     >
-                        Retry Loading
+                        Try Again
                     </button>
                 </div>
             </div>
@@ -234,11 +257,11 @@ const Dashboard = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h2 className="text-xl font-sans font-bold text-foreground tracking-tight">Dashboard Overview</h2>
-                        <p className="text-xs text-muted-foreground mt-0.5">Real-time inventory intelligence & batch tracking</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Overview of stock levels, reorder alerts, and expiring medicines</p>
                     </div>
 
                     <div className="flex items-center gap-2.5 flex-wrap">
-                        {/* Facility / Store Filter */}
+                        {/* Location Filter */}
                         <div className="relative flex items-center">
                             <Building2 size={14} className="absolute left-3 text-muted-foreground pointer-events-none" />
                             <select
@@ -246,7 +269,7 @@ const Dashboard = () => {
                                 onChange={(e) => setSelectedLocation(e.target.value)}
                                 className="text-xs font-medium bg-background border border-border text-foreground rounded-md pl-8 pr-7 py-2 hover:bg-accent/40 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
                             >
-                                <option value="">All Facilities ({locations.length || 'Global'})</option>
+                                <option value="">All Locations ({locations.length || 'All'})</option>
                                 {locations.map((loc) => (
                                     <option key={loc.id} value={loc.id}>
                                         {loc.name}
@@ -266,7 +289,7 @@ const Dashboard = () => {
                                 <option value="">All Categories ({categories.length || 'All'})</option>
                                 {categories.map((cat) => (
                                     <option key={cat} value={cat}>
-                                        {cat}
+                                        {formatCategory(cat)}
                                     </option>
                                 ))}
                             </select>
@@ -295,65 +318,65 @@ const Dashboard = () => {
             {/* Page Content Container with Standard Spacious Layout */}
             <div className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6 flex-1">
                 {/* 4 KPI Matrix with Warm Parchment Cards */}
-                <div className="bg-card border border-border rounded-lg grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border shadow-xs">
+                <div className="bg-card border border-border rounded-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border shadow-xs">
 
                 <div className="p-6 flex flex-col justify-between">
                     <div>
-                        <p className="text-[11px] font-bold text-muted-foreground tracking-wider font-mono uppercase">Active SKUs</p>
+                        <p className="text-[11px] font-bold text-muted-foreground tracking-wider font-mono uppercase">Total Medicines</p>
                         <h3 className="text-3xl font-sans font-bold text-foreground mt-2 tracking-tight">{totalItems}</h3>
                     </div>
                     <div className="mt-4 flex items-center text-xs font-medium text-muted-foreground">
-                        <span>Total catalog volume</span>
+                        <span>Total medicines in system</span>
                     </div>
                 </div>
 
                 <div className="p-6 flex flex-col justify-between">
                     <div>
-                        <p className="text-[11px] font-bold text-muted-foreground tracking-wider font-mono uppercase">Inventory Valuation</p>
+                        <p className="text-[11px] font-bold text-muted-foreground tracking-wider font-mono uppercase">Total Stock Value</p>
                         <h3 className="text-3xl font-sans font-bold text-foreground mt-2 tracking-tight">₹0</h3>
                     </div>
                     <div className="mt-4 flex items-center text-xs font-medium text-muted-foreground">
-                        <span>Live purchase evaluation</span>
+                        <span>Estimated total inventory value</span>
                     </div>
                 </div>
 
                 <div className="p-6 flex flex-col justify-between">
                     <div>
-                        <p className="text-[11px] font-bold text-muted-foreground tracking-wider font-mono uppercase">Stock Fulfillment Rate</p>
+                        <p className="text-[11px] font-bold text-muted-foreground tracking-wider font-mono uppercase">In-Stock Rate</p>
                         <h3 className="text-3xl font-sans font-bold text-foreground mt-2 tracking-tight">
                             {totalItems > 0 ? (((totalItems - criticalItems) / totalItems) * 100).toFixed(1) + '%' : '—'}
                         </h3>
                     </div>
                     <div className="mt-4 flex items-center text-muted-foreground text-xs font-medium">
-                        <span>Across active store locations</span>
+                        <span>Medicines in healthy supply</span>
                     </div>
                 </div>
 
                 <div className="p-6 flex flex-col justify-between">
                     <div>
-                        <p className="text-[11px] font-bold text-muted-foreground tracking-wider font-mono uppercase">Critical Stock Alerts</p>
-                        <h3 className="text-3xl font-sans font-bold text-destructive mt-2 tracking-tight">{criticalItems} Critical</h3>
+                        <p className="text-[11px] font-bold text-muted-foreground tracking-wider font-mono uppercase">Low Stock Alerts</p>
+                        <h3 className="text-3xl font-sans font-bold text-destructive mt-2 tracking-tight">{criticalItems} Need Reorder</h3>
                     </div>
                     <div className="mt-4 flex items-center text-xs font-medium text-amber-700">
-                        <span>⚠️ {warningItems} Near Minimum</span>
+                        <span>⚠️ {warningItems} Running Low</span>
                     </div>
                 </div>
             </div>
 
             {/* Connected Charts Grid Matrix */}
-            <div className="bg-card border border-border rounded-lg grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border shadow-xs">
+            <div className="bg-card border border-border rounded-xl grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border shadow-xs">
                 {/* Status Distribution - "Mono Rounded" Style */}
                 <div className="p-6 flex flex-col justify-between">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-base font-sans font-bold text-foreground">Inventory Health Breakdown</h3>
+                            <h3 className="text-base font-sans font-bold text-foreground">Stock Health Overview</h3>
                             {totalItems > 0 && (
-                                <span className="text-xs font-semibold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 border border-emerald-300 rounded-md flex items-center gap-0.5">
-                                    <ArrowUpRight size={12} /> {totalItems > 0 ? (((totalItems - criticalItems) / totalItems) * 100).toFixed(1) : 0}% Healthy
+                                <span className="text-xs font-semibold text-foreground bg-accent px-2 py-0.5 border border-border rounded-md flex items-center gap-0.5">
+                                    <ArrowUpRight size={12} className="text-[#F26A4B]" /> {totalItems > 0 ? (((totalItems - criticalItems) / totalItems) * 100).toFixed(1) : 0}% Well Stocked
                                 </span>
                             )}
                         </div>
-                        <p className="text-xs text-muted-foreground mb-4">Real-time batch stock status across warehouse locations.</p>
+                        <p className="text-xs text-muted-foreground mb-4">Overview of current stock across all storage locations.</p>
                     </div>
 
                     <MonoRoundedDonut
@@ -367,98 +390,41 @@ const Dashboard = () => {
                     />
                 </div>
 
-                {/* Category Distribution with Adaptive Scroll */}
-                <div className="p-6">
-                    <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2">
-                            <h3 className="text-base font-sans font-bold text-foreground">Therapeutic Category Volume</h3>
-                            <span className="text-xs font-semibold text-foreground bg-accent px-2 py-0.5 border border-border rounded-md flex items-center gap-0.5">
-                                {category_distribution.length} Categories
-                            </span>
-                        </div>
-                        <span className="text-xs font-bold text-foreground">
-                            {totalItems} Units
-                        </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mb-4">Current units in stock by therapeutic medicine category.</p>
-                    <div className="max-h-[300px] overflow-y-auto pr-2">
-                        <div style={{ height: Math.max(260, category_distribution.length * 34) }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart
-                                    data={category_distribution}
-                                    layout="vertical"
-                                    margin={{ top: 8, right: 20, left: 10, bottom: 8 }}
-                                    barCategoryGap="20%"
-                                >
-                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E5DFD5" opacity={0.6} />
-                                    <XAxis type="number" tick={{ fontSize: 11, fill: '#5E5A52' }} axisLine={{ stroke: '#D2CBBB' }} />
-                                    <YAxis
-                                        dataKey="name"
-                                        type="category"
-                                        width={140}
-                                        interval={0}
-                                        tick={{ fontSize: 11, fill: '#1E1E1E' }}
-                                        axisLine={{ stroke: '#D2CBBB' }}
-                                    />
-                                    <Tooltip
-                                        cursor={{ fill: 'rgba(0, 0, 0, 0.03)', radius: [999, 999, 999, 999] }}
-                                        content={({ active, payload, label }) => {
-                                            if (!active || !payload || !payload.length) return null;
-                                            return (
-                                                <div className="bg-card border border-border rounded-xl p-3 shadow-lg min-w-[130px]">
-                                                    <p className="text-xs font-semibold text-foreground">{label}</p>
-                                                    <div className="h-[1px] bg-border my-1.5" />
-                                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                                        <span className="w-2 h-2 rounded-full bg-[#F26A4B] shrink-0" />
-                                                        <span>Volume: <strong className="text-foreground font-bold font-mono">{payload[0].value}</strong></span>
-                                                    </div>
-                                                </div>
-                                            );
-                                        }}
-                                    />
-                                    <Bar
-                                        dataKey="value"
-                                        fill="#F26A4B"
-                                        radius={[999, 999, 999, 999]}
-                                        barSize={14}
-                                        background={{ fill: 'rgba(0, 0, 0, 0.04)', radius: [999, 999, 999, 999] }}
-                                    />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
+                {/* Expiry Risk Trajectory - Dynamic Spline Lines */}
+                <div className="p-6 flex flex-col justify-between">
+                    <ExpiryLineChart data={stats.expiry_timeline} height={240} />
                 </div>
             </div>
 
-            {/* Top Critical Shortages — Full Width */}
-            <div className="bg-card border border-border rounded-lg shadow-xs">
+            {/* Low Stock Medicines — Full Width */}
+            <div className="bg-card border border-border rounded-xl shadow-xs">
                 <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
                         <div>
-                            <h3 className="text-base font-sans font-bold text-foreground">Top Critical Shortages</h3>
-                            <p className="text-xs text-muted-foreground">Items requiring immediate reorder.</p>
+                            <h3 className="text-base font-sans font-bold text-foreground">Medicines Running Low</h3>
+                            <p className="text-xs text-muted-foreground">Medicines that need to be reordered soon.</p>
                         </div>
                         <span className="text-xs font-semibold text-destructive bg-destructive/10 border border-destructive/20 px-2 py-0.5 rounded-md">
-                            {low_stock_items.length} Critical
+                            {low_stock_items.length} Need Reorder
                         </span>
                     </div>
                     <div className="divide-y divide-border/60">
                         {low_stock_items.length === 0 ? (
-                            <p className="text-muted-foreground text-sm text-center py-10">No critical shortages found.</p>
+                            <p className="text-muted-foreground text-sm text-center py-10">Great news! All medicines have sufficient stock.</p>
                         ) : (
                             low_stock_items.slice(0, 8).map((item, index) => (
                                 <div key={index} className="py-3 flex items-center justify-between">
                                     <div>
                                         <p className="font-semibold text-foreground text-sm">{item.name}</p>
                                         <p className="text-xs text-muted-foreground">
-                                            {item.location || 'Central Warehouse'}{item.category ? ` • ${item.category}` : ''}
+                                            {item.location || 'Central Location'}{item.category ? ` • ${formatCategory(item.category)}` : ''}
                                         </p>
                                     </div>
                                     <div className="text-right">
                                         <p className="text-sm font-bold text-destructive">
-                                            {item.days_remaining != null ? `${item.days_remaining}d left` : `${item.stock || item.current_stock || 0} left`}
+                                            {item.days_remaining != null ? `${item.days_remaining} days left` : `${item.stock || item.current_stock || 0} units left`}
                                         </p>
-                                        <p className="text-[11px] text-muted-foreground">Min: {item.min_stock ?? '—'}</p>
+                                        <p className="text-[11px] text-muted-foreground">Minimum needed: {item.min_stock ?? '—'}</p>
                                     </div>
                                 </div>
                             ))

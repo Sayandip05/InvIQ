@@ -16,9 +16,9 @@ const STATUS_THEME_COLORS = {
 const MONO_THEME_PALETTE = ['#1E1E1E', '#F26A4B', '#5E5A52', '#7A7268', '#A89F91', '#C2BBB0'];
 
 const STATUS_LABELS = {
-  HEALTHY: 'Optimal Batches',
-  WARNING: 'Near Expiry',
-  CRITICAL: 'Critical Alerts',
+  HEALTHY: 'In Stock',
+  WARNING: 'Expiring Soon',
+  CRITICAL: 'Need Reorder',
 };
 
 export default function MonoRoundedDonut({
@@ -63,11 +63,14 @@ export default function MonoRoundedDonut({
   const getColor = (entry, index) => {
     if (isPlaceholder) return '#D2CBBB';
     const key = String(entry.name).toUpperCase();
-    return (
-      entry.color ||
-      STATUS_THEME_COLORS[key] ||
-      MONO_THEME_PALETTE[index % MONO_THEME_PALETTE.length]
-    );
+    // Strictly enforce theme palette so no green can ever appear
+    if (STATUS_THEME_COLORS[key]) {
+      return STATUS_THEME_COLORS[key];
+    }
+    if (entry.color && !entry.color.toLowerCase().includes('22c55e') && !entry.color.toLowerCase().includes('green')) {
+      return entry.color;
+    }
+    return MONO_THEME_PALETTE[index % MONO_THEME_PALETTE.length];
   };
 
   return (
@@ -111,7 +114,7 @@ export default function MonoRoundedDonut({
                 contentStyle={{
                   backgroundColor: '#F4EFE4',
                   borderColor: '#D2CBBB',
-                  borderRadius: '0.5rem',
+                  borderRadius: '8px',
                   color: '#1E1E1E',
                   fontSize: '0.75rem',
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',

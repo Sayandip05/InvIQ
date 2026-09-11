@@ -18,11 +18,7 @@ from app.core.rate_limiter import limiter
 from app.infrastructure.database.models import User
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
-
-
-def _caller_org_id(user: User) -> Optional[int]:
-    """Return org_id for tenant-scoped operations using central dependency rule."""
-    return get_caller_org_id(user)
+_caller_org_id = get_caller_org_id
 
 
 

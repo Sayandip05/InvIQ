@@ -37,7 +37,7 @@ export default function Landing() {
 
   const testimonials = [
     {
-      quote: "Before InvIQ, we lost ₹25,000 every quarter to expired medicine batches sitting on our back shelves. With InvIQ's 30-day FEFO alerts, we return them to the distributor on time. It paid for itself in week one.",
+      quote: "Before InvIQ, we lost ₹25,000 every quarter to expired medicine batches sitting on our back shelves. With InvIQ's 30-day early expiry alerts, we return them to the distributor on time. It paid for itself in week one.",
       name: "Rajesh Sharma",
       role: "Owner, Sharma Medicos (Durgapur)",
       image: "https://i.pravatar.cc/150?img=11"
@@ -67,7 +67,7 @@ export default function Landing() {
   const faqs = [
     {
       question: "How does InvIQ stop medicine expiry losses?",
-      answer: "InvIQ uses First-Expiry-First-Out (FEFO) intelligence. It tracks batch numbers and expiration dates, sending you advance notifications 30 and 60 days before a batch expires so you can sell it first or return it to your distributor for a credit note."
+      answer: "InvIQ tracks batch numbers and expiration dates, sending you advance notifications 30 and 60 days before a batch expires so you can sell it first or return it to your distributor for credit."
     },
     {
       question: "Can I manage multiple medical store branches?",
@@ -277,7 +277,7 @@ export default function Landing() {
             Smart Pharmacy Inventory Intelligence
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            Track medicines live across branches, prevent costly expiry losses with FEFO, and automate distributor reordering with AI.
+            Track medicines live across branches, prevent costly expiry losses by selling older stock first, and reorder from distributors easily with AI.
           </p>
         </div>
 
@@ -307,7 +307,7 @@ export default function Landing() {
               <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center mb-6 text-[#F26A4B] group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
                 <Activity className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-card-foreground mb-3 group-hover:text-[#F26A4B] transition-colors">Zero-Expiry Loss (FEFO)</h3>
+              <h3 className="text-xl font-bold text-card-foreground mb-3 group-hover:text-[#F26A4B] transition-colors">Zero-Expiry Loss (Sell Oldest First)</h3>
               <p className="text-muted-foreground leading-relaxed">
                 30 and 60 day advance alerts on expiring medicine batches so you can sell them first or return to your distributor for credit.
               </p>
@@ -467,9 +467,9 @@ export default function Landing() {
               <div className="flex flex-col gap-4">
                 {[
                   { title: '1 Pharmacy Counter', desc: 'Single shop management with full stock visibility.' },
-                  { title: 'Up to 500 Medicine SKUs', desc: 'Start digitizing your medicine catalogue instantly.' },
-                  { title: 'Basic FEFO Expiry Alerts', desc: 'Get notified before batches expire and lose value.' },
-                  { title: 'Quick Barcode Dispensing', desc: 'Scan and dispense medicines faster at the counter.' },
+                  { title: 'Up to 500 Medicines', desc: 'Start digitizing your medicine catalogue instantly.' },
+                  { title: 'Early Expiry Alerts', desc: 'Get notified before batches expire and lose value.' },
+                  { title: 'Quick Barcode Checkout', desc: 'Scan and sell medicines faster at the counter.' },
                   { title: 'Daily Stock Dashboard', desc: 'Clean overview of your inventory every morning.' },
                 ].map((f, i) => (
                   <div key={i} className="flex flex-row gap-3">
@@ -510,9 +510,9 @@ export default function Landing() {
               <div className="flex flex-col gap-4">
                 {[
                   { title: 'Manage 1 Medical Store Branch', desc: 'Full control of one pharmacy with live stock sync.' },
-                  { title: 'Up to 3,000 Medicine SKUs', desc: 'Handle a large catalogue with batch-level tracking.' },
-                  { title: 'FEFO Alerts (30 / 60 / 90 days)', desc: 'Return expiring batches to distributors for credit.' },
-                  { title: 'Distributor Excel / CSV Ingest', desc: 'Upload delivery manifests to update stock in 1 click.' },
+                  { title: 'Up to 3,000 Medicines', desc: 'Handle a large catalogue with batch-level tracking.' },
+                  { title: 'Early Expiry Alerts (30 / 60 / 90 days)', desc: 'Return expiring batches to distributors for credit.' },
+                  { title: 'Supplier Excel / CSV Ingest', desc: 'Upload delivery bills to update stock in 1 click.' },
                   { title: 'Low-Stock Auto Reorder Alerts', desc: 'AI predicts and alerts before you run out of medicine.' },
                   { title: 'WhatsApp & Email Support', desc: 'Get human support on WhatsApp within business hours.' },
                 ].map((f, i) => (
@@ -551,7 +551,7 @@ export default function Landing() {
               <div className="flex flex-col gap-4">
                 {[
                   { title: 'Multiple Medical Store Branches', desc: 'Manage all branches from one unified dashboard.' },
-                  { title: 'Unlimited Medicine SKUs', desc: 'No cap on catalogue size — scale without limits.' },
+                  { title: 'Unlimited Medicines', desc: 'No cap on catalogue size — scale without limits.' },
                   { title: 'Multi-Branch Live Stock Sync', desc: 'See real-time stock across every shop instantly.' },
                   { title: 'Branch-to-Branch Transfers', desc: 'Move stock between locations in one tap.' },
                   { title: 'Cold-Chain Fridge Monitoring', desc: 'Track vaccine fridge temperatures in real time.' },

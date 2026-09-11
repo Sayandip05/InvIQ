@@ -58,10 +58,10 @@ def reset_and_seed():
             {"name": "Pan-D Capsule", "category": "Gastro", "unit": "strip", "barcode": "890108600101", "strength": "40mg+30mg", "mrp": 199.0, "purchase_rate": 140.0, "min_stock": 20, "lead_time": 2, "storage": "ambient"},
             {"name": "Pantocid 40mg Tablet", "category": "Gastro", "unit": "strip", "barcode": "890108600117", "strength": "40mg", "mrp": 162.0, "purchase_rate": 115.0, "min_stock": 15, "lead_time": 2, "storage": "ambient"},
             {"name": "Digene Antacid Gel 200ml", "category": "Gastro", "unit": "bottle", "barcode": "890108600122", "strength": "200ml Mint", "mrp": 155.0, "purchase_rate": 110.0, "min_stock": 10, "lead_time": 3, "storage": "ambient"},
-            # Analgesic & Pain
-            {"name": "Dolo 650mg Tablet", "category": "Analgesics", "unit": "strip", "barcode": "890108600102", "strength": "650mg", "mrp": 34.0, "purchase_rate": 22.0, "min_stock": 50, "lead_time": 1, "storage": "ambient"},
-            {"name": "Combiflam Tablet", "category": "Analgesics", "unit": "strip", "barcode": "890108600120", "strength": "400mg+325mg", "mrp": 42.0, "purchase_rate": 28.0, "min_stock": 30, "lead_time": 2, "storage": "ambient"},
-            {"name": "Volini Pain Relief Gel", "category": "Analgesics", "unit": "tube", "barcode": "890108600113", "strength": "50g", "mrp": 140.0, "purchase_rate": 98.0, "min_stock": 12, "lead_time": 2, "storage": "ambient"},
+            # Pain Relief
+            {"name": "Dolo 650mg Tablet", "category": "Pain Relief", "unit": "strip", "barcode": "890108600102", "strength": "650mg", "mrp": 34.0, "purchase_rate": 22.0, "min_stock": 50, "lead_time": 1, "storage": "ambient"},
+            {"name": "Combiflam Tablet", "category": "Pain Relief", "unit": "strip", "barcode": "890108600120", "strength": "400mg+325mg", "mrp": 42.0, "purchase_rate": 28.0, "min_stock": 30, "lead_time": 2, "storage": "ambient"},
+            {"name": "Volini Pain Relief Gel", "category": "Pain Relief", "unit": "tube", "barcode": "890108600113", "strength": "50g", "mrp": 140.0, "purchase_rate": 98.0, "min_stock": 12, "lead_time": 2, "storage": "ambient"},
             # Antibiotics
             {"name": "Augmentin 625 Duo", "category": "Antibiotics", "unit": "strip", "barcode": "890108600103", "strength": "625mg", "mrp": 223.0, "purchase_rate": 160.0, "min_stock": 15, "lead_time": 2, "storage": "ambient"},
             {"name": "Azithral 500mg Tablet", "category": "Antibiotics", "unit": "strip", "barcode": "890108600104", "strength": "500mg", "mrp": 132.0, "purchase_rate": 92.0, "min_stock": 20, "lead_time": 2, "storage": "ambient"},

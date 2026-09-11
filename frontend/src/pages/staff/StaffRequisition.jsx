@@ -26,9 +26,9 @@ const StaffRequisition = () => {
 
     const [form, setForm] = useState({
         location_id: '',
-        department: 'Pharmacy Counter',
+        department: 'Store Counter',
         urgency: 'NORMAL',
-        requested_by: user?.full_name || user?.username || 'Staff Pharmacist',
+        requested_by: user?.full_name || user?.username || 'Store Staff',
         notes: '',
         items: [{ item_id: '', quantity: 1, packaging_unit: '', notes: '' }],
     });
@@ -37,7 +37,7 @@ const StaffRequisition = () => {
         if (user) {
             setForm(prev => ({
                 ...prev,
-                requested_by: user.full_name || user.username || 'Staff Pharmacist'
+                requested_by: user.full_name || user.username || 'Store Staff'
             }));
         }
     }, [user]);
@@ -131,9 +131,9 @@ const StaffRequisition = () => {
                 setSuccess(`Requisition ${res.data.data.requisition_number} submitted successfully!`);
                 setForm({
                     location_id: locations[0]?.id || '',
-                    department: 'Pharmacy Counter',
+                    department: 'Store Counter',
                     urgency: 'NORMAL',
-                    requested_by: user?.full_name || user?.username || 'Staff Pharmacist',
+                    requested_by: user?.full_name || user?.username || 'Store Staff',
                     notes: '',
                     items: [{ item_id: '', quantity: 1, packaging_unit: '', notes: '' }],
                 });
@@ -263,7 +263,7 @@ const StaffRequisition = () => {
                                     <input
                                         required
                                         type="text"
-                                        placeholder="e.g. Pharmacist Rahul"
+                                        placeholder="e.g. Staff Rahul"
                                         className="w-full px-3 py-2 border border-border rounded-none text-xs bg-background text-foreground focus:outline-none focus:border-primary"
                                         value={form.requested_by}
                                         onChange={(e) => setForm({ ...form, requested_by: e.target.value })}
@@ -329,7 +329,7 @@ const StaffRequisition = () => {
                                 </label>
                                 <textarea
                                     rows={2}
-                                    placeholder="Add batch preference, cold-chain handling note, or urgent requirements..."
+                                    placeholder="Add batch preference, fridge storage note, or urgent requirements..."
                                     className="w-full px-3 py-2 border border-border rounded-none text-xs bg-background text-foreground focus:outline-none focus:border-primary resize-none"
                                     value={form.notes}
                                     onChange={(e) => setForm({ ...form, notes: e.target.value })}
@@ -385,7 +385,7 @@ const StaffRequisition = () => {
                                                         <option value="">Select Medicine Item</option>
                                                         {items.map(item => (
                                                             <option key={item.id} value={item.id}>
-                                                                {item.name} ({item.unit}) - SKU: {item.sku || 'N/A'}
+                                                                {item.name} ({item.unit})
                                                             </option>
                                                         ))}
                                                     </select>

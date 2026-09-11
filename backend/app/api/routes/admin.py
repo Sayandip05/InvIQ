@@ -20,12 +20,23 @@ from app.infrastructure.database.models import User, AuditLog, Organization, Loc
 from app.infrastructure.database.user_repo import UserRepository
 from app.infrastructure.database.audit_repo import AuditRepository
 from app.application.report_service import ReportService
+from app.application.pdf_report_builder import build_pdf_report
+from fastapi.responses import StreamingResponse
 from app.core.exceptions import NotFoundError, DuplicateError, AuthorizationError
 
 logger = logging.getLogger("smart_inventory.admin")
 
 router = APIRouter(prefix="/admin", tags=["Admin Dashboard"])
 
+
+def _get_caller_org(db: Session, current_user: User) -> Organization:
+    """Retrieve and validate the tenant organization for the current admin user."""
+    if current_user.org_id is None:
+        raise AuthorizationError("User is not assigned to an organization")
+    org = db.query(Organization).filter(Organization.id == current_user.org_id).first()
+    if not org:
+        raise NotFoundError("Organization", current_user.org_id)
+    return org
 
 
 class UpdatePharmacyOrganizationRequest(BaseModel):
@@ -47,18 +58,8 @@ def get_pharmacy_organization(
     current_user: User = Depends(require_admin),
 ):
     """Get the current pharmacy owner's organization profile & branch metrics."""
-    if current_user.org_id is None:
-        raise AuthorizationError("User is not assigned to an organization")
-
-    org_id = current_user.org_id
-    if not org_id:
-        raise NotFoundError("Organization", "default")
-
-    org = db.query(Organization).filter(Organization.id == org_id).first()
-    if not org:
-        raise NotFoundError("Organization", org_id)
-
-    locations = db.query(Location).filter(Location.org_id == org_id).all()
+    org = _get_caller_org(db, current_user)
+    locations = db.query(Location).filter(Location.org_id == org.id).all()
 
     return {
         "success": True,
@@ -102,16 +103,8 @@ def update_pharmacy_organization(
     current_user: User = Depends(require_admin),
 ):
     """Update pharmacy organization profile (name, address, phone, GSTIN, DL number, settings)."""
-    if current_user.org_id is None:
-        raise AuthorizationError("User is not assigned to an organization")
-
-    org_id = current_user.org_id
-    if not org_id:
-        raise NotFoundError("Organization", "default")
-
-    org = db.query(Organization).filter(Organization.id == org_id).first()
-    if not org:
-        raise NotFoundError("Organization", org_id)
+    org = _get_caller_org(db, current_user)
+    org_id = org.id
 
     if body.name is not None and body.name.strip():
         new_name = body.name.strip()
@@ -600,6 +593,7 @@ def delete_supplier(
 # ── GET /admin/reports/generate & /admin/reports/export ────────────────────
 
 
+@router.get("/reports")
 @router.get("/reports/generate")
 @router.get("/reports/export")
 @limiter.limit("10/minute")
@@ -616,22 +610,8 @@ def generate_pdf_report(
     """
     Generate and stream a PDF report.
     Supports: inventory, requisitions, low_stock, monthly_sales
-
-    Data fetching is delegated to ReportService (application layer).
-    This handler only constructs the PDF from the returned plain dicts.
+    Data fetching is delegated to ReportService and PDF rendering to build_pdf_report.
     """
-    from io import BytesIO
-    from fastapi.responses import StreamingResponse
-
-    try:
-        from reportlab.lib.pagesizes import A4
-        from reportlab.lib import colors
-        from reportlab.lib.units import inch
-        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-        from reportlab.lib.styles import getSampleStyleSheet
-    except ImportError:
-        raise HTTPException(status_code=500, detail="reportlab is not installed on the server")
-
     # ── Tenant boundary check ──────────────────────────────────────────
     caller_org_id = current_user.org_id
     if caller_org_id is None:
@@ -643,165 +623,19 @@ def generate_pdf_report(
         if not loc:
             raise NotFoundError("Location", location_id)
 
-    # ── Data layer — all queries go through the service ──────────────────
+    # ── Data & PDF Layer ────────────────────────────────────────────────
     svc = ReportService(db)
-
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(
-        buffer, pagesize=A4,
-        rightMargin=0.75 * inch, leftMargin=0.75 * inch,
-        topMargin=0.75 * inch, bottomMargin=0.75 * inch,
+    buffer, filename = build_pdf_report(
+        svc=svc,
+        report_type=report_type,
+        location_id=location_id,
+        date_from=date_from,
+        date_to=date_to,
+        username=current_user.username,
+        org_id=caller_org_id,
     )
-    styles = getSampleStyleSheet()
-    elements = []
-
-    report_titles = {
-        "inventory":     "Inventory Stock Report",
-        "requisitions":  "Requisitions Report",
-        "low_stock":     "Low Stock Alert Report",
-        "monthly_sales": "Monthly Sales & Profit Report",
-    }
-    title = report_titles.get(report_type, "Inventory Report")
-
-    elements.append(Paragraph(f"InvIQ — {title}", styles["Title"]))
-    elements.append(Paragraph(
-        f"Generated by: {current_user.username}  |  "
-        f"Date: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}",
-        styles["Normal"],
-    ))
-    if date_from or date_to:
-        elements.append(Paragraph(
-            f"Period: {date_from or 'beginning'} to {date_to or 'today'}",
-            styles["Normal"],
-        ))
-    elements.append(Spacer(1, 0.3 * inch))
-
-    # ── Shared header table style ─────────────────────────────────────────
-    HEADER_STYLE = [
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
-        ("TEXTCOLOR",  (0, 0), (-1, 0), colors.white),
-        ("FONTNAME",   (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("ALIGN",      (0, 0), (-1, -1), "CENTER"),
-        ("GRID",       (0, 0), (-1, -1), 0.4, colors.HexColor("#e2e8f0")),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f8fafc")]),
-    ]
-
-    # ── INVENTORY / LOW_STOCK REPORT ──────────────────────────────────────
-    if report_type in ("inventory", "low_stock"):
-        rows = (
-            svc.get_low_stock_rows(location_id=location_id, org_id=caller_org_id)
-            if report_type == "low_stock"
-            else svc.get_stock_rows(location_id=location_id, org_id=caller_org_id)
-        )
-
-        heading = (
-            "Items Below Minimum Stock Threshold"
-            if report_type == "low_stock"
-            else "Current Stock Levels"
-        )
-        elements.append(Paragraph(heading, styles["Heading2"]))
-
-        if not rows:
-            elements.append(Paragraph("No data found for the selected criteria.", styles["Normal"]))
-        else:
-            def _status(r: dict) -> str:
-                if r["current_stock"] <= 0:
-                    return "CRITICAL"
-                if r["current_stock"] <= r["min_stock"]:
-                    return "WARNING"
-                return "HEALTHY"
-
-            table_data = [["Item Name", "Category", "Unit", "Current Stock", "Min Required", "Status"]]
-            for r in rows:
-                table_data.append([
-                    r["name"][:35],
-                    r["category"],
-                    r["unit"],
-                    str(r["current_stock"]),
-                    str(r["min_stock"]),
-                    _status(r),
-                ])
-            t = Table(table_data, colWidths=[2.2*inch, 1*inch, 0.6*inch, 0.9*inch, 0.9*inch, 0.8*inch])
-            t.setStyle(TableStyle(HEADER_STYLE))
-            elements.append(t)
-
-    # ── REQUISITIONS REPORT ───────────────────────────────────────────────
-    elif report_type == "requisitions":
-        elements.append(Paragraph("Requisitions Summary", styles["Heading2"]))
-
-        stats = svc.get_requisition_stats(date_from=date_from, date_to=date_to, org_id=caller_org_id)
-        stat_data = [
-            ["Metric", "Count"],
-            ["Total", str(stats["total"])],
-            ["Pending", str(stats["pending"])],
-            ["Approved", str(stats["approved"])],
-            ["Rejected", str(stats["rejected"])],
-        ]
-        st = Table(stat_data, colWidths=[2.5*inch, 1*inch])
-        st.setStyle(TableStyle(HEADER_STYLE))
-        elements.append(st)
-        elements.append(Spacer(1, 0.2*inch))
-
-        rows = svc.get_requisition_rows(date_from=date_from, date_to=date_to, org_id=caller_org_id)
-        if rows:
-            elements.append(Paragraph("Requisition List", styles["Heading2"]))
-            table_data = [["Req #", "Department", "Requested By", "Urgency", "Status", "Date"]]
-            for r in rows:
-                table_data.append([
-                    r["requisition_number"],
-                    r["department"],
-                    r["requested_by"],
-                    r["urgency"],
-                    r["status"],
-                    r["created_at"],
-                ])
-            t = Table(table_data, colWidths=[1.1*inch, 1*inch, 1.2*inch, 0.8*inch, 0.9*inch, 0.9*inch])
-            t.setStyle(TableStyle(HEADER_STYLE))
-            elements.append(t)
-
-    # ── MONTHLY SALES REPORT ──────────────────────────────────────────────
-    elif report_type == "monthly_sales":
-        # Extract year and month from date_from (e.g. "2026-08" or "2026-08-01") or default to current
-        now = datetime.now(timezone.utc)
-        target_year = now.year
-        target_month = now.month
-        if date_from:
-            try:
-                parts = date_from.split("-")
-                target_year = int(parts[0])
-                target_month = int(parts[1])
-            except Exception:
-                pass
-
-        month_label = f"{target_year:04d}-{target_month:02d}"
-        elements.append(Paragraph(f"Monthly Financial Performance ({month_label})", styles["Heading2"]))
-
-        summary = svc.get_monthly_sales_summary(
-            org_id=caller_org_id or 1,
-            year=target_year,
-            month=target_month,
-        )
-
-        sales_data = [
-            ["Financial Metric", "Value (INR)"],
-            ["Total Customer Bills (Sessions)", str(summary.get("session_count", 0))],
-            ["Gross Sales (MRP Total)", f"Rs. {summary.get('gross_total', 0.0):,.2f}"],
-            ["Total Customer Discounts Given", f"Rs. {summary.get('discount_amount', 0.0):,.2f}"],
-            ["Net Realized Revenue", f"Rs. {summary.get('net_total', 0.0):,.2f}"],
-            ["Medication Purchase Cost (COGS)", f"Rs. {summary.get('purchase_cost', 0.0):,.2f}"],
-            ["Gross Profit", f"Rs. {summary.get('gross_profit', 0.0):,.2f}"],
-            ["Gross Profit Margin", f"{summary.get('margin_pct', 0.0):.2f}%"],
-        ]
-        st = Table(sales_data, colWidths=[3.2 * inch, 2.2 * inch])
-        st.setStyle(TableStyle(HEADER_STYLE))
-        elements.append(st)
-
-    # Build PDF
-    doc.build(elements)
     pdf_bytes = buffer.getvalue()
     buffer.seek(0)
-
-    filename = f"inviq_{report_type}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M')}.pdf"
     response_headers = {"Content-Disposition": f"attachment; filename={filename}"}
 
     # Upload generated report to Azure Blob Storage for cloud archiving if available
@@ -853,11 +687,7 @@ def get_discount_settings(
     current_user: User = Depends(require_admin),
 ):
     """Return the current discount policy for this organisation."""
-    if current_user.org_id is None:
-        raise AuthorizationError("User is not assigned to an organisation")
-    org = db.query(Organization).filter(Organization.id == current_user.org_id).first()
-    if not org:
-        raise NotFoundError("Organisation", current_user.org_id)
+    org = _get_caller_org(db, current_user)
 
     settings = org.settings or {}
     return {
@@ -881,11 +711,7 @@ def update_discount_settings(
     Save discount policy into org.settings.
     Validates tiered slabs before persisting.
     """
-    if current_user.org_id is None:
-        raise AuthorizationError("User is not assigned to an organisation")
-    org = db.query(Organization).filter(Organization.id == current_user.org_id).first()
-    if not org:
-        raise NotFoundError("Organisation", current_user.org_id)
+    org = _get_caller_org(db, current_user)
 
     # Build the config dict from the request
     config: dict = {

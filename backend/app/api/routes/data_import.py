@@ -76,6 +76,7 @@ def _run_background_import(
 
 # ── 1. Upload & AI Mapping ───────────────────────────────────────────────────
 
+@router.post("/jobs", response_model=ImportPreviewResponse)
 @router.post("/upload", response_model=ImportPreviewResponse)
 @limiter.limit("10/minute")
 def upload_and_map_file(

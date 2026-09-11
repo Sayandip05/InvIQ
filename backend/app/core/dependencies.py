@@ -227,3 +227,35 @@ def get_caller_org_id(user: User) -> int:
     return user.org_id
 
 
+def has_location_access(user: User, target_location_id: int) -> bool:
+    """Check if user has access to a specific branch/location."""
+    raw = getattr(user, "location_ids", None)
+    if not raw:
+        return True
+    if isinstance(raw, str):
+        import json
+        try:
+            raw = json.loads(raw)
+        except Exception:
+            raw = [raw]
+    if isinstance(raw, (list, set, tuple)):
+        allowed_ids = set()
+        for item in raw:
+            try:
+                allowed_ids.add(int(item))
+            except (ValueError, TypeError):
+                pass
+        if not allowed_ids:
+            return True
+        return target_location_id in allowed_ids
+    return True
+
+
+def get_client_ip(request: Request) -> str:
+    """Extract client IP from Request headers or client host."""
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+

@@ -28,7 +28,7 @@ body {
     --muted: #CFC8B8;
     --accent: #E6E4D7;
     --border: #D2CBBB;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
     --chart-1: #F26A4B;
     --chart-2: #1E1E1E;
     --chart-3: #5E5A52;
@@ -75,7 +75,7 @@ body {
     --muted: #2A2A2A;
     --accent: #363636;
     --border: #2C2C2C;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
     --chart-1: #F26A4B;
     --chart-2: #D9CFC2;
     --chart-3: #8E8A83;

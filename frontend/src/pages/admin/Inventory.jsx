@@ -3,6 +3,25 @@ import { inventory } from '../../services/api';
 import { Search, AlertCircle, CheckCircle, AlertTriangle, Building2 } from 'lucide-react';
 import AlertsDropdown from '../../components/layout/AlertsDropdown';
 
+const formatCategory = (cat) => {
+    if (!cat) return '';
+    const map = {
+        'analgesics': 'Pain Relief',
+        'analgesic': 'Pain Relief',
+        'cardiovascular': 'Heart Care',
+        'cardiac': 'Heart Care',
+        'respiratory': 'Breathing Care',
+        'endocrine': 'Diabetes Care',
+        'gastrointestinal': 'Stomach Care',
+        'gastro': 'Stomach Care',
+        'dermatology': 'Skin Care',
+        'dermatological': 'Skin Care',
+        'ophthalmic': 'Eye Care',
+        'ophthalmology': 'Eye Care',
+    };
+    return map[cat.toLowerCase()] || cat;
+};
+
 const Inventory = () => {
     const [locations, setLocations] = useState([]);
     const [selectedLocation, setSelectedLocation] = useState('');
@@ -56,20 +75,20 @@ const Inventory = () => {
         switch (status) {
             case 'HEALTHY':
                 return (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        <CheckCircle size={12} className="mr-1" /> Healthy
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-accent text-foreground border border-border">
+                        <CheckCircle size={12} className="mr-1 text-foreground" /> In Stock
                     </span>
                 );
             case 'WARNING':
                 return (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                        <AlertTriangle size={12} className="mr-1" /> Low Stock
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-[#7A7268]/15 text-foreground border border-[#7A7268]/30">
+                        <AlertTriangle size={12} className="mr-1 text-[#7A7268]" /> Low Stock
                     </span>
                 );
             case 'CRITICAL':
                 return (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
-                        <AlertCircle size={12} className="mr-1" /> Critical
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-[#F26A4B]/15 text-[#F26A4B] border border-[#F26A4B]/30">
+                        <AlertCircle size={12} className="mr-1" /> Need Reorder
                     </span>
                 );
             default:
@@ -84,7 +103,7 @@ const Inventory = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h2 className="text-xl font-sans font-bold text-foreground tracking-tight">Inventory Management</h2>
-                        <p className="text-xs text-muted-foreground mt-0.5">Real-time SKU catalog and stock levels</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Real-time medicine list and stock levels</p>
                     </div>
 
                     <div className="flex items-center gap-2.5 flex-wrap">
@@ -153,7 +172,7 @@ const Inventory = () => {
                                             <div className="font-semibold text-foreground">{item.name}</div>
                                             <div className="text-xs text-muted-foreground">Base Unit: <span className="font-mono text-foreground">{item.base_unit || item.unit}</span></div>
                                         </td>
-                                        <td className="px-6 py-4 text-muted-foreground capitalize">{item.category}</td>
+                                        <td className="px-6 py-4 text-muted-foreground capitalize">{formatCategory(item.category)}</td>
                                         <td className="px-6 py-4 text-center">{getStatusBadge(item.status)}</td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="font-bold text-foreground">
