@@ -1,6 +1,6 @@
 # 🏥 InvIQ - AI-Powered Retail Chemist & Multi-Pharmacy Inventory Operating System
 
-**Smart AI inventory, FEFO expiry loss prevention, barcode quick-dispensing, and distributor Excel synchronization for retail medical stores and pharmacy chains.**
+**Smart AI inventory, FEFO expiry loss prevention, counter billing, and distributor Excel synchronization for retail medical stores and pharmacy chains.**
 
 ---
 
@@ -9,7 +9,7 @@
 Independent retail medical stores and local pharmacy chains in Tier-2/3 cities lose significant revenue every month due to **expired medications (FEFO loss)**, missed customer sales from sudden stockouts, and manual paper-heavy distributor bills. **InvIQ provides a simple, ultra-fast, mobile-friendly platform tailored specifically for chemist shop owners:**
 
 1. **Zero Expiry Loss (FEFO)**: Real-time alerts at 30, 60, and 90 days before batch expiration so chemists can return stock to distributors on time.
-2. **Instant Barcode Quick Dispense**: Connected USB/Bluetooth barcode scanner and camera dispense endpoint that removes sold items one-by-one with millisecond consistency.
+2. **Instant Counter Dispense & Billing**: Fast counter billing and sales transactions that update item stock levels with millisecond consistency.
 3. **1-Click Distributor Bill Ingest**: Upload wholesaler Excel/CSV delivery manifests to auto-increment live stock in seconds.
 4. **Single & Multi-Shop Chains**: Centralized dashboard to track stock across 1 to 10+ shop counters from a phone or tablet.
 
@@ -31,7 +31,7 @@ Independent retail medical stores and local pharmacy chains in Tier-2/3 cities l
 ![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind-3-06B6D4?logo=tailwindcss&logoColor=white)
 
-### AI & Barcode Infrastructure
+### AI & Cloud Intelligence
 ![Groq](https://img.shields.io/badge/Groq-LLaMA_3.3_70B-FF6B00?logo=ai&logoColor=white)
 ![Sarvam AI](https://img.shields.io/badge/Sarvam_AI-Saaras_v3_STT-7C3AED?logo=google&logoColor=white)
 ![Qdrant](https://img.shields.io/badge/Qdrant-Cloud_Vector_DB-DC2626?logo=database&logoColor=white)
@@ -40,13 +40,13 @@ Independent retail medical stores and local pharmacy chains in Tier-2/3 cities l
 
 ## ✨ Key Capabilities
 
-- ⚡ **Hardware-Ready Barcode & Counter Dispensing** - Clean counter billing module with direct barcode item lookup and seamless POS hardware reader integration.
+- ⚡ **Counter Billing & Dispensing** - Clean counter billing module with live item lookups, receipt generation, and immediate stock updates.
 - 💊 **Streamlined Inventory Catalog** - Intuitive item stock management tracking available units, reorder levels, batches, and storage facilities without confusing packaging tiers or complex multipliers.
 - 📈 **Dynamic Expiry Risk Forecast & Analytics** - Dynamic spline line trajectory modeling 6-month batch expiration timelines against critical safe action margins, coupled with an optimal health distribution chart.
 - 🛒 **Counter Billing Cart & Flexible Customer Discounts** - High-speed retail billing sessions with live discount previews (`none`, `flat`, `tiered` slabs), receipt generation, instant stock locking, and zero-drift void cancellation.
 - 📦 **FEFO Expiry Loss Shield** - Proactive batch alerts at 30, 60, and 90 days ensuring no expired medicine remains on shelves.
 - 🚚 **Supplier & Distributor Management** - Direct vendor portal with 1-click Excel delivery manifest ingestion and automated PDF invoices stored in Azure Blob Storage.
-- 🤖 **AI Chemist Assistant** - Ask questions in plain English or Hindi: *"What medicines are running low in Counter 1?"*
+- 🤖 **AI Chemist Assistant** - Ask questions in plain English: *"What medicines are running low in Counter 1?"* (System operates strictly in English).
 - 📊 **Real-Time Clean Analytics** - Live stock counts, critical shortages, cold-chain fridge monitoring, and store-by-store breakdowns.
 - 🔐 **Enterprise Multi-Tenant Security** - Strict non-nullable `org_id` schema, HttpOnly SameSite auth cookies, CSP headers, issued-at (`iat`) token invalidation, cryptographic Google OAuth ID-token verification, and tenant-scoped Redis pub/sub.
 - ☁️ **Dual Environment Architecture** - Strictly separated `DEVELOPMENT` (local dev & rapid testing) and `PRODUCTION` (containerized Azure App Service / Cloud with Alembic migrations).
@@ -116,7 +116,7 @@ graph TB
         AuthApp["🔐 Auth & Tenant Portal (Argon2id + JWT + HttpOnly Cookies)"]
         AdminPort["🛡️ Chemist Admin Dashboard & Organization Settings"]
         StaffPort["💊 Counter Staff Portal (Permitted Branch Scoped)"]
-        BarcodeGun["🔫 Counter Barcode Scanner (USB / Bluetooth / Camera)"]
+        BillingApp["🧾 Counter Billing & POS Interface"]
         VendorPort["🚚 Wholesaler / Distributor Delivery Portal"]
     end
 
@@ -127,13 +127,13 @@ graph TB
         AuthMid["🔑 JWT Token & Role Authorization Guard"]
         TenantGuard["🏢 Multi-Tenant Context Resolver (org_id Scoping)"]
         REST["REST API Engine (60+ Scoped Endpoints)"]
-        ScanAPI["⚡ Quick-Dispense Engine (/api/inventory/scan-dispense)"]
+        BillingAPI["⚡ Billing & Dispense Engine (/api/v1/billing)"]
         GQL["GraphQL Subgraph (/graphql/analytics)"]
         WS["WebSocket Alerts Engine (/ws/alerts)"]
     end
 
     subgraph BusinessLayer["⚙️ Domain & Application Services"]
-        InvSvc["InventoryService & Barcode Dispenser<br/>• Batch-Aware FEFO Deductions<br/>• Redis Distributed Lock (SETNX)"]
+        InvSvc["InventoryService & Stock Tracker<br/>• Batch-Aware FEFO Deductions<br/>• Redis Distributed Lock (SETNX)"]
         AnalyticsSvc["AnalyticsService & FEFO Shield<br/>• 30/60/90 Day Expiry Calculations<br/>• Tenant-Scoped Cache Keys"]
         ReqSvc["RequisitionService<br/>• Chemist Purchase Orders<br/>• Draft → Approved → Fulfilled Lifecycle"]
         VendorSvc["VendorService<br/>• Excel Delivery Manifest Sync<br/>• PDF Invoices in Azure Blob"]
@@ -141,7 +141,7 @@ graph TB
         PdfSvc["InvoicePdfService & ReportService<br/>• ReportLab Vector PDF Engine"]
         NotifySvc["NotificationService<br/>• SMTP Background Mailer<br/>• Tenant-Scoped Low Stock Alerts"]
         CacheSvc["CacheService<br/>• L1 Memory + L2 Upstash REST<br/>• Tenant Pattern Invalidation"]
-        AgentSvc["AgentService & ReAct Chatbot<br/>• LangGraph AI Architecture<br/>• Multilingual Voice STT (Sarvam)"]
+        AgentSvc["AgentService & ReAct Chatbot<br/>• LangGraph AI Architecture<br/>• English Voice STT (Sarvam)"]
     end
 
     subgraph AsyncWorkers["⚡ Asynchronous Processing & Background Workers"]
@@ -167,16 +167,16 @@ graph TB
     AuthApp --> CORS
     AdminPort --> CORS
     StaffPort --> CORS
-    BarcodeGun --> ScanAPI
+    BillingApp --> BillingAPI
     VendorPort --> CORS
     CORS --> SecHeaders --> Limiter --> AuthMid --> TenantGuard
     TenantGuard --> REST
-    TenantGuard --> ScanAPI
+    TenantGuard --> BillingAPI
     TenantGuard --> GQL
     TenantGuard --> WS
 
     %% Gateway to Business Services
-    ScanAPI --> InvSvc
+    BillingAPI --> InvSvc
     REST --> InvSvc
     REST --> AnalyticsSvc
     REST --> ReqSvc
@@ -230,14 +230,14 @@ sequenceDiagram
 
     Note over Chemist,DB: 1. Counter Dispensing & Atomic FEFO Deduction
     Customer->>Chemist: Requests Medicine (e.g. Pan-D)
-    Chemist->>App: Scans Barcode (8901086001234)
-    App->>API: POST /api/inventory/scan-dispense
+    Chemist->>App: Adds Medicine to Cart (e.g. Pan-D)
+    App->>API: POST /api/v1/billing/sessions/1/scan
     API->>Lock: Acquire Lock (lock:org_1:stock:loc_1:item_5)
     API->>DB: Query Batches Ordered by Expiry Date (FEFO)
     API->>DB: Atomic Update: issued += 1 on Earliest Batch
     API->>Lock: Release Distributed Lock
     DB-->>API: Stock Count Updated (e.g. 42 remaining)
-    API-->>App: 200 OK (Beep Success Sound + Remaining Stock)
+    API-->>App: 200 OK (Success Sound + Remaining Stock)
     
     opt Stock Below Minimum Threshold (< 15)
         API->>WS: Broadcast to Channel inviq:events:org:1
@@ -258,19 +258,19 @@ sequenceDiagram
 
 ---
 
-### 3. High-Speed Barcode Quick-Dispense Engine
+### 3. Real-Time Counter Dispense & Inventory Engine
 
 ```mermaid
 flowchart TD
-    Scan["🔫 Barcode Gun Keystroke / Mobile Camera Scan"] --> Input["📱 InvIQ Counter Listener (Sub-50ms Capture)"]
-    Input --> Request["🚀 POST /api/inventory/scan-dispense<br/>{ barcode_or_id: '8901086...', location_id: 1, qty: 1 }"]
+    InputItem["💊 Select Medicine / Quick Lookup"] --> Input["📱 InvIQ Counter Interface"]
+    Input --> Request["🚀 POST /api/v1/billing/sessions/{id}/scan<br/>{ item_id: 5, location_id: 1, qty: 1 }"]
     
     Request --> Auth["🛡️ Scoped Tenant & Branch Authorization"]
     Auth --> Lock["🔒 Redis Distributed Lock: lock:org_{id}:stock:{loc}:{item}"]
-    Lock --> Lookup["🔍 O(1) Index Lookup on Item.barcode"]
+    Lock --> Lookup["🔍 O(1) Index Lookup on Item"]
     
-    Lookup --> Check{"Is Item Valid & In Stock?"}
-    Check -- No --> Error["❌ Error 400: Out of Stock / Unrecognized Barcode"]
+    Check{"Is Item Valid & In Stock?"}
+    Check -- No --> Error["❌ Error 400: Out of Stock / Unrecognized Item"]
     
     Check -- Yes --> FEFO["🛡️ Batch Aggregation: FEFO Ordering (expiry_date ASC)"]
     FEFO --> Atomic["⚡ Atomic Ledger Transaction: closing = opening + received - issued"]
@@ -301,7 +301,7 @@ graph LR
 
     subgraph Capabilities["⚡ Scoped Capabilities"]
         StoreMgmt["💊 Pharmacy Profile & Branch Setup<br/>Supplier Management & Master Data<br/>FEFO Expiry Alerts & Reports<br/>Requisition Approvals"]
-        StaffOps["⚡ 1-Click Barcode Dispense<br/>Counter Stock Intake & Transactions<br/>Create Purchase Requisitions"]
+        StaffOps["⚡ Counter Billing & Sales Dispense<br/>Counter Stock Intake & Transactions<br/>Create Purchase Requisitions"]
         VendorOps["📄 Excel Delivery Manifest Upload<br/>Auto Invoice PDF Generation<br/>Download Delivery Receipts"]
     end
 
