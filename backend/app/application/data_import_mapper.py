@@ -125,18 +125,7 @@ class DataImportMapper:
 
         schema = self.get_target_schema_meta(target_entity)
 
-        # Attempt LLM mapping if Groq API key is present
-        if settings.GROQ_API_KEY:
-            try:
-                mapping_result = self._call_llm_mapper(headers, sample_rows, target_entity, schema)
-                if mapping_result and "mappings" in mapping_result:
-                    mapping_result["cache_hit"] = False
-                    cache_set(cache_key, mapping_result, ttl=self.cache_ttl)
-                    return mapping_result
-            except Exception as e:
-                logger.warning("LLM column mapping failed, using deterministic heuristic fallback: %s", e)
-
-        # Deterministic heuristic fallback (regex / substring matching)
+        # Ingestion is strictly deterministic with zero AI/LLM calls
         mapping_result = self._heuristic_mapper(headers, sample_rows, target_entity, schema)
         mapping_result["cache_hit"] = False
         cache_set(cache_key, mapping_result, ttl=self.cache_ttl)

@@ -256,3 +256,33 @@ def test_vendor_invoice_api_endpoints(client, db, admin_user):
         assert res_pdf.headers["content-type"] == "application/pdf"
         assert res_pdf.content[:5] == b"%PDF-"
 
+
+def test_download_standard_template_endpoint(client, admin_user):
+    """Test downloading the official standardized 11-column Excel delivery template."""
+    headers = get_auth_header(client, admin_user["username"], admin_user["password"])
+    res = client.get("/api/vendor/template", headers=headers)
+    assert res.status_code == 200
+    assert "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" in res.headers["content-type"]
+    assert "InvIQ_Medicine_Delivery_Template.xlsx" in res.headers["content-disposition"]
+
+    import openpyxl
+    wb = openpyxl.load_workbook(BytesIO(res.content))
+    ws = wb.active
+    assert ws.title == "Medicine Delivery Manifest"
+
+    # Verify all 11 standard headers
+    expected_headers = [
+        "item_name", "quantity", "unit", "batch_number", "expiry_date",
+        "purchase_rate", "mrp", "category", "storage_temp", "delivery_date", "invoice_no"
+    ]
+    actual_headers = [cell.value for cell in ws[1]]
+    assert actual_headers == expected_headers
+
+    # Verify sample row has real medicine data
+    row2 = [cell.value for cell in ws[2]]
+    assert row2[0] == "Paracetamol 500mg"
+    assert row2[1] == 100
+    assert row2[2] == "strip"
+    assert row2[3] == "BT-2026-A1"
+
+

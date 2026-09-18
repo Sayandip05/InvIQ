@@ -149,7 +149,10 @@ export function useDeliveryUpload() {
             fetchUploadHistory();
             fetchInvoices();
         } catch (uploadErr) {
-            const msg = uploadErr?.response?.data?.detail || uploadErr?.response?.data?.message || 'Upload failed. Please check file format.';
+            const msg = uploadErr?.response?.data?.error?.message
+                || uploadErr?.response?.data?.detail
+                || uploadErr?.response?.data?.message
+                || 'Upload failed. Please check file format.';
             setError(msg);
         } finally {
             setLoading(false);

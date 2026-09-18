@@ -17,8 +17,12 @@
 - Gracefully redirected legacy /admin/requisitions route and removed standalone Requisitions from navigation.
 - Fixed data fetching for nearby expired medicines by querying real batch expiry dates (InventoryTransaction.expiry_date) instead of consumption rate days_remaining, plus added /inventory/near-expiry endpoint.
 
-***Template *** [PENDING]
-- Make a proper standardized template for XLSX files to be followed by all users.
+***Template *** [COMPLETED]
+- Created official 11-column standardized Excel template (item_name, quantity, unit, batch_number, expiry_date, purchase_rate, mrp, category, storage_temp, delivery_date, invoice_no).
+- Implemented deterministic All-or-Nothing dry-run pre-validation with plain language line-by-line error reporting (zero database writes on validation errors).
+- Enabled automatic catalog item creation on the fly for missing medicines using manifest pricing, category, and storage details.
+- Ensured atomic database transactions with full rollback on failure.
+- Eradicated AI from data ingestion and import mapping while keeping agent_service.py untouched.
 
 ***Others ***
 - Check everything logically & physically, not intermediately.

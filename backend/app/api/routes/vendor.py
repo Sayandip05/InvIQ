@@ -83,9 +83,11 @@ def upload_delivery(
         org_id=current_user.org_id,
     )
 
+    if not result.get("success"):
+        raise ValidationError(result.get("error", "Failed to process delivery file"))
+
     # Invalidate analytics cache so dashboards reflect newly delivered stock
-    if result.get("success"):
-        cache_invalidate_pattern("analytics:*")
+    cache_invalidate_pattern("analytics:*")
 
     return result
 
@@ -116,35 +118,88 @@ def get_my_uploads(
 def download_template(
     current_user: User = Depends(get_current_user),
 ):
-    """Download a blank Excel template for vendor deliveries."""
+    """Download the official standardized Excel template for medicine deliveries."""
     _require_vendor_role(current_user)
 
     try:
         import openpyxl
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     except ImportError:
         raise ValidationError("openpyxl is not installed on the server")
 
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Delivery Template"
+    ws.title = "Medicine Delivery Manifest"
 
-    # Header row
-    headers = ["item_name", "quantity_received", "delivery_date", "notes"]
+    # Official Standard Headers (11 columns)
+    headers = [
+        "item_name",
+        "quantity",
+        "unit",
+        "batch_number",
+        "expiry_date",
+        "purchase_rate",
+        "mrp",
+        "category",
+        "storage_temp",
+        "delivery_date",
+        "invoice_no",
+    ]
+
+    header_fill = PatternFill(start_color="1F2937", end_color="1F2937", fill_type="solid")
+    header_font = Font(name="Arial", size=11, bold=True, color="FFFFFF")
+    thin_border = Border(
+        left=Side(style="thin", color="E5E7EB"),
+        right=Side(style="thin", color="E5E7EB"),
+        top=Side(style="thin", color="E5E7EB"),
+        bottom=Side(style="thin", color="E5E7EB"),
+    )
+
     for col, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col, value=header)
-        cell.font = openpyxl.styles.Font(bold=True)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = thin_border
 
-    # Example row
-    ws.cell(row=2, column=1, value="Paracetamol 500mg")
-    ws.cell(row=2, column=2, value=100)
-    ws.cell(row=2, column=3, value="2026-03-28")
-    ws.cell(row=2, column=4, value="Order #12345")
+    # Sample medicine delivery rows demonstrating real pharmacy entries
+    sample_rows = [
+        ["Paracetamol 500mg", 100, "strip", "BT-2026-A1", "2027-12-31", 18.50, 30.00, "Pain Relief", "ambient", "2026-09-18", "INV-8921"],
+        ["Amoxicillin 250mg", 50, "box", "BT-2026-B4", "2028-06-30", 45.00, 75.00, "Antibiotics", "ambient", "2026-09-18", "INV-8921"],
+        ["Insulin Glargine 100IU", 20, "vial", "BT-2026-C9", "2027-09-30", 350.00, 480.00, "Diabetes Care", "cold_chain", "2026-09-18", "INV-8922"],
+    ]
 
-    # Column widths
-    ws.column_dimensions["A"].width = 25
-    ws.column_dimensions["B"].width = 20
-    ws.column_dimensions["C"].width = 15
-    ws.column_dimensions["D"].width = 30
+    data_font = Font(name="Arial", size=10)
+    for row_idx, row_data in enumerate(sample_rows, start=2):
+        for col_idx, val in enumerate(row_data, start=1):
+            cell = ws.cell(row=row_idx, column=col_idx, value=val)
+            cell.font = data_font
+            cell.border = thin_border
+            # Format numbers and dates
+            if col_idx in (2,):  # quantity
+                cell.alignment = Alignment(horizontal="center")
+            elif col_idx in (6, 7):  # rates
+                cell.alignment = Alignment(horizontal="right")
+                cell.number_format = "#,##0.00"
+            elif col_idx in (5, 10):  # dates
+                cell.alignment = Alignment(horizontal="center")
+
+    # Column widths tailored for clean viewing
+    col_widths = {
+        "A": 26,  # item_name
+        "B": 12,  # quantity
+        "C": 12,  # unit
+        "D": 16,  # batch_number
+        "E": 15,  # expiry_date
+        "F": 15,  # purchase_rate
+        "G": 12,  # mrp
+        "H": 18,  # category
+        "I": 15,  # storage_temp
+        "J": 15,  # delivery_date
+        "K": 16,  # invoice_no
+    }
+    for col_letter, width in col_widths.items():
+        ws.column_dimensions[col_letter].width = width
 
     # Save to bytes
     output = BytesIO()
@@ -155,7 +210,7 @@ def download_template(
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=delivery_template.xlsx"},
+        headers={"Content-Disposition": "attachment; filename=InvIQ_Medicine_Delivery_Template.xlsx"},
     )
 
 

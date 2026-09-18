@@ -155,11 +155,11 @@ export default function DataEntry() {
         {/* ── Notification Banners ─── */}
         {error && (
           <div className="p-4 text-xs font-medium border border-destructive/30 bg-destructive/10 text-destructive rounded-lg flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <AlertCircle size={16} className="text-destructive shrink-0" />
-              <span>{error}</span>
+            <div className="flex items-start gap-2">
+              <AlertCircle size={16} className="text-destructive shrink-0 mt-0.5" />
+              <span className="whitespace-pre-line leading-relaxed">{error}</span>
             </div>
-            <button onClick={() => setError('')} className="p-1 hover:opacity-75 cursor-pointer">
+            <button onClick={() => setError('')} className="p-1 hover:opacity-75 cursor-pointer shrink-0">
               <X size={14} />
             </button>
           </div>
@@ -241,7 +241,7 @@ export default function DataEntry() {
                 <div className="bg-accent/30 border border-border rounded-lg p-3.5 flex items-center justify-between gap-3">
                   <div>
                     <p className="text-xs font-semibold text-foreground">Need the standard template?</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">Use our template with Item Name, Batch, and Qty columns.</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Official manifest template with Item Name, Batch, Expiry, Qty, and MRP.</p>
                   </div>
                   <button
                     type="button"
