@@ -46,9 +46,14 @@ export default function BillingCounter() {
             <div className="sticky top-0 z-30 bg-card/90 backdrop-blur border-b border-border px-6 py-3.5 shadow-2xs">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-xl font-sans font-bold text-foreground tracking-tight">Retail POS &amp; Billing Counter</h2>
+                        <h2 className="text-xl font-sans font-bold text-foreground tracking-tight flex items-center gap-2">
+                            Retail POS &amp; Billing Counter
+                            <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                                In Development
+                            </span>
+                        </h2>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                            Scan medicine barcodes, apply batch discounts, and print bills in real time
+                            Interface preview for upcoming retail POS workflow (currently non-functional for live inventory).
                         </p>
                     </div>
 
@@ -74,6 +79,17 @@ export default function BillingCounter() {
             </div>
 
             <div className="p-6 md:p-8 max-w-6xl mx-auto w-full space-y-6 flex-1">
+
+                {/* In-Development Notice Banner */}
+                <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200">
+                    <AlertCircle size={18} className="shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                    <div className="space-y-0.5">
+                        <h4 className="text-xs font-bold uppercase tracking-wider">Module Under Active Development</h4>
+                        <p className="text-xs opacity-90 leading-relaxed">
+                            The Billing Counter is currently a work-in-progress prototype and is <strong>not functional</strong> for live sales or inventory deductions. For stock intake and adjustments, please use the <strong>Inventory</strong> and <strong>Stock Acquisition</strong> tabs.
+                        </p>
+                    </div>
+                </div>
 
             {/* Toast Alerts */}
             {error && (

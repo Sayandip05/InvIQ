@@ -1,6 +1,6 @@
 # 🏥 InvIQ - AI-Powered Retail Chemist & Multi-Pharmacy Inventory Operating System
 
-**Smart AI inventory, FEFO expiry loss prevention, counter billing, and distributor Excel synchronization for retail medical stores and pharmacy chains.**
+**Smart AI inventory, FEFO expiry loss prevention, distributor Excel synchronization, and retail stock management for medical stores and pharmacy chains.**
 
 ---
 
@@ -9,7 +9,7 @@
 Independent retail medical stores and local pharmacy chains in Tier-2/3 cities lose significant revenue every month due to **expired medications (FEFO loss)**, missed customer sales from sudden stockouts, and manual paper-heavy distributor bills. **InvIQ provides a simple, ultra-fast, mobile-friendly platform tailored specifically for chemist shop owners:**
 
 1. **Zero Expiry Loss (FEFO)**: Real-time alerts at 30, 60, and 90 days before batch expiration so chemists can return stock to distributors on time.
-2. **Instant Counter Dispense & Billing**: Fast counter billing and sales transactions that update item stock levels with millisecond consistency.
+2. **Counter Dispensing & POS (In Development)**: Counter billing workflow and checkout interface currently under active development.
 3. **1-Click Distributor Bill Ingest**: Upload wholesaler Excel/CSV delivery manifests to auto-increment live stock in seconds.
 4. **Single & Multi-Shop Chains**: Centralized dashboard to track stock across 1 to 10+ shop counters from a phone or tablet.
 
@@ -40,17 +40,16 @@ Independent retail medical stores and local pharmacy chains in Tier-2/3 cities l
 
 ## ✨ Key Capabilities
 
-- ⚡ **Counter Billing & Dispensing** - Clean counter billing module with live item lookups, receipt generation, and immediate stock updates.
+- 🚧 **Counter Billing & POS (In Development)** - Retail checkout & counter billing module is currently in active development (prototype preview; not functional for live production transactions).
 - 💊 **Streamlined Inventory Catalog** - Intuitive item stock management tracking available units, reorder levels, batches, and storage facilities without confusing packaging tiers or complex multipliers.
 - 📈 **Dynamic Expiry Risk Forecast & Analytics** - Dynamic spline line trajectory modeling 6-month batch expiration timelines against critical safe action margins, coupled with an optimal health distribution chart.
-- 🛒 **Counter Billing Cart & Flexible Customer Discounts** - High-speed retail billing sessions with live discount previews (`none`, `flat`, `tiered` slabs), receipt generation, instant stock locking, and zero-drift void cancellation.
 - 📦 **FEFO Expiry Loss Shield** - Proactive batch alerts at 30, 60, and 90 days ensuring no expired medicine remains on shelves.
 - 🚚 **Supplier & Distributor Management** - Direct vendor portal with 1-click Excel delivery manifest ingestion and automated PDF invoices stored in Azure Blob Storage.
 - 🤖 **AI Chemist Assistant** - Ask questions in plain English: *"What medicines are running low in Counter 1?"* (System operates strictly in English).
 - 📊 **Real-Time Clean Analytics** - Live stock counts, critical shortages, cold-chain fridge monitoring, and store-by-store breakdowns.
 - 🔐 **Enterprise Multi-Tenant Security** - Strict non-nullable `org_id` schema, HttpOnly SameSite auth cookies, CSP headers, issued-at (`iat`) token invalidation, cryptographic Google OAuth ID-token verification, and tenant-scoped Redis pub/sub.
 - ☁️ **Dual Environment Architecture** - Strictly separated `DEVELOPMENT` (local dev & rapid testing) and `PRODUCTION` (containerized Azure App Service / Cloud with Alembic migrations).
-- ✅ **Production Test Suite** - Comprehensive 342+ test cases covering billing lifecycles, RBAC, multi-tenancy, and FEFO dispensing with 100% pass rate.
+- ✅ **Production Test Suite** - Comprehensive 342+ test cases covering RBAC, multi-tenancy, and FEFO dispensing with 100% pass rate.
 
 ---
 
@@ -116,7 +115,7 @@ graph TB
         AuthApp["🔐 Auth & Tenant Portal (Argon2id + JWT + HttpOnly Cookies)"]
         AdminPort["🛡️ Chemist Admin Dashboard & Organization Settings"]
         StaffPort["💊 Counter Staff Portal (Permitted Branch Scoped)"]
-        BillingApp["🧾 Counter Billing & POS Interface"]
+        BillingApp["🚧 Counter Billing & POS Interface (In Development)"]
         VendorPort["🚚 Wholesaler / Distributor Delivery Portal"]
     end
 
@@ -127,7 +126,7 @@ graph TB
         AuthMid["🔑 JWT Token & Role Authorization Guard"]
         TenantGuard["🏢 Multi-Tenant Context Resolver (org_id Scoping)"]
         REST["REST API Engine (60+ Scoped Endpoints)"]
-        BillingAPI["⚡ Billing & Dispense Engine (/api/v1/billing)"]
+        BillingAPI["🚧 Billing Engine (In Development - /api/v1/billing)"]
         GQL["GraphQL Subgraph (/graphql/analytics)"]
         WS["WebSocket Alerts Engine (/ws/alerts)"]
     end
@@ -228,7 +227,7 @@ sequenceDiagram
     participant WS as 📡 WebSocket (Redis Pub/Sub)
     actor Supplier as 🚚 Medicine Wholesaler
 
-    Note over Chemist,DB: 1. Counter Dispensing & Atomic FEFO Deduction
+    Note over Chemist,DB: 1. Counter Dispense Flow (Prototype - In Development)
     Customer->>Chemist: Requests Medicine (e.g. Pan-D)
     Chemist->>App: Adds Medicine to Cart (e.g. Pan-D)
     App->>API: POST /api/v1/billing/sessions/1/scan
@@ -301,7 +300,7 @@ graph LR
 
     subgraph Capabilities["⚡ Scoped Capabilities"]
         StoreMgmt["💊 Pharmacy Profile & Branch Setup<br/>Supplier Management & Master Data<br/>FEFO Expiry Alerts & Reports<br/>Requisition Approvals"]
-        StaffOps["⚡ Counter Billing & Sales Dispense<br/>Counter Stock Intake & Transactions<br/>Create Purchase Requisitions"]
+        StaffOps["⚡ Counter Stock Intake & Transactions<br/>Create Purchase Requisitions<br/>🚧 Counter Billing (In Development)"]
         VendorOps["📄 Excel Delivery Manifest Upload<br/>Auto Invoice PDF Generation<br/>Download Delivery Receipts"]
     end
 

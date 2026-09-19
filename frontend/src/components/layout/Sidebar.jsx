@@ -23,7 +23,7 @@ const ROLE_LABELS = {
 const ALL_NAV_ITEMS = [
     // ── Admin Portal ──────────────────────────────────────────────────────
     { path: '/admin/dashboard',         label: 'Dashboard',           icon: LayoutDashboard, roles: ['admin', 'guest'] },
-    { path: '/admin/billing',           label: 'Billing Counter',     icon: ScanBarcode,     roles: ['admin', 'staff', 'guest'] },
+    { path: '/admin/billing',           label: 'Billing Counter',     icon: ScanBarcode,     roles: ['admin', 'staff', 'guest'], badge: 'In Dev' },
     { path: '/admin/inventory',         label: 'Inventory',           icon: Package,          roles: ['admin', 'guest'] },
     { path: '/admin/stock-acquisition', label: 'Stock Acquisition',   icon: Upload,           roles: ['admin', 'vendor', 'guest'] },
     { path: '/admin/chat',              label: 'AI Assistant',        icon: MessageSquare,    roles: ['admin'] },
@@ -133,7 +133,16 @@ const Sidebar = () => {
                             }}
                         >
                             <item.icon size={19} className="shrink-0" />
-                            {!collapsed && <span className="font-medium truncate">{item.label}</span>}
+                            {!collapsed && (
+                                <div className="flex items-center justify-between flex-1 min-w-0">
+                                    <span className="font-medium truncate">{item.label}</span>
+                                    {item.badge && (
+                                        <span className="ml-1.5 px-1.5 py-0.2 text-[9px] font-bold uppercase tracking-wider rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 shrink-0">
+                                            {item.badge}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
                         </NavLink>
                     </React.Fragment>
                 ))}
