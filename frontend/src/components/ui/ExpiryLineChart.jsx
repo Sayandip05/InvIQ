@@ -8,7 +8,7 @@ import {
     Tooltip,
     ResponsiveContainer,
 } from 'recharts';
-import { Calendar } from 'lucide-react';
+import { Calendar, CheckCircle2 } from 'lucide-react';
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -36,23 +36,19 @@ function getNiceYScale(maxVal) {
 }
 
 /**
- * Builds versatile rolling month projections starting from current month.
+ * Builds versatile rolling month timeline starting from current month.
  */
 function generateRollingTimeline(count = 6) {
     const now = new Date();
     const currentMonth = now.getMonth();
-    const sampleExpPattern = [25, 45, 38, 65, 52, 85, 40, 55, 30, 70, 48, 60];
-    const sampleThreshPattern = [18, 32, 29, 48, 41, 61, 30, 40, 22, 50, 35, 45];
 
     return Array.from({ length: count }, (_, i) => {
         const mIdx = (currentMonth + i) % 12;
-        const exp = sampleExpPattern[i % sampleExpPattern.length];
-        const thresh = sampleThreshPattern[i % sampleThreshPattern.length];
         return {
             month: MONTH_NAMES[mIdx],
-            expiring: exp,
-            threshold: thresh,
-            risk_level: exp >= 60 ? 'High' : exp >= 35 ? 'Medium' : 'Normal',
+            expiring: 0,
+            threshold: 0,
+            risk_level: 'Normal',
         };
     });
 }
@@ -70,6 +66,10 @@ export default function ExpiryLineChart({ data, height = 240 }) {
         }
         return generateRollingTimeline(horizon);
     }, [data, horizon]);
+
+    const hasExpiringData = useMemo(() => {
+        return chartData.some(d => (Number(d.expiring) || 0) > 0);
+    }, [chartData]);
 
     // Calculate dynamic Y-axis scale based on actual data
     const maxVal = useMemo(() => {
@@ -124,123 +124,140 @@ export default function ExpiryLineChart({ data, height = 240 }) {
 
             {/* Dynamic Curve Container styled seamlessly in Theme Colors (Rounded Corners, Zero Black) */}
             <div className="w-full rounded-xl bg-card p-3 border border-border shadow-none">
-                {/* Theme-aligned Legend with Rounded Indicators */}
-                <div className="flex items-center justify-end gap-4 text-[11px] text-muted-foreground mb-2 px-1">
-                    <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#1E1E1E] inline-block" />
-                        <span className="text-foreground font-medium">Expiring Medicines</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                        <span className="w-4 h-0 border-t-2 border-dashed border-[#7A7268] inline-block" />
-                        <span>Safety Alert Line</span>
-                    </div>
-                </div>
+                {hasExpiringData ? (
+                    <>
+                        {/* Theme-aligned Legend with Rounded Indicators */}
+                        <div className="flex items-center justify-end gap-4 text-[11px] text-muted-foreground mb-2 px-1">
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-2.5 h-2.5 rounded-full bg-[#1E1E1E] inline-block" />
+                                <span className="text-foreground font-medium">Expiring Medicines</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <span className="w-4 h-0 border-t-2 border-dashed border-[#7A7268] inline-block" />
+                                <span>Safety Alert Line</span>
+                            </div>
+                        </div>
 
-                <div style={{ height, width: '100%' }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <LineChart
-                            data={chartData}
-                            margin={{ top: 12, right: 16, left: -12, bottom: 4 }}
-                        >
-                            {/* Theme subtle horizontal grid lines */}
-                            <CartesianGrid
-                                strokeDasharray="3 3"
-                                vertical={false}
-                                stroke="#D2CBBB"
-                                opacity={0.6}
-                            />
-                            <XAxis
-                                dataKey="month"
-                                stroke="#7A7268"
-                                tick={{ fill: '#5E5A52', fontSize: 11 }}
-                                tickLine={false}
-                                axisLine={{ stroke: '#D2CBBB' }}
-                                dy={4}
-                            />
-                            <YAxis
-                                domain={domain}
-                                ticks={ticks}
-                                stroke="#7A7268"
-                                tick={{ fill: '#5E5A52', fontSize: 11 }}
-                                tickLine={false}
-                                axisLine={false}
-                                dx={-4}
-                            />
-                            <Tooltip
-                                content={({ active, payload, label }) => {
-                                    if (!active || !payload || !payload.length) return null;
-                                    const expiringVal = payload.find(p => p.dataKey === 'expiring')?.value ?? 0;
-                                    const threshVal = payload.find(p => p.dataKey === 'threshold')?.value ?? 0;
-                                    const itemData = payload[0]?.payload;
+                        <div style={{ height, width: '100%' }}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart
+                                    data={chartData}
+                                    margin={{ top: 12, right: 16, left: -12, bottom: 4 }}
+                                >
+                                    {/* Theme subtle horizontal grid lines */}
+                                    <CartesianGrid
+                                        strokeDasharray="3 3"
+                                        vertical={false}
+                                        stroke="#D2CBBB"
+                                        opacity={0.6}
+                                    />
+                                    <XAxis
+                                        dataKey="month"
+                                        stroke="#7A7268"
+                                        tick={{ fill: '#5E5A52', fontSize: 11 }}
+                                        tickLine={false}
+                                        axisLine={{ stroke: '#D2CBBB' }}
+                                        dy={4}
+                                    />
+                                    <YAxis
+                                        domain={domain}
+                                        ticks={ticks}
+                                        stroke="#7A7268"
+                                        tick={{ fill: '#5E5A52', fontSize: 11 }}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        dx={-4}
+                                    />
+                                    <Tooltip
+                                        content={({ active, payload, label }) => {
+                                            if (!active || !payload || !payload.length) return null;
+                                            const expiringVal = payload.find(p => p.dataKey === 'expiring')?.value ?? 0;
+                                            const threshVal = payload.find(p => p.dataKey === 'threshold')?.value ?? 0;
+                                            const itemData = payload[0]?.payload;
 
-                                    return (
-                                        <div className="bg-card border border-border rounded-lg p-3 shadow-md text-xs min-w-[150px]">
-                                            <div className="flex items-center justify-between border-b border-border pb-1.5 mb-2">
-                                                <span className="font-bold text-foreground tracking-wide">{label} Expiration</span>
-                                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                                                    expiringVal >= (maxVal * 0.65)
-                                                        ? 'bg-[#F26A4B]/15 text-[#F26A4B] border border-[#F26A4B]/30'
-                                                        : 'bg-accent text-foreground'
-                                                }`}>
-                                                    {itemData?.risk_level || 'Normal'}
-                                                </span>
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <div className="flex items-center justify-between text-foreground">
-                                                    <span className="flex items-center gap-1.5">
-                                                        <span className="w-2 h-2 rounded-full bg-[#1E1E1E] inline-block" />
-                                                        Expiring:
-                                                    </span>
-                                                    <strong className="font-mono text-foreground">{expiringVal} units</strong>
+                                            return (
+                                                <div className="bg-card border border-border rounded-lg p-3 shadow-md text-xs min-w-[150px]">
+                                                    <div className="flex items-center justify-between border-b border-border pb-1.5 mb-2">
+                                                        <span className="font-bold text-foreground tracking-wide">{label} Expiration</span>
+                                                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                                                            expiringVal >= (maxVal * 0.65)
+                                                                ? 'bg-[#F26A4B]/15 text-[#F26A4B] border border-[#F26A4B]/30'
+                                                                : 'bg-accent text-foreground'
+                                                        }`}>
+                                                            {itemData?.risk_level || 'Normal'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <div className="flex items-center justify-between text-foreground">
+                                                            <span className="flex items-center gap-1.5">
+                                                                <span className="w-2 h-2 rounded-full bg-[#1E1E1E] inline-block" />
+                                                                Expiring:
+                                                            </span>
+                                                            <strong className="font-mono text-foreground">{expiringVal} units</strong>
+                                                        </div>
+                                                        <div className="flex items-center justify-between text-muted-foreground">
+                                                            <span className="flex items-center gap-1.5">
+                                                                <span className="w-2.5 h-0 border-t border-dashed border-[#7A7268]" />
+                                                                Safety Level:
+                                                            </span>
+                                                            <span className="font-mono text-foreground">{threshVal} units</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center justify-between text-muted-foreground">
-                                                    <span className="flex items-center gap-1.5">
-                                                        <span className="w-2.5 h-0 border-t border-dashed border-[#7A7268]" />
-                                                        Safety Level:
-                                                    </span>
-                                                    <span className="font-mono text-foreground">{threshVal} units</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                }}
-                            />
+                                            );
+                                        }}
+                                    />
 
-                            {/* Secondary Line: Dashed Taupe/Slate Spline Curve */}
-                            <Line
-                                type="natural"
-                                dataKey="threshold"
-                                stroke="#7A7268"
-                                strokeWidth={2}
-                                strokeDasharray="4 4"
-                                dot={false}
-                                activeDot={false}
-                                name="Safety Alert Line"
-                            />
+                                    {/* Secondary Line: Dashed Taupe/Slate Spline Curve */}
+                                    <Line
+                                        type="natural"
+                                        dataKey="threshold"
+                                        stroke="#7A7268"
+                                        strokeWidth={2}
+                                        strokeDasharray="4 4"
+                                        dot={false}
+                                        activeDot={false}
+                                        name="Safety Alert Line"
+                                    />
 
-                            {/* Primary Line: Solid Deep Onyx/Charcoal Spline Curve with Node Dots */}
-                            <Line
-                                type="natural"
-                                dataKey="expiring"
-                                stroke="#1E1E1E"
-                                strokeWidth={3}
-                                dot={{
-                                    r: 4.5,
-                                    fill: '#1E1E1E',
-                                    stroke: '#F4EFE4',
-                                    strokeWidth: 2,
-                                }}
-                                activeDot={{
-                                    r: 6.5,
-                                    fill: '#F26A4B',
-                                    stroke: '#F4EFE4',
-                                    strokeWidth: 2,
-                                }}
-                                name="Expiring Medicines"
-                            />
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
+                                    {/* Primary Line: Solid Deep Onyx/Charcoal Spline Curve with Node Dots */}
+                                    <Line
+                                        type="natural"
+                                        dataKey="expiring"
+                                        stroke="#1E1E1E"
+                                        strokeWidth={3}
+                                        dot={{
+                                            r: 4.5,
+                                            fill: '#1E1E1E',
+                                            stroke: '#F4EFE4',
+                                            strokeWidth: 2,
+                                        }}
+                                        activeDot={{
+                                            r: 6.5,
+                                            fill: '#F26A4B',
+                                            stroke: '#F4EFE4',
+                                            strokeWidth: 2,
+                                        }}
+                                        name="Expiring Medicines"
+                                    />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </>
+                ) : (
+                    <div
+                        style={{ height: height + 24, width: '100%' }}
+                        className="flex flex-col items-center justify-center text-center p-6 rounded-lg bg-accent/20 border border-dashed border-border/80"
+                    >
+                        <div className="w-10 h-10 rounded-full bg-[#F26A4B]/10 border border-[#F26A4B]/20 flex items-center justify-center text-[#F26A4B] mb-2.5">
+                            <CheckCircle2 size={20} />
+                        </div>
+                        <p className="text-sm font-semibold text-foreground">No Expiring Medicines Projected</p>
+                        <p className="text-xs text-muted-foreground mt-1 max-w-[280px]">
+                            All medicines are within safe dates, or no inventory has been recorded yet.
+                        </p>
+                    </div>
+                )}
             </div>
         </div>
     );

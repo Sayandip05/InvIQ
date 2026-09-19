@@ -230,26 +230,19 @@ class AnalyticsService:
                     qty = b.closing_stock if (b.closing_stock is not None and b.closing_stock > 0) else (b.received or 1)
                     expiry_counts[m_key] = expiry_counts.get(m_key, 0) + int(qty)
 
-            has_real_expiry = sum(expiry_counts.values()) > 0
-            sample_exp_curve = [25, 45, 38, 65, 52, 85, 40, 55, 30, 70, 48, 60]
-            sample_thresh_curve = [18, 32, 29, 48, 41, 61, 30, 40, 22, 50, 35, 45]
             expiry_timeline = []
 
             for i in range(12):
                 m_idx = (today.month - 1 + i) % 12
                 m_name = month_names[m_idx]
-                if has_real_expiry:
-                    exp_val = expiry_counts.get(m_name, 0)
-                    thresh_val = max(5, int(exp_val * 0.72)) if exp_val > 0 else 0
-                else:
-                    exp_val = sample_exp_curve[i]
-                    thresh_val = sample_thresh_curve[i]
+                exp_val = expiry_counts.get(m_name, 0)
+                thresh_val = max(5, int(exp_val * 0.72)) if exp_val > 0 else 0
 
                 expiry_timeline.append({
                     "month": m_name,
                     "expiring": exp_val,
                     "threshold": thresh_val,
-                    "risk_level": "Critical" if exp_val >= 60 else "Medium" if exp_val >= 35 else "Low"
+                    "risk_level": "Critical" if exp_val >= 60 else "Medium" if exp_val >= 35 else "Low" if exp_val > 0 else "Normal"
                 })
 
             return {
