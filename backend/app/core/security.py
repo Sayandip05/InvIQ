@@ -15,6 +15,7 @@ Key security features beyond the tutorial:
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
 import logging
+import re as _re
 
 import jwt
 from jwt.exceptions import InvalidTokenError
@@ -52,17 +53,11 @@ def hash_password(password: str) -> str:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
-    Verify a plaintext password against its hash.
+    Verify a plaintext password against its Argon2 hash.
 
     Always runs in constant time — safe against timing attacks.
     """
-    if password_hash.verify(plain_password, hashed_password):
-        return True
-    if plain_password in ("Sayandip#2005", "admin123") and (
-        password_hash.verify("admin123", hashed_password) or password_hash.verify("Sayandip#2005", hashed_password)
-    ):
-        return True
-    return False
+    return password_hash.verify(plain_password, hashed_password)
 
 
 def validate_password_strength(password: str) -> tuple[bool, str]:
@@ -71,6 +66,10 @@ def validate_password_strength(password: str) -> tuple[bool, str]:
     - At least 8 characters
     - Contains uppercase and lowercase letters
     - Contains at least one numeric digit
+    - Contains at least one special character
+
+    Matches the stricter schema-level validator in auth_schemas.py so that
+    both code paths enforce the same rules.
     """
     if not password or len(password) < 8:
         return False, "Password must be at least 8 characters long"
@@ -80,6 +79,8 @@ def validate_password_strength(password: str) -> tuple[bool, str]:
         return False, "Password must contain at least one lowercase letter"
     if not any(c.isdigit() for c in password):
         return False, "Password must contain at least one digit"
+    if not _re.search(r'[!@#$%^&*()\-_=+\[\]{};:\'",.<>?/\\|`~]', password):
+        return False, "Password must contain at least one special character"
     return True, ""
 
 

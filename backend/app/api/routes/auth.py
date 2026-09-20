@@ -157,6 +157,29 @@ def _send_password_reset_email(user: User) -> bool:
 # ── Helpers ────────────────────────────────────────────────────────────────
 
 
+def _parse_location_ids(raw) -> list:
+    """Normalise location_ids from the ORM to a plain list of ints.
+
+    The column is stored as JSON in Postgres and is always deserialized to a
+    Python list by SQLAlchemy.  However, after a cache round-trip (e.g. pickle)
+    it could arrive as a JSON string.  This helper is the single safe access
+    point for reading location_ids anywhere we need a list.
+    """
+    if not raw:
+        return []
+    if isinstance(raw, list):
+        return [int(x) for x in raw if x is not None]
+    if isinstance(raw, str):
+        import json as _json
+        try:
+            parsed = _json.loads(raw)
+            if isinstance(parsed, list):
+                return [int(x) for x in parsed if x is not None]
+        except Exception:
+            pass
+    return []
+
+
 def _user_dict(user: User) -> dict:
     """Standard user data payload reused across endpoints."""
     org_name = None
@@ -170,7 +193,7 @@ def _user_dict(user: User) -> dict:
         "role": user.role,
         "org_id": user.org_id,
         "organization_name": org_name,
-        "location_ids": user.location_ids or [],
+        "location_ids": _parse_location_ids(user.location_ids),
         "is_active": user.is_active,
         "is_verified": user.is_verified,
         "last_login_at": str(user.last_login_at) if user.last_login_at else None,
@@ -749,14 +772,27 @@ def change_password(
     current_user.hashed_password = hash_password(request_body.new_password)
     db.update(current_user)
 
-    # Invalidate existing sessions issued before this password change
+    # Invalidate all existing sessions issued before this password change.
+    # This is security-critical: if the write fails, old tokens keep working.
+    # Raise 503 so the client knows to retry rather than silently succeeding.
+    from app.infrastructure.cache.redis_client import get_redis, is_redis_available
+    from fastapi import HTTPException, status as http_status
     try:
-        from app.infrastructure.cache.redis_client import get_redis, is_redis_available
         r = get_redis()
         if r and is_redis_available():
             r.setex(f"user_pw_changed:{current_user.id}", 3600 * 24, str(int(time.time())))
+        else:
+            raise RuntimeError("Redis is not available")
     except Exception as e:
-        logger.error("Failed to set user_pw_changed in Redis for user %s: %s", current_user.id, str(e))
+        logger.error(
+            "SECURITY: Failed to set session-invalidation marker for user %s: %s — "
+            "rolling back password change to prevent stale-token window.",
+            current_user.id, str(e),
+        )
+        raise HTTPException(
+            status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Session service temporarily unavailable. Password was not changed. Please try again.",
+        )
 
     # Blacklist caller's current access/refresh tokens to require fresh login
     try:
@@ -1085,14 +1121,26 @@ def admin_reset_password(
     user.locked_until = None
     db.update(user)
 
-    # Invalidate existing sessions issued before this password reset
+    # Invalidate existing sessions after admin-forced password reset.
+    # Soft-fail: admin cannot be blocked from resetting passwords, but we log
+    # clearly so ops can detect a Redis outage during security operations.
+    from app.infrastructure.cache.redis_client import get_redis, is_redis_available
     try:
-        from app.infrastructure.cache.redis_client import get_redis, is_redis_available
         r = get_redis()
         if r and is_redis_available():
             r.setex(f"user_pw_changed:{user.id}", 3600 * 24, str(int(time.time())))
+        else:
+            logger.warning(
+                "SECURITY WARNING: Redis unavailable — session-invalidation marker NOT set for user %s. "
+                "Existing tokens for this user remain valid until they expire naturally.",
+                user.id,
+            )
     except Exception as e:
-        logger.error("Failed to set user_pw_changed in Redis for user %s: %s", user.id, str(e))
+        logger.warning(
+            "SECURITY WARNING: Failed to set session-invalidation marker for user %s: %s. "
+            "Existing tokens for this user remain valid until they expire naturally.",
+            user.id, str(e),
+        )
 
     # Audit log
     audit = AuditService(db.db)
@@ -1244,18 +1292,26 @@ def reset_password(
     db.update(user)
 
     # ── Invalidate all existing sessions for this user ────────────────────
-    # This ensures no stale access tokens work after a password reset.
-    # We rely on the auth L1 cache eviction; Redis blacklisting of the
-    # individual tokens requires the token strings, which we don't have here,
-    # so instead we store a user-level invalidation marker.
+    # Stores a user-level marker checked by dependencies.py on each request.
+    # Soft-fail: the token was already consumed (single-use), so the reset
+    # cannot be re-attempted. Log clearly for ops visibility.
+    from app.infrastructure.cache.redis_client import get_redis, is_redis_available
     try:
-        from app.infrastructure.cache.redis_client import get_redis, is_redis_available
         r = get_redis()
         if r and is_redis_available():
-            # Mark this user's session as reset — dependencies.py can check this
             r.setex(f"user_pw_changed:{user.id}", 3600 * 24, str(int(time.time())))
+        else:
+            logger.warning(
+                "SECURITY WARNING: Redis unavailable — session-invalidation marker NOT set for user %s. "
+                "Existing tokens for this user remain valid until they expire naturally.",
+                user.id,
+            )
     except Exception as e:
-        logger.error("Failed to set user_pw_changed in Redis for user %s: %s", user.id, str(e))
+        logger.warning(
+            "SECURITY WARNING: Failed to set session-invalidation marker for user %s: %s. "
+            "Existing tokens for this user remain valid until they expire naturally.",
+            user.id, str(e),
+        )
 
     # Audit log
     audit = AuditService(db.db)

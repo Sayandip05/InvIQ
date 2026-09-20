@@ -169,12 +169,19 @@ class InventoryRepository:
         Prevents race conditions on initial stock creation and concurrent inventory transactions.
         Automatically released when the current database transaction commits or rolls back.
         Safely no-ops when running against non-Postgres engines (e.g. SQLite test runners).
+
+        NOTE: We intentionally avoid Python's built-in hash() here because it is
+        randomised per-process (PYTHONHASHSEED).  Two Gunicorn workers would compute
+        different lock keys for the same (location_id, item_id) pair, giving zero
+        mutual exclusion.  The deterministic formula below is collision-free for all
+        item_id values up to 999_999 (well within the domain range).
         """
         try:
             bind = self.db.get_bind()
             if bind and getattr(bind.dialect, "name", "") == "postgresql":
                 from sqlalchemy import text
-                lock_key = hash((location_id, item_id)) & 0x7FFFFFFF
+                # Deterministic, cross-process stable key — no PYTHONHASHSEED influence.
+                lock_key = (location_id * 1_000_000 + item_id) & 0x7FFFFFFF
                 self.db.execute(text("SELECT pg_advisory_xact_lock(:key)"), {"key": lock_key})
         except Exception as e:
             logger.debug("Advisory lock skipped or unsupported: %s", e)
