@@ -28,7 +28,11 @@ class InventoryService:
         self.repo = repo
 
     def _get_recipient_emails(self, org_id: Optional[int] = None) -> list[str]:
-        """Fetch emails of active admins/managers for the organization, cached for 60 seconds."""
+        """Fetch emails of active admin users for the organization, cached for 60 seconds.
+
+        Note: The DB schema User.role enum is 'admin' | 'staff' | 'vendor' — there is no
+        'manager' role.  Only 'admin' users receive low-stock alert emails.
+        """
         now = time.time()
         # Fast path without lock
         if org_id in InventoryService._recipients_cache and now < InventoryService._recipients_cache_expiry.get(org_id, 0.0):
@@ -375,6 +379,8 @@ class InventoryService:
                     if remaining_to_dispense <= 0:
                         break
                     deduct = min(remaining_to_dispense, b["available_qty"])
+                    # flush_only=True — all batch deductions flush without individual commits;
+                    # a single atomic commit fires after ALL batches are allocated (Bug 1 fix).
                     tx_res = self.add_transaction(
                         location_id=location_id,
                         item_id=item.id,
@@ -388,6 +394,7 @@ class InventoryService:
                         transacted_unit=packaging_unit,
                         transacted_qty=quantity,
                         multiplier=multiplier,
+                        flush_only=True,
                     )
                     allocated_batches.append({
                         "batch_number": b["batch_number"],
@@ -416,6 +423,7 @@ class InventoryService:
                     transacted_unit=packaging_unit,
                     transacted_qty=quantity,
                     multiplier=multiplier,
+                    flush_only=True,
                 )
                 allocated_batches.append({
                     "batch_number": fb_batch,
@@ -425,6 +433,9 @@ class InventoryService:
                     "transaction_id": tx_res["data"]["id"],
                 })
                 last_tx_result = tx_res
+
+            # Single atomic commit after all batch deductions have been flushed
+            self.repo.commit()
 
             # 5. Targeted cache invalidation for real-time reactivity
             try:

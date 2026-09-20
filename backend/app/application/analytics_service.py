@@ -178,7 +178,8 @@ class AnalyticsService:
 
             status_counts = {"CRITICAL": 0, "WARNING": 0, "HEALTHY": 0}
             for item in stock_health:
-                status_counts[item.health_status] += 1
+                # Bug 6 fix: use .get() to avoid KeyError on unexpected/None health_status values.
+                status_counts[item.health_status] = status_counts.get(item.health_status, 0) + 1
 
             status_data = [
                 {

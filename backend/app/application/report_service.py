@@ -221,7 +221,8 @@ class ReportService:
         """
         Return aggregated requisition counts for the summary table.
         """
-        rows = self.get_requisition_rows(date_from=date_from, date_to=date_to, org_id=org_id)
+        # Bug fix: use a very large limit so stats are never silently capped at 100 rows.
+        rows = self.get_requisition_rows(date_from=date_from, date_to=date_to, org_id=org_id, limit=100_000)
         return {
             "total": len(rows),
             "pending": sum(1 for r in rows if r["status"] == "PENDING"),

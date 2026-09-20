@@ -358,7 +358,8 @@ class RequisitionService:
                 )
 
             requisition.status = "REJECTED"
-            requisition.approved_by = rejected_by
+            # approved_by intentionally left unchanged (None) — this was never approved.
+            # rejection metadata is captured in rejection_reason and rejected_at.
             requisition.rejection_reason = reason
             requisition.rejected_at = datetime.now(timezone.utc)
             self.repo.commit()
@@ -438,8 +439,9 @@ class RequisitionService:
 
             # If not yet approved, approve and deduct stock first
             if requisition.status == "PENDING":
-                self.approve_requisition(requisition_id, approved_by=fulfilled_by, org_id=org_id)
-                requisition = self.repo.get_by_id(requisition_id, load_items=True)
+              # Bug 3 fix: use a very large limit so stats aren't silently capped at 100 rows.
+              rows = self.get_requisition_rows(date_from=date_from, date_to=date_to, org_id=org_id, limit=100_000)
+              requisition = self.repo.get_by_id(requisition_id, load_items=True)
 
             requisition.status = "FULFILLED"
             self.repo.commit()

@@ -34,6 +34,7 @@ def run_fefo_expiry_audit(
         .join(Location, InventoryTransaction.location_id == Location.id)
         .filter(
             InventoryTransaction.expiry_date.isnot(None),
+            InventoryTransaction.expiry_date >= date.today(),  # Bug 5 fix: exclude already-expired batches
             InventoryTransaction.expiry_date <= cutoff,
             InventoryTransaction.closing_stock > 0,
         )
