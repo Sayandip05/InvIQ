@@ -55,10 +55,15 @@ logger = logging.getLogger("smart_inventory.graphql")
 _PRIVILEGED_ROLES = {"admin"}
 
 
-def _resolve_caller_org_id(user: Optional[User]) -> Optional[int]:
-    """Resolve caller org_id. If user has org_id=None, deny access."""
+def _resolve_caller_org_id(user: Optional[User]) -> int:
+    """Resolve caller org_id.
+
+    Raises AuthorizationError (403) for unauthenticated callers and for
+    users with no org assignment.  Never returns None — callers must not
+    pass None org_id to analytics queries (it would leak cross-tenant data).
+    """
     if user is None:
-        return None
+        raise AuthorizationError("Authentication required")
     if getattr(user, "org_id", None) is None:
         raise AuthorizationError("User is not assigned to an organization")
     return user.org_id

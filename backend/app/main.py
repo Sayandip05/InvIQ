@@ -81,6 +81,36 @@ def seed_admin_user():
 
 
 
+def _recover_interrupted_import_jobs() -> None:
+    """Mark any DataImportJob that was left in PROCESSING state as FAILED.
+
+    These are jobs whose background threads were killed mid-flight by a previous
+    process restart (SIGKILL, OOM, or deployment). Without this, they stay
+    PROCESSING forever and the client has no way to know they failed.
+    """
+    try:
+        from app.infrastructure.database.connection import SessionLocal
+        from app.infrastructure.database.models import DataImportJob
+
+        with SessionLocal() as db:
+            stuck = (
+                db.query(DataImportJob)
+                .filter(DataImportJob.status == "PROCESSING")
+                .all()
+            )
+            if stuck:
+                for job in stuck:
+                    job.status = "FAILED"
+                    job.error_message = "Interrupted by process restart"
+                db.commit()
+                logger.warning(
+                    "Recovered %d interrupted import job(s) → marked FAILED on startup.",
+                    len(stuck),
+                )
+    except Exception as e:
+        logger.warning("Could not recover interrupted import jobs: %s", e)
+
+
 # ── Lifespan (Graceful Startup + Shutdown) ─────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -94,6 +124,7 @@ async def lifespan(app: FastAPI):
         Base.metadata.create_all(bind=engine)
 
     seed_admin_user()
+    _recover_interrupted_import_jobs()
     get_redis()  # Initialize Redis connection (logs status)
 
     # Start WebSocket Redis pub/sub subscriber background task
@@ -110,6 +141,9 @@ async def lifespan(app: FastAPI):
     yield
     # ── Shutdown ──
     subscriber_task.cancel()
+    # Drain in-flight background import jobs before closing DB connections.
+    from app.api.routes.data_import import shutdown_import_executor
+    shutdown_import_executor()
     close_redis()
     engine.dispose()
     logger.info("[STOP] %s shutdown complete", settings.PROJECT_NAME)

@@ -19,7 +19,7 @@ Workflow:
 """
 
 import logging
-import threading
+from concurrent.futures import ThreadPoolExecutor, Future
 from typing import Optional
 from fastapi import APIRouter, Depends, UploadFile, File, Request, Query
 from sqlalchemy.orm import Session
@@ -49,6 +49,33 @@ router = APIRouter(prefix="/data-import", tags=["Data Import"])
 ALLOWED_EXTENSIONS = (".csv", ".xlsx", ".xls")
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB matches existing vendor upload limit
 SUPPORTED_ENTITIES = {"inventory_transaction", "item", "location"}
+
+# Thread-pool for large-file background imports when Celery is unavailable.
+# Bounded pool prevents unbounded thread/DB-connection growth under concurrent load.
+# Shutdown is coordinated in main.py lifespan (wait=True) so in-flight jobs finish.
+_import_executor: ThreadPoolExecutor | None = None
+
+
+def get_import_executor() -> ThreadPoolExecutor:
+    """Return the module-level import executor, creating it on first use."""
+    global _import_executor
+    if _import_executor is None:
+        from app.core.config import settings as _s
+        _import_executor = ThreadPoolExecutor(
+            max_workers=_s.IMPORT_MAX_WORKERS,
+            thread_name_prefix="data-import",
+        )
+    return _import_executor
+
+
+def shutdown_import_executor() -> None:
+    """Gracefully drain in-flight import jobs. Called from lifespan shutdown."""
+    global _import_executor
+    if _import_executor is not None:
+        logger.info("Waiting for in-flight background import jobs to finish...")
+        _import_executor.shutdown(wait=True)
+        _import_executor = None
+        logger.info("Import executor shut down cleanly.")
 
 
 def _run_background_import(
@@ -241,6 +268,7 @@ def confirm_and_execute_import(
         job.status = "PROCESSING"
         service.import_repo.update_job(job)
 
+        dispatched = False
         try:
             from app.workers.tasks import import_csv_task, _celery_available
             if _celery_available:
@@ -253,23 +281,36 @@ def confirm_and_execute_import(
                     username=current_user.username,
                 )
                 logger.info("Queued Celery background import task for job #%d (org_id=%s)", job.id, job.org_id)
-            else:
-                thread = threading.Thread(
-                    target=_run_background_import,
-                    args=(job.id, confirmed_mapping, body.default_location_id, current_user.username),
-                    daemon=True,
-                    name=f"data-import-job-{job.id}",
-                )
-                thread.start()
+                dispatched = True
         except Exception as queue_err:
-            logger.warning("Celery queue dispatch failed, using worker thread fallback: %s", queue_err)
-            thread = threading.Thread(
-                target=_run_background_import,
-                args=(job.id, confirmed_mapping, body.default_location_id, current_user.username),
-                daemon=True,
-                name=f"data-import-job-{job.id}",
-            )
-            thread.start()
+            logger.warning("Celery queue dispatch failed, falling back to thread pool: %s", queue_err)
+
+        if not dispatched:
+            # Bounded thread pool — prevents unbounded thread + DB connection growth.
+            # If the pool is saturated (all workers busy) submit() raises RuntimeError;
+            # we return 503 so the client can retry rather than silently queuing forever.
+            from fastapi import HTTPException, status as http_status
+            try:
+                get_import_executor().submit(
+                    _run_background_import,
+                    job.id,
+                    confirmed_mapping,
+                    body.default_location_id,
+                    current_user.username,
+                )
+                logger.info(
+                    "Submitted background import job #%d to thread pool (org_id=%s)",
+                    job.id, job.org_id,
+                )
+            except RuntimeError as pool_err:
+                # Pool shut down (process shutting down) — reject cleanly.
+                job.status = "FAILED"
+                job.error_message = "Server is shutting down; please retry."
+                service.import_repo.update_job(job)
+                raise HTTPException(
+                    status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Import service is at capacity. Please retry in a moment.",
+                ) from pool_err
 
         return ImportStatusResponse(
             success=True,

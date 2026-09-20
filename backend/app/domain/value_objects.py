@@ -86,16 +86,15 @@ DAYS_REMAINING_INFINITE: int = 999
 # ---------------------------------------------------------------------------
 
 @dataclass(frozen=True)
-class StockThresholds:
+class _StockThresholdsData:
     """
     Business-rule constants for stock health classification.
 
     All threshold values are defined here and referenced everywhere else.
-    The SQL query in queries.py imports CRITICAL_DAYS and WARNING_DAYS
+    The SQL query in analytics_repo.py imports CRITICAL_DAYS and WARNING_DAYS
     directly so there is a single source of truth.
 
-    Fields are class-level constants (not instance fields) so they can be
-    used without instantiation: StockThresholds.CRITICAL_DAYS.
+    Access via the module-level singleton ``StockThresholds``.
     """
 
     # Days-of-supply thresholds
@@ -109,11 +108,13 @@ class StockThresholds:
     DEFAULT_SAFETY_FACTOR: float = field(default=2.0)
 
     def __init_subclass__(cls, **kwargs: object) -> None:  # pragma: no cover
-        raise TypeError("StockThresholds is a singleton constants class; do not subclass it.")
+        raise TypeError("_StockThresholdsData is a singleton constants class; do not subclass it.")
 
 
-# Expose as module-level names for convenient import
-StockThresholds = StockThresholds()  # type: ignore[assignment]
+# Public singleton — import and use as: StockThresholds.CRITICAL_DAYS
+# Named distinctly from the private dataclass to avoid the class-name rebind
+# that caused `type: ignore[assignment]` workarounds throughout the codebase.
+StockThresholds: _StockThresholdsData = _StockThresholdsData()
 
 
 # ---------------------------------------------------------------------------
@@ -135,7 +136,7 @@ class ReorderPolicy:
 
     avg_daily_usage: float
     lead_time_days: int
-    safety_factor: float = StockThresholds.DEFAULT_SAFETY_FACTOR  # type: ignore[union-attr]
+    safety_factor: float = StockThresholds.DEFAULT_SAFETY_FACTOR
 
     def recommended_quantity(self, current_stock: int) -> int:
         """

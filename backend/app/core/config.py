@@ -190,6 +190,10 @@ class Settings(BaseSettings):
     # Number of rows written per DB commit during row processing.
     IMPORT_BATCH_SIZE: int = 50
 
+    # Maximum parallel background import threads (thread-pool fallback when Celery
+    # is unavailable).  Prevents unbounded thread/DB-connection growth under load.
+    IMPORT_MAX_WORKERS: int = 4
+
     # ── Derived helpers ────────────────────────────────────────────────
 
     @property

@@ -35,7 +35,7 @@ def calculate_reorder_quantity(
     avg_daily_usage: float,
     lead_time_days: int,
     current_stock: int,
-    safety_factor: float = StockThresholds.DEFAULT_SAFETY_FACTOR,  # type: ignore[union-attr]
+    safety_factor: float = StockThresholds.DEFAULT_SAFETY_FACTOR,
 ) -> int:
     """
     Calculate the recommended reorder quantity.
