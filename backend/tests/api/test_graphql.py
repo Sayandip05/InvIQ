@@ -73,10 +73,11 @@ class TestGraphQLDashboardStats:
         assert isinstance(data["locationStock"], list)
         assert isinstance(data["statusDistribution"], list)
 
-    def test_guest_can_access_dashboard(self, db):
-        """Dashboard stats are not privileged — guests see them too."""
+    def test_unauthenticated_guest_is_rejected(self, db):
+        """Unauthenticated callers must receive an auth error, not data."""
         result = _exec(self.QUERY, _guest_ctx(db))
-        assert result.errors is None
+        assert result.errors is not None
+        assert any("Authentication required" in str(e) for e in result.errors)
 
 
 # ── Heatmap ───────────────────────────────────────────────────────────────
@@ -138,9 +139,9 @@ class TestGraphQLHeatmap:
         result = _exec(self.QUERY, _ctx(db, "admin"))
         assert result.errors is None
 
-    def test_privileged_fields_masked_for_guest(self, db):
-        """Guest callers must get null for privileged fields."""
-        GUEST_QUERY = """
+    def test_privileged_fields_masked_for_vendor(self, db):
+        """Vendor callers (authenticated but not privileged) get null privileged fields."""
+        VENDOR_QUERY = """
         {
           heatmap {
             details {
@@ -152,21 +153,18 @@ class TestGraphQLHeatmap:
           }
         }
         """
-        result = _exec(GUEST_QUERY, _guest_ctx(db))
+        result = _exec(VENDOR_QUERY, _ctx(db, "vendor"))
         assert result.errors is None
         for item in result.data["heatmap"]["details"]:
             assert item["avgDailyUsage"] is None
             assert item["daysRemaining"] is None
             assert item["leadTimeDays"] is None
 
-    def test_privileged_fields_masked_for_vendor(self, db):
-        """Vendor role (not privileged) gets null privileged fields."""
-        QUERY = """{ heatmap { details { avgDailyUsage } } }"""
-        result = _exec(QUERY, _ctx(db, "vendor"))
-        assert result.errors is None
-        for item in result.data["heatmap"]["details"]:
-            assert item["avgDailyUsage"] is None
-
+    def test_unauthenticated_guest_is_rejected(self, db):
+        """Unauthenticated callers must receive an auth error, not data."""
+        result = _exec("{ heatmap { locations } }", _guest_ctx(db))
+        assert result.errors is not None
+        assert any("Authentication required" in str(e) for e in result.errors)
 
 # ── Alerts ────────────────────────────────────────────────────────────────
 
@@ -200,16 +198,23 @@ class TestGraphQLAlerts:
         assert result.errors is None
         assert result.data["alerts"]["severity"] == "CRITICAL"
 
-    def test_alert_privileged_fields_null_for_guest(self, db):
+    def test_alert_privileged_fields_null_for_vendor(self, db):
+        """Authenticated vendor (not privileged) gets null privileged fields."""
         result = _exec(
             '{ alerts(severity: "WARNING") { alerts { avgDailyUsage daysRemaining leadTimeDays } } }',
-            _guest_ctx(db),
+            _ctx(db, "vendor"),
         )
         assert result.errors is None
         for alert in result.data["alerts"]["alerts"]:
             assert alert["avgDailyUsage"] is None
             assert alert["daysRemaining"] is None
             assert alert["leadTimeDays"] is None
+
+    def test_unauthenticated_guest_is_rejected(self, db):
+        """Unauthenticated callers must receive an auth error."""
+        result = _exec('{ alerts { count } }', _guest_ctx(db))
+        assert result.errors is not None
+        assert any("Authentication required" in str(e) for e in result.errors)
 
     def test_alert_privileged_fields_visible_for_manager(self, db):
         result = _exec(
@@ -304,15 +309,25 @@ class TestGraphQLStockHealth:
         result = _exec(self.BASE, _ctx(db, "admin"))
         assert result.errors is None
 
-    def test_privileged_fields_masked_for_guest(self, db):
+    def test_privileged_fields_masked_for_vendor(self, db):
+        """Authenticated vendor (not privileged) gets null privileged fields."""
         result = _exec(
             "{ stockHealth { avgDailyUsage daysRemaining leadTimeDays } }",
-            _guest_ctx(db),
+            _ctx(db, "vendor"),
         )
         assert result.errors is None
         for row in result.data["stockHealth"]:
             assert row["avgDailyUsage"] is None
             assert row["daysRemaining"] is None
+
+    def test_unauthenticated_guest_is_rejected(self, db):
+        """Unauthenticated callers must receive an auth error."""
+        result = _exec(
+            "{ stockHealth { itemName } }",
+            _guest_ctx(db),
+        )
+        assert result.errors is not None
+        assert any("Authentication required" in str(e) for e in result.errors)
 
 
 # ── Tenant Isolation ──────────────────────────────────────────────────────

@@ -25,7 +25,7 @@ class TestSupplierManagement:
             "name": "Shree Pharma Distributors",
             "username": "shreepharma_test",
             "email": "shree_test@pharma.com",
-            "password": "vendorSecret123",
+            "password": "vendorSecret123!",  # meets stricter policy: upper+lower+digit+special
             "phone": "+91 98765 43210",
         }
         create_res = client.post("/api/admin/suppliers", json=payload, headers=headers)
