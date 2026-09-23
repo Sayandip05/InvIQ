@@ -37,21 +37,21 @@ export default function Landing() {
 
   const testimonials = [
     {
-      quote: "Before InvIQ, we lost ₹25,000 every quarter to expired medicine batches sitting on our back shelves. With InvIQ's 30-day early expiry alerts, we return them to the distributor on time. It paid for itself in week one.",
+      quote: "We ran our entire shop on Excel spreadsheets and paper registers for five years. Batches expired on back shelves without warning, costing us ₹30,000 every quarter. Ingesting distributor Excel bills directly into InvIQ and tracking 30-day expiry alerts protected our margins instantly.",
       name: "Rajesh Sharma",
-      role: "Owner, Sharma Medicos (Durgapur)",
+      role: "Proprietor, Sharma Medicos (Single Counter Chemist)",
       image: "https://i.pravatar.cc/150?img=11"
     },
     {
-      quote: "I run 2 medical stores 5 km apart. I used to call my shop boy 15 times a day to check stock. Now I just open InvIQ on my mobile and see live stock for both branches instantly.",
+      quote: "Managing three pharmacy branches across town was constant phone tag. I called staff all day just to check stock balances. With InvIQ, my counter staff raise branch requisitions in two clicks, and I see live inventory across all three locations from my phone.",
       name: "Amit Verma",
-      role: "Proprietor, City Care Chemist (Siliguri)",
+      role: "Managing Director, Verma Healthcare Network (3 Retail Branches)",
       image: "https://i.pravatar.cc/150?img=33"
     },
     {
-      quote: "As a medicine distributor, uploading delivery Excel bills to InvIQ saves me 2 hours every evening. The chemist gets their stock updated automatically without manual typing.",
-      name: "Priya Sen",
-      role: "Shree Pharma Wholesale Distributors",
+      quote: "Typing 60-line delivery invoices into spreadsheets late at night was exhausting. InvIQ lets us drag and drop distributor Excel files, validates every batch automatically, and updates the shop ledger before our delivery boy unpacks the boxes.",
+      name: "Suresh Patel",
+      role: "Owner, Patel Chemist & Wholesale Retail Counter",
       image: "https://i.pravatar.cc/150?img=47"
     }
   ];
@@ -66,28 +66,28 @@ export default function Landing() {
 
   const faqs = [
     {
-      question: "How does InvIQ stop medicine expiry losses?",
-      answer: "InvIQ tracks batch numbers and expiration dates, sending you advance notifications 30 and 60 days before a batch expires so you can sell it first or return it to your distributor for credit."
+      question: "How does InvIQ replace our daily Excel spreadsheets and notebooks?",
+      answer: "Instead of manually typing every purchase invoice into fragile spreadsheets, you simply upload your distributor Excel or CSV delivery bill. InvIQ automatically parses medicine names, batches, expiry dates, purchase rates, and MRP with all-or-nothing validation."
     },
     {
-      question: "Can I manage multiple medical store branches?",
-      answer: "Yes! You can add and monitor multiple pharmacy shops (e.g. Market Branch and Station Road Branch) in one unified dashboard on your phone or laptop."
+      question: "How does the system prevent medicine expiry losses?",
+      answer: "InvIQ tracks batch lifecycles with dynamic 30, 60, and 90 day expiry alerts. You can identify slow-moving batches early, prioritize older stock at checkout, or return medicines to your distributor for credit before deadlines expire."
     },
     {
-      question: "Can I upload delivery bills from my medicine distributor?",
-      answer: "Yes. InvIQ supports Excel (.xlsx) and CSV files from all major medicine distributors. Our AI automatically maps medicine names, batches, quantities, and MRP."
+      question: "Can I manage a single store or multiple pharmacy branches?",
+      answer: "Both. If you operate a single shop, you get complete stock visibility and billing. If you own a chain, you can connect central storage, multiple branches, and individual billing counters with live stock sync and inter-branch requisition approvals."
     },
     {
-      question: "Do I need to replace my existing billing counter machine?",
-      answer: "No. InvIQ works alongside your existing setup as a smart inventory intelligence, expiry prevention, and multi-branch tracking system on any phone, tablet, or PC."
+      question: "How does the built-in AI assistant help on the pharmacy floor?",
+      answer: "Powered by Groq LLaMA 3.3, your staff can ask natural questions like 'Which batches expire next month in Branch 2?' or 'Show me all low stock antibiotics' and receive immediate answers from live database records without searching complex menus."
     },
     {
-      question: "Can my medicine supplier/distributor access InvIQ?",
-      answer: "Yes. You can give your medicine distributor access to the dedicated Vendor Portal where they can view your purchase orders and upload delivery manifests."
+      question: "Does InvIQ include a retail billing counter for staff?",
+      answer: "Yes. The staff portal features an integrated billing counter POS where staff can quickly search medicines, select specific batches, apply discounts, and process retail counter receipts while inventory automatically decrements in real time."
     },
     {
-      question: "How does the AI assistant help my pharmacy?",
-      answer: "You can ask natural questions like 'How many strips of Paracetamol 650 left in Branch 2?' or 'Which batches expire next month?' and get instant answers without searching through complex tables."
+      question: "Which capabilities are currently in development?",
+      answer: "We are actively developing direct WhatsApp supplier purchase order dispatch, automated cold-chain IoT temperature sensor sync, and multi-month seasonal demand forecasting. These updates are deployed automatically to active accounts."
     }
   ];
 
@@ -194,7 +194,7 @@ export default function Landing() {
         <div className="text-center max-w-4xl mx-auto mb-10 sm:mb-16 md:mb-20 px-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-card border border-border text-foreground text-xs sm:text-sm font-medium mb-6 hover:bg-accent hover:scale-105 transition-all duration-200 cursor-default shadow-xs">
             <Sparkles className="w-3.5 h-3.5 text-[#F26A4B]" />
-            <span>Built for Medical Store &amp; Pharmacy Owners</span>
+            <span>Built for Single Chemists &amp; Multi-Branch Pharmacy Networks</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl md:text-7xl font-poppins font-bold tracking-tight text-foreground mb-5 md:mb-7 leading-[1.15] cursor-default">
@@ -202,9 +202,9 @@ export default function Landing() {
             <span className="text-[#F26A4B] inline-block min-h-[1.2em]">
               <Typewriter
                 words={[
-                  "Expired Medicines",
-                  "Missed Reorders",
-                  "Low-Stock Surprises",
+                  "Expired Medicine Batches",
+                  "Messy Excel Spreadsheets",
+                  "Sudden Stockout Surprises",
                 ]}
                 speed={75}
                 deleteSpeed={40}
@@ -216,7 +216,7 @@ export default function Landing() {
           </h1>
 
           <p className="text-sm sm:text-base md:text-lg text-muted-foreground mb-8 sm:mb-10 max-w-xl mx-auto leading-relaxed">
-            Know what's running low, return expiring batches on time, and manage every shop from your phone.
+            Replace manual spreadsheets and paper books. Ingest distributor bills in seconds, prevent dead stock, and monitor every shop counter from your phone.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-5">
@@ -274,10 +274,10 @@ export default function Landing() {
             Features
           </div>
           <h2 className="text-4xl md:text-5xl font-poppins font-bold text-foreground mb-6 tracking-tight">
-            Smart Pharmacy Inventory Intelligence
+            Pharmacy Inventory Intelligence Without Spreadsheets
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            Track medicines live across branches, prevent costly expiry losses by selling older stock first, and reorder from distributors easily with AI.
+            Built specifically for retail chemist realities: eliminate dead stock on back shelves, ingest delivery bills instantly, and coordinate branch transfers effortlessly.
           </p>
         </div>
 
@@ -307,20 +307,20 @@ export default function Landing() {
               <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center mb-6 text-[#F26A4B] group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
                 <Activity className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-card-foreground mb-3 group-hover:text-[#F26A4B] transition-colors">Zero-Expiry Loss (Sell Oldest First)</h3>
+              <h3 className="text-xl font-bold text-card-foreground mb-3 group-hover:text-[#F26A4B] transition-colors">Zero-Loss Batch Expiry Radar</h3>
               <p className="text-muted-foreground leading-relaxed">
-                30 and 60 day advance alerts on expiring medicine batches so you can sell them first or return to your distributor for credit.
+                Receive 30, 60, and 90 day advance alerts on expiring batches so you can sell older stock first or claim distributor credit notes before deadlines pass.
               </p>
             </div>
 
             {/* Card 2 */}
             <div className="bg-card backdrop-blur-xl rounded-[2rem] p-8 md:p-10 border border-border shadow-xs hover:shadow-xl hover:border-primary/50 hover:-translate-y-2 transition-all duration-300 group cursor-default">
               <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center mb-6 text-[#F26A4B] group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
-                <Zap className="w-6 h-6" />
+                <LineChart className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-card-foreground mb-3 group-hover:text-[#F26A4B] transition-colors">Predictive Low-Stock Alerts</h3>
+              <h3 className="text-xl font-bold text-card-foreground mb-3 group-hover:text-[#F26A4B] transition-colors">1-Click Distributor Excel Ingest</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Never turn away a customer. AI predicts running-out medicines based on daily sales and tells you what to reorder today.
+                Drop wholesaler delivery manifests in Excel or CSV format. Our system verifies rows, creates missing medicines on the fly, and updates ledgers with zero manual typing.
               </p>
             </div>
 
@@ -329,20 +329,20 @@ export default function Landing() {
               <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center mb-6 text-[#F26A4B] group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
                 <Network className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-card-foreground mb-3 group-hover:text-[#F26A4B] transition-colors">Multi-Shop Branch Tracking</h3>
+              <h3 className="text-xl font-bold text-card-foreground mb-3 group-hover:text-[#F26A4B] transition-colors">Multi-Shop Branch Requisitions</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Manage 2 or 3 medicine store branches from your phone with unified live stock sync without calling staff.
+                Connect your central stockroom with retail branch counters. Staff submit digital stock requests and owners approve transfers with complete audit accountability.
               </p>
             </div>
 
             {/* Card 4 */}
             <div className="bg-card backdrop-blur-xl rounded-[2rem] p-8 md:p-10 border border-border shadow-xs hover:shadow-xl hover:border-primary/50 hover:-translate-y-2 transition-all duration-300 group cursor-default">
               <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center mb-6 text-[#F26A4B] group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
-                <LineChart className="w-6 h-6" />
+                <Zap className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-card-foreground mb-3 group-hover:text-[#F26A4B] transition-colors">1-Click Distributor Excel Ingest</h3>
+              <h3 className="text-xl font-bold text-card-foreground mb-3 group-hover:text-[#F26A4B] transition-colors">AI Chemist Assistant (Groq LLaMA)</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Upload wholesaler delivery manifests (Excel/CSV) to automatically update batch numbers, quantities, and MRP.
+                Ask natural questions on phone or desktop to instantly find low-stock medicines, inspect cold-storage supplies, or forecast monthly batch expirations.
               </p>
             </div>
 
@@ -359,10 +359,10 @@ export default function Landing() {
             Process
           </div>
           <h2 className="text-4xl md:text-5xl font-poppins font-bold text-foreground mb-6 tracking-tight">
-            Get Started in 3 Simple Steps
+            Replace Manual Books in 3 Simple Steps
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            Set up your medical store inventory in minutes and automate stock tracking effortlessly.
+            Modernize your pharmacy inventory in minutes without halting your daily retail counter sales.
           </p>
         </div>
 
@@ -377,9 +377,9 @@ export default function Landing() {
                 1
               </div>
               <div className="bg-card rounded-3xl p-8 border border-border shadow-xs hover:shadow-xl hover:border-primary/50 hover:-translate-y-2 transition-all duration-300 w-full h-full">
-                <h3 className="text-lg font-bold text-card-foreground mb-3 group-hover:text-[#F26A4B] transition-colors">Register Your Shop</h3>
+                <h3 className="text-lg font-bold text-card-foreground mb-3 group-hover:text-[#F26A4B] transition-colors">Set Up Stores &amp; Counters</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Create your chemist account in 60 seconds and configure your medical store branches.
+                  Register your pharmacy in 60 seconds, configure your primary shop or multiple branches, and invite staff with role permissions.
                 </p>
               </div>
             </div>
@@ -390,9 +390,9 @@ export default function Landing() {
                 2
               </div>
               <div className="bg-card rounded-3xl p-8 border border-border shadow-xs hover:shadow-xl hover:border-primary/50 hover:-translate-y-2 transition-all duration-300 w-full h-full">
-                <h3 className="text-lg font-bold text-card-foreground mb-3 group-hover:text-[#F26A4B] transition-colors">Upload Distributor Bills</h3>
+                <h3 className="text-lg font-bold text-card-foreground mb-3 group-hover:text-[#F26A4B] transition-colors">Ingest Distributor Delivery Bills</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Upload your medicine distributor Excel/CSV invoices or add stock manually in seconds.
+                  Upload wholesaler Excel or CSV delivery invoices directly. InvIQ extracts medicines, batch codes, rates, and expiry dates safely.
                 </p>
               </div>
             </div>
@@ -403,9 +403,9 @@ export default function Landing() {
                 3
               </div>
               <div className="bg-card rounded-3xl p-8 border border-border shadow-xs hover:shadow-xl hover:border-primary/50 hover:-translate-y-2 transition-all duration-300 w-full h-full">
-                <h3 className="text-lg font-bold text-card-foreground mb-3 group-hover:text-[#F26A4B] transition-colors">Automate Restock &amp; Expiries</h3>
+                <h3 className="text-lg font-bold text-card-foreground mb-3 group-hover:text-[#F26A4B] transition-colors">Automate Stock, Sales &amp; Expiries</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Get predictive reorder alerts, track expiring batches, and send 1-click orders to suppliers.
+                  Track real-time batch health, run retail counter billing, approve branch requisitions, and query inventory using the AI assistant.
                 </p>
               </div>
             </div>
@@ -441,10 +441,10 @@ export default function Landing() {
             Pricing
           </div>
           <h2 className="text-4xl md:text-5xl font-poppins font-bold text-foreground mb-4 tracking-tight">
-            Prices that make sense!
+            Fair Pricing Built for Pharmacy Margins
           </h2>
           <p className="text-lg leading-relaxed text-muted-foreground max-w-xl mx-auto">
-            Simple, transparent pricing built for local chemist shops and growing pharmacy networks in India.
+            Practical plans tailored for standalone neighborhood chemists and fast-growing multi-branch pharmacy chains.
           </p>
         </div>
 
@@ -456,7 +456,7 @@ export default function Landing() {
             <div className="p-6 pb-0 flex flex-col gap-1.5">
               <h3 className="text-2xl font-poppins font-semibold text-foreground tracking-tight">Starter Chemist</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Perfect for small retail counters starting digital stock management at zero cost.
+                Perfect for a single retail counter digitizing shelf stock and replacing manual paper notebooks.
               </p>
             </div>
             <div className="p-6 flex flex-col gap-8 flex-1">
@@ -466,11 +466,11 @@ export default function Landing() {
               </p>
               <div className="flex flex-col gap-4">
                 {[
-                  { title: '1 Pharmacy Counter', desc: 'Single shop management with full stock visibility.' },
-                  { title: 'Up to 500 Medicines', desc: 'Start digitizing your medicine catalogue instantly.' },
-                  { title: 'Early Expiry Alerts', desc: 'Get notified before batches expire and lose value.' },
-                  { title: 'Quick Barcode Checkout', desc: 'Scan and sell medicines faster at the counter.' },
-                  { title: 'Daily Stock Dashboard', desc: 'Clean overview of your inventory every morning.' },
+                  { title: '1 Pharmacy Counter Location', desc: 'Single shop management with full inventory visibility.' },
+                  { title: 'Up to 500 Medicine Batches', desc: 'Digitize your essential shelf inventory immediately.' },
+                  { title: '30-Day Batch Expiry Alerts', desc: 'Catch expiring batches before distributor return windows close.' },
+                  { title: 'Retail Billing Counter (POS)', desc: 'Fast checkout counter with live inventory deduction.' },
+                  { title: 'Distributor Excel Ingestion', desc: 'Upload standard delivery manifests with dry-run safety.' },
                 ].map((f, i) => (
                   <div key={i} className="flex flex-row gap-3">
                     <Check className="w-4 h-4 mt-1 text-foreground shrink-0" strokeWidth={2.5} />
@@ -491,7 +491,7 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* Card 2: Single Pharmacy — highlighted */}
+          {/* Card 2: Single Pharmacy */}
           <div className="rounded-xl border-2 border-primary bg-background shadow-2xl hover:-translate-y-2 transition-all duration-300 flex flex-col relative">
             <div className="absolute -top-3 right-6 bg-[#F26A4B] text-white text-[11px] font-bold uppercase tracking-wider px-3 py-0.5 rounded-full shadow-sm">
               Popular
@@ -499,7 +499,7 @@ export default function Landing() {
             <div className="p-6 pb-0 flex flex-col gap-1.5">
               <h3 className="text-2xl font-poppins font-semibold text-foreground tracking-tight">Single Pharmacy</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Ideal for standalone chemist shops wanting live stock tracking and expiry loss prevention.
+                Designed for busy independent chemists who need complete expiry protection and AI assistance.
               </p>
             </div>
             <div className="p-6 flex flex-col gap-8 flex-1">
@@ -509,12 +509,12 @@ export default function Landing() {
               </p>
               <div className="flex flex-col gap-4">
                 {[
-                  { title: 'Manage 1 Medical Store Branch', desc: 'Full control of one pharmacy with live stock sync.' },
-                  { title: 'Up to 3,000 Medicines', desc: 'Handle a large catalogue with batch-level tracking.' },
-                  { title: 'Early Expiry Alerts (30 / 60 / 90 days)', desc: 'Return expiring batches to distributors for credit.' },
-                  { title: 'Supplier Excel / CSV Ingest', desc: 'Upload delivery bills to update stock in 1 click.' },
-                  { title: 'Low-Stock Auto Reorder Alerts', desc: 'AI predicts and alerts before you run out of medicine.' },
-                  { title: 'WhatsApp & Email Support', desc: 'Get human support on WhatsApp within business hours.' },
+                  { title: '1 Full Pharmacy Store', desc: 'Complete batch tracking, supplier ledgers, and billing.' },
+                  { title: 'Up to 5,000 Medicine Batches', desc: 'Handle high retail volume with cold-chain indicators.' },
+                  { title: '30, 60, and 90 Day Expiry Radar', desc: 'Maximize supplier credit returns with advance notice.' },
+                  { title: 'Automated Excel Bill Parsing', desc: 'Ingest 11-column distributor manifests in one click.' },
+                  { title: 'AI Chemist Assistant (Groq LLaMA)', desc: 'Instant natural language inventory search on web or mobile.' },
+                  { title: 'WhatsApp Order Dispatch (In Dev)', desc: 'Generate supplier purchase orders directly to WhatsApp.' },
                 ].map((f, i) => (
                   <div key={i} className="flex flex-row gap-3">
                     <Check className="w-4 h-4 mt-1 text-foreground shrink-0" strokeWidth={2.5} />
@@ -540,7 +540,7 @@ export default function Landing() {
             <div className="p-6 pb-0 flex flex-col gap-1.5">
               <h3 className="text-2xl font-poppins font-semibold text-foreground tracking-tight">Pharmacy Chain</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                For chemist owners managing 2+ branches with central supplier ordering and live sync.
+                For pharmacy entrepreneurs managing 2 or more branches with central stock replenishment.
               </p>
             </div>
             <div className="p-6 flex flex-col gap-8 flex-1">
@@ -550,12 +550,12 @@ export default function Landing() {
               </p>
               <div className="flex flex-col gap-4">
                 {[
-                  { title: 'Multiple Medical Store Branches', desc: 'Manage all branches from one unified dashboard.' },
-                  { title: 'Unlimited Medicines', desc: 'No cap on catalogue size — scale without limits.' },
-                  { title: 'Multi-Branch Live Stock Sync', desc: 'See real-time stock across every shop instantly.' },
-                  { title: 'Branch-to-Branch Transfers', desc: 'Move stock between locations in one tap.' },
-                  { title: 'Cold-Chain Fridge Monitoring', desc: 'Track vaccine fridge temperatures in real time.' },
-                  { title: 'Priority WhatsApp & Phone Support', desc: 'Dedicated account manager and phone helpline.' },
+                  { title: 'Multiple Stores & Central Warehouse', desc: 'Manage all branch locations from one unified dashboard.' },
+                  { title: 'Unlimited Medicine Batches', desc: 'Scale catalog size and transaction volume without caps.' },
+                  { title: 'Inter-Branch Stock Requisitions', desc: 'Staff request transfers and owners approve with full audits.' },
+                  { title: 'Multi-Role Staff Access', desc: 'Granular permissions for owners, counter staff, and vendors.' },
+                  { title: 'Consolidated Stock Ledger', desc: 'Track opening, received, and issued stock across all stores.' },
+                  { title: 'IoT Cold-Chain Telemetry (In Dev)', desc: 'Automated hardware temperature monitoring for vaccine safety.' },
                 ].map((f, i) => (
                   <div key={i} className="flex flex-row gap-3">
                     <Check className="w-4 h-4 mt-1 text-foreground shrink-0" strokeWidth={2.5} />
@@ -570,7 +570,7 @@ export default function Landing() {
                 onClick={() => window.location.href = '/signup'}
                 className="mt-auto w-full h-11 px-4 inline-flex items-center justify-center gap-2 rounded-full border border-border bg-accent text-sm font-semibold text-foreground hover:bg-primary hover:text-primary-foreground active:scale-98 transition-all duration-200 cursor-pointer group"
               >
-                Book a Meeting
+                Schedule Onboarding
                 <PhoneCall className="w-4 h-4" />
               </button>
             </div>
@@ -592,10 +592,10 @@ export default function Landing() {
 
         <div className="text-center max-w-3xl mx-auto mb-12 relative z-10 px-4">
           <h2 className="text-4xl md:text-5xl font-poppins font-bold text-foreground mb-4 tracking-tight">
-            Hear From <span className="text-[#F26A4B]">Our Customers</span>
+            Hear From <span className="text-[#F26A4B]">Active Pharmacists</span>
           </h2>
           <p className="text-[15px] text-muted-foreground leading-relaxed max-w-xl mx-auto">
-            Smarter inventory. Real impact. See how InvIQ boosts<br className="hidden md:block" />efficiency and eliminates stock issues.
+            Practical inventory intelligence. Real operational savings. See how retail chemists eliminate expired stock and simplify daily tracking.
           </p>
         </div>
 
@@ -710,10 +710,10 @@ export default function Landing() {
                   Contact
                 </div>
                 <h2 className="text-4xl md:text-5xl font-poppins font-bold mb-4 leading-tight">
-                  Expand Your Reach with<br />InvIQ's Smart Platform
+                  Stop Losing Margins to<br />Dead Stock and Manual Entry
                 </h2>
                 <p className="text-[#A89F8F] text-lg">
-                  Manage inventory, streamline operations, and scale your business anywhere in the world.
+                  Join smart pharmacy owners who rely on InvIQ to replace spreadsheets, prevent batch expiries, and streamline store operations.
                 </p>
               </div>
               
@@ -746,7 +746,7 @@ export default function Landing() {
                   <span className="font-poppins font-bold text-xl tracking-tight text-foreground group-hover:text-[#F26A4B] transition-colors">InvIQ</span>
                 </div>
                 <p className="text-muted-foreground text-sm max-w-sm mb-6 leading-relaxed">
-                  Next-generation smart pharmacy inventory management with real-time tracking, AI-powered forecasting, and cold-chain compliance.
+                  Smart pharmacy inventory platform for single and multi-branch medical stores. Replace fragile spreadsheets with batch-level tracking, automated bill ingestion, and AI insights.
                 </p>
               </div>
               
