@@ -3,19 +3,24 @@ import { inventory, requisition } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import {
   Plus, Trash2, Send, ClipboardList, Clock, CheckCircle2, XCircle,
-  Building2, User, LogOut, ScanBarcode, AlertTriangle, ShieldCheck
+  Building2, User, LogOut, ScanBarcode, AlertTriangle, ArrowLeft, LayoutDashboard, ShoppingCart
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   URGENCY_OPTIONS,
-  DEPARTMENTS,
   STATUS_STYLES,
   URGENCY_STYLES,
 } from '@/shared/constants/status';
+import BillingCounter from './BillingCounter';
 
 const StaffRequisition = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+    
+    // Main Portal Navigation: 'requisitions' | 'billing'
+    const activeSection = searchParams.get('tab') === 'billing' ? 'billing' : 'requisitions';
+
     const [locations, setLocations] = useState([]);
     const [items, setItems] = useState([]);
     const [myRequests, setMyRequests] = useState([]);
@@ -26,12 +31,19 @@ const StaffRequisition = () => {
 
     const [form, setForm] = useState({
         location_id: '',
-        department: 'Store Counter',
         urgency: 'NORMAL',
         requested_by: user?.full_name || user?.username || 'Store Staff',
         notes: '',
         items: [{ item_id: '', quantity: 1, packaging_unit: '', notes: '' }],
     });
+
+    const setSection = (sec) => {
+        if (sec === 'billing') {
+            setSearchParams({ tab: 'billing' });
+        } else {
+            setSearchParams({});
+        }
+    };
 
     useEffect(() => {
         if (user) {
@@ -97,6 +109,15 @@ const StaffRequisition = () => {
     const updateItemRow = (index, field, value) => {
         const newItems = [...form.items];
         newItems[index][field] = value;
+
+        // Automatically set packaging_unit from the item catalog definition
+        if (field === 'item_id') {
+            const selectedItem = items.find(it => String(it.id) === String(value));
+            if (selectedItem) {
+                newItems[index].packaging_unit = selectedItem.unit || 'units';
+            }
+        }
+
         setForm(prev => ({ ...prev, items: newItems }));
     };
 
@@ -115,15 +136,20 @@ const StaffRequisition = () => {
         }
 
         try {
+            const selectedLoc = locations.find(l => String(l.id) === String(form.location_id));
             const payload = {
                 ...form,
                 location_id: parseInt(form.location_id),
-                items: validItems.map(i => ({
-                    item_id: parseInt(i.item_id),
-                    quantity: parseInt(i.quantity),
-                    packaging_unit: i.packaging_unit ? String(i.packaging_unit).trim() : null,
-                    notes: i.notes,
-                })),
+                department: selectedLoc?.name || 'Main Counter',
+                items: validItems.map(i => {
+                    const itemObj = items.find(it => String(it.id) === String(i.item_id));
+                    return {
+                        item_id: parseInt(i.item_id),
+                        quantity: parseInt(i.quantity),
+                        packaging_unit: itemObj?.unit || i.packaging_unit || 'units',
+                        notes: i.notes || null,
+                    };
+                }),
             };
 
             const res = await requisition.create(payload);
@@ -131,7 +157,6 @@ const StaffRequisition = () => {
                 setSuccess(`Requisition ${res.data.data.requisition_number} submitted successfully!`);
                 setForm({
                     location_id: locations[0]?.id || '',
-                    department: 'Store Counter',
                     urgency: 'NORMAL',
                     requested_by: user?.full_name || user?.username || 'Store Staff',
                     notes: '',
@@ -167,7 +192,7 @@ const StaffRequisition = () => {
         <div className="min-h-screen bg-background text-foreground p-4 md:p-8 font-sans">
             <div className="max-w-5xl mx-auto space-y-6">
 
-                {/* ── Top Header / User Context Bar (Warm Editorial Theme) ──────────────── */}
+                {/* ── Top Header / User Context Bar ──────────────── */}
                 <div className="bg-card border border-border p-5 rounded-none shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <img
@@ -187,7 +212,7 @@ const StaffRequisition = () => {
                                 </div>
                             </div>
                             <h1 className="text-base sm:text-lg font-sans font-bold text-foreground tracking-tight mt-0.5">
-                                Medicine Requisition &amp; Stock Intake
+                                Chemist Counter Workspace
                             </h1>
                             <p className="text-xs text-muted-foreground">
                                 Operator: <strong className="text-foreground">{user?.full_name || user?.username}</strong>
@@ -195,14 +220,17 @@ const StaffRequisition = () => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <Link
-                            to="/staff/billing"
-                            className="flex items-center gap-1.5 px-3.5 py-2 bg-card hover:bg-accent text-foreground text-xs font-bold border border-border rounded-none transition"
-                        >
-                            <ScanBarcode size={14} className="text-foreground" />
-                            <span>Billing Counter</span>
-                        </Link>
+                    <div className="flex items-center gap-2 flex-wrap">
+                        {user?.role === 'admin' && (
+                            <Link
+                                to="/admin/dashboard"
+                                className="flex items-center gap-1.5 px-3 py-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground text-xs font-bold border border-border rounded-none transition"
+                                title="Return to Admin Management Dashboard"
+                            >
+                                <LayoutDashboard size={14} />
+                                <span>Admin Dashboard</span>
+                            </Link>
+                        )}
 
                         <button
                             onClick={handleLogout}
@@ -227,35 +255,71 @@ const StaffRequisition = () => {
                     </div>
                 )}
 
-                {/* Navigation Tabs */}
-                <div className="flex bg-card border border-border rounded-none p-1 shadow-2xs">
+                {/* ── Primary Staff Portal Workspace Switcher ──────────────── */}
+                <div className="flex bg-card border border-border rounded-none p-1.5 shadow-2xs gap-1.5">
                     <button
-                        onClick={() => setActiveTab('form')}
-                        className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider transition rounded-none cursor-pointer ${
-                            activeTab === 'form'
-                                ? 'bg-primary text-primary-foreground'
+                        onClick={() => setSection('requisitions')}
+                        className={`flex-1 py-2.5 px-4 text-xs font-bold uppercase tracking-wider transition rounded-none cursor-pointer flex items-center justify-center gap-2 ${
+                            activeSection === 'requisitions'
+                                ? 'bg-primary text-primary-foreground shadow-2xs'
                                 : 'text-muted-foreground hover:bg-accent/40'
                         }`}
                     >
-                        <Send size={13} className="inline mr-1.5" /> New Requisition
+                        <Send size={14} />
+                        <span>Medicine Requisitions &amp; Stock Intake</span>
                     </button>
                     <button
-                        onClick={() => setActiveTab('history')}
-                        className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider transition rounded-none cursor-pointer ${
-                            activeTab === 'history'
-                                ? 'bg-primary text-primary-foreground'
+                        onClick={() => setSection('billing')}
+                        className={`flex-1 py-2.5 px-4 text-xs font-bold uppercase tracking-wider transition rounded-none cursor-pointer flex items-center justify-center gap-2 ${
+                            activeSection === 'billing'
+                                ? 'bg-primary text-primary-foreground shadow-2xs'
                                 : 'text-muted-foreground hover:bg-accent/40'
                         }`}
                     >
-                        <Clock size={13} className="inline mr-1.5" /> My Request History
+                        <ScanBarcode size={14} />
+                        <span>Retail Billing Counter (POS)</span>
                     </button>
                 </div>
+
+                {/* ── SECTION 2: BILLING COUNTER (EMBEDDED INSIDE STAFF PORTAL) ── */}
+                {activeSection === 'billing' && (
+                    <div className="bg-card border border-border p-6 shadow-xs">
+                        <BillingCounter embedded={true} />
+                    </div>
+                )}
+
+                {/* ── SECTION 1: MEDICINE REQUISITIONS ── */}
+                {activeSection === 'requisitions' && (
+                    <div className="space-y-6">
+                        {/* Sub-Navigation Tabs */}
+                        <div className="flex bg-card border border-border rounded-none p-1 shadow-2xs">
+                            <button
+                                onClick={() => setActiveTab('form')}
+                                className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider transition rounded-none cursor-pointer ${
+                                    activeTab === 'form'
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'text-muted-foreground hover:bg-accent/40'
+                                }`}
+                            >
+                                <Send size={13} className="inline mr-1.5" /> New Requisition
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('history')}
+                                className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider transition rounded-none cursor-pointer ${
+                                    activeTab === 'history'
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'text-muted-foreground hover:bg-accent/40'
+                                }`}
+                            >
+                                <Clock size={13} className="inline mr-1.5" /> My Request History
+                            </button>
+                        </div>
 
                 {/* ─── NEW REQUEST FORM (Warm Editorial Theme) ─── */}
                 {activeTab === 'form' && (
                     <form onSubmit={handleSubmit} className="bg-card rounded-none border border-border shadow-xs overflow-hidden">
                         <div className="p-6 border-b border-border bg-accent/20 space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-1">
                                         Requester Name <span className="text-destructive">*</span>
@@ -272,21 +336,6 @@ const StaffRequisition = () => {
 
                                 <div>
                                     <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-1">
-                                        Department <span className="text-destructive">*</span>
-                                    </label>
-                                    <select
-                                        required
-                                        className="w-full px-3 py-2 border border-border rounded-none text-xs bg-background text-foreground focus:outline-none focus:border-primary"
-                                        value={form.department}
-                                        onChange={(e) => setForm({ ...form, department: e.target.value })}
-                                    >
-                                        <option value="">Select Department</option>
-                                        {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-1">
                                         Location / Counter <span className="text-destructive">*</span>
                                     </label>
                                     <select
@@ -295,7 +344,7 @@ const StaffRequisition = () => {
                                         value={form.location_id}
                                         onChange={(e) => setForm({ ...form, location_id: e.target.value })}
                                     >
-                                        <option value="">Select Location</option>
+                                        <option value="">Select Location / Counter</option>
                                         {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
                                     </select>
                                 </div>
@@ -367,70 +416,69 @@ const StaffRequisition = () => {
                                         <tr className="bg-accent/40 border-b border-border text-foreground font-bold uppercase text-[10px]">
                                             <th className="py-2.5 px-3">Medicine / Item</th>
                                             <th className="py-2.5 px-3 w-28 text-center">Quantity</th>
-                                            <th className="py-2.5 px-3 w-36">Unit (e.g. strip/box)</th>
+                                            <th className="py-2.5 px-3 w-32 text-center">Unit</th>
                                             <th className="py-2.5 px-3">Line Notes</th>
                                             <th className="py-2.5 px-3 w-12 text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/50">
-                                        {form.items.map((row, index) => (
-                                            <tr key={index} className="hover:bg-accent/20">
-                                                <td className="p-2">
-                                                    <select
-                                                        required
-                                                        className="w-full px-2.5 py-1.5 border border-border rounded-none text-xs bg-background text-foreground focus:outline-none focus:border-primary"
-                                                        value={row.item_id}
-                                                        onChange={(e) => updateItemRow(index, 'item_id', e.target.value)}
-                                                    >
-                                                        <option value="">Select Medicine Item</option>
-                                                        {items.map(item => (
-                                                            <option key={item.id} value={item.id}>
-                                                                {item.name} ({item.unit})
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                </td>
-                                                <td className="p-2">
-                                                    <input
-                                                        type="number"
-                                                        min="1"
-                                                        required
-                                                        className="w-full px-2 py-1.5 border border-border rounded-none text-center text-xs bg-background text-foreground focus:outline-none focus:border-primary"
-                                                        value={row.quantity}
-                                                        onChange={(e) => updateItemRow(index, 'quantity', parseInt(e.target.value) || 1)}
-                                                    />
-                                                </td>
-                                                <td className="p-2">
-                                                    <input
-                                                        type="text"
-                                                        placeholder="strip, box, vial"
-                                                        className="w-full px-2.5 py-1.5 border border-border rounded-none text-xs bg-background text-foreground focus:outline-none focus:border-primary"
-                                                        value={row.packaging_unit || ''}
-                                                        onChange={(e) => updateItemRow(index, 'packaging_unit', e.target.value)}
-                                                    />
-                                                </td>
-                                                <td className="p-2">
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Optional item note"
-                                                        className="w-full px-2.5 py-1.5 border border-border rounded-none text-xs bg-background text-foreground focus:outline-none focus:border-primary"
-                                                        value={row.notes}
-                                                        onChange={(e) => updateItemRow(index, 'notes', e.target.value)}
-                                                    />
-                                                </td>
-                                                <td className="p-2 text-center">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeItemRow(index)}
-                                                        disabled={form.items.length === 1}
-                                                        className="text-muted-foreground hover:text-destructive disabled:opacity-20 transition cursor-pointer"
-                                                        title="Remove Row"
-                                                    >
-                                                        <Trash2 size={15} />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                        {form.items.map((row, index) => {
+                                            const selectedItem = items.find(it => String(it.id) === String(row.item_id));
+                                            return (
+                                                <tr key={index} className="hover:bg-accent/20">
+                                                    <td className="p-2">
+                                                        <select
+                                                            required
+                                                            className="w-full px-2.5 py-1.5 border border-border rounded-none text-xs bg-background text-foreground focus:outline-none focus:border-primary"
+                                                            value={row.item_id}
+                                                            onChange={(e) => updateItemRow(index, 'item_id', e.target.value)}
+                                                        >
+                                                            <option value="">Select Medicine Item</option>
+                                                            {items.map(item => (
+                                                                <option key={item.id} value={item.id}>
+                                                                    {item.name} ({item.unit})
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </td>
+                                                    <td className="p-2">
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            required
+                                                            className="w-full px-2 py-1.5 border border-border rounded-none text-center text-xs bg-background text-foreground focus:outline-none focus:border-primary"
+                                                            value={row.quantity}
+                                                            onChange={(e) => updateItemRow(index, 'quantity', parseInt(e.target.value) || 1)}
+                                                        />
+                                                    </td>
+                                                    <td className="p-2 text-center">
+                                                        <div className="px-2.5 py-1.5 border border-border/70 rounded-none text-xs bg-muted/40 text-foreground font-mono font-bold flex items-center justify-center">
+                                                            {selectedItem?.unit || row.packaging_unit || '—'}
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-2">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Optional item note"
+                                                            className="w-full px-2.5 py-1.5 border border-border rounded-none text-xs bg-background text-foreground focus:outline-none focus:border-primary"
+                                                            value={row.notes}
+                                                            onChange={(e) => updateItemRow(index, 'notes', e.target.value)}
+                                                        />
+                                                    </td>
+                                                    <td className="p-2 text-center">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeItemRow(index)}
+                                                            disabled={form.items.length === 1}
+                                                            className="text-muted-foreground hover:text-destructive disabled:opacity-20 transition cursor-pointer"
+                                                            title="Remove Row"
+                                                        >
+                                                            <Trash2 size={15} />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>
@@ -495,7 +543,7 @@ const StaffRequisition = () => {
                                 </div>
                                 
                                 <div className="text-xs text-muted-foreground">
-                                    <span className="font-semibold text-foreground">{req.department}</span> • Counter: {req.location_name} • {req.items?.length || 0} Line item(s)
+                                    <span className="font-semibold text-foreground">Counter: {req.location_name || req.department}</span> • {req.items?.length || 0} Line item(s)
                                 </div>
 
                                 {req.rejection_reason && (
@@ -517,6 +565,8 @@ const StaffRequisition = () => {
                                 )}
                             </div>
                         ))}
+                    </div>
+                )}
                     </div>
                 )}
             </div>

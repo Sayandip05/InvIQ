@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 import {
     Activity, AlertTriangle, CheckCircle, Package,
-    ArrowUpRight, ArrowDownRight, Filter, RotateCcw, Building2, Tag
+    ArrowUpRight, ArrowDownRight, Filter, RotateCcw, Building2
 } from 'lucide-react';
 
 
@@ -158,28 +158,17 @@ const formatCategory = (cat) => {
 const Dashboard = () => {
     const [stats, setStats] = useState(null);
     const [locations, setLocations] = useState([]);
-    const [categories, setCategories] = useState([]);
     const [selectedLocation, setSelectedLocation] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Fetch available locations & category options on mount
+    // Fetch available locations on mount
     useEffect(() => {
         const fetchFilters = async () => {
             try {
-                const [locRes, itemRes] = await Promise.all([
-                    inventory.getLocations(),
-                    inventory.getItems(),
-                ]);
+                const locRes = await inventory.getLocations();
                 if (locRes.data && locRes.data.data) {
                     setLocations(locRes.data.data);
-                }
-                if (itemRes.data && itemRes.data.data) {
-                    const uniqueCats = Array.from(
-                        new Set(itemRes.data.data.map((i) => i.category).filter(Boolean))
-                    ).sort();
-                    setCategories(uniqueCats);
                 }
             } catch (err) {
                 console.error("Failed to load filter options", err);
@@ -188,14 +177,13 @@ const Dashboard = () => {
         fetchFilters();
     }, []);
 
-    // Fetch dashboard stats whenever active filter changes
+    // Fetch dashboard stats whenever active location filter changes
     useEffect(() => {
         const fetchStats = async () => {
             try {
                 setLoading(true);
                 const params = {};
                 if (selectedLocation) params.location_id = selectedLocation;
-                if (selectedCategory) params.category = selectedCategory;
 
                 const response = await analytics.getStats(params);
                 if (response.data && (response.data.success || response.data.data)) {
@@ -212,14 +200,13 @@ const Dashboard = () => {
         };
 
         fetchStats();
-    }, [selectedLocation, selectedCategory]);
+    }, [selectedLocation]);
 
     const handleResetFilters = () => {
         setSelectedLocation('');
-        setSelectedCategory('');
     };
 
-    const hasActiveFilters = Boolean(selectedLocation || selectedCategory);
+    const hasActiveFilters = Boolean(selectedLocation);
 
     if (loading && !stats) {
         return <DashboardSkeleton />;
@@ -278,22 +265,6 @@ const Dashboard = () => {
                             </select>
                         </div>
 
-                        {/* Category Filter */}
-                        <div className="relative flex items-center">
-                            <Tag size={14} className="absolute left-3 text-muted-foreground pointer-events-none" />
-                            <select
-                                value={selectedCategory}
-                                onChange={(e) => setSelectedCategory(e.target.value)}
-                                className="text-xs font-medium bg-background border border-border text-foreground rounded-md pl-8 pr-7 py-2 hover:bg-accent/40 focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
-                            >
-                                <option value="">All Categories ({categories.length || 'All'})</option>
-                                {categories.map((cat) => (
-                                    <option key={cat} value={cat}>
-                                        {formatCategory(cat)}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
 
                         {/* Reset Button */}
                         {hasActiveFilters && (

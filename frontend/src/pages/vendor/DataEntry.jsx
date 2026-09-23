@@ -70,13 +70,6 @@ export default function DataEntry() {
   const successUploadsCount = uploads.filter(u => u.status === 'completed' || u.status === 'success' || !u.status).length;
   const successRate = uploads.length > 0 ? Math.round((successUploadsCount / uploads.length) * 100) : 100;
 
-  const filteredUploads = uploads.filter((u) => {
-    const q = searchQuery.toLowerCase();
-    const fname = (u.filename || '').toLowerCase();
-    const loc = (u.location_name || '').toLowerCase();
-    return fname.includes(q) || loc.includes(q);
-  });
-
   return (
     <div className="flex flex-col min-h-full bg-background font-sans text-foreground">
       {/* ── Sticky Top Navbar ─── */}
@@ -222,9 +215,9 @@ export default function DataEntry() {
             </div>
 
             {/* 2-Column Upload Form + History */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
               {/* Left Column: Upload Form */}
-              <div className="lg:col-span-5 bg-card border border-border p-5 rounded-xl space-y-5 shadow-2xs">
+              <div className="lg:col-span-5 bg-card border border-border p-5 rounded-none space-y-5 shadow-2xs flex flex-col justify-between h-full">
                 <div className="flex items-center justify-between pb-3 border-b border-border">
                   <div className="flex items-center gap-2">
                     <div className="p-1.5 bg-accent text-[#F26A4B] rounded-md border border-border">
@@ -344,8 +337,8 @@ export default function DataEntry() {
               </div>
 
               {/* Right Column: History */}
-              <div className="lg:col-span-7 bg-card border border-border p-5 rounded-xl space-y-4 shadow-2xs">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
+              <div className="lg:col-span-7 bg-card border border-border p-5 rounded-none space-y-4 shadow-2xs flex flex-col h-full">
+                <div className="flex items-center justify-between pb-3 border-b border-border">
                   <div className="flex items-center gap-2">
                     <div className="p-1.5 bg-accent text-foreground rounded-md border border-border">
                       <History size={16} />
@@ -355,26 +348,15 @@ export default function DataEntry() {
                       <p className="text-[11px] text-muted-foreground">{uploads.length} total deliveries processed</p>
                     </div>
                   </div>
-
-                  <div className="relative w-full sm:w-56">
-                    <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Filter by file or branch..."
-                      className="w-full text-xs bg-background border border-border text-foreground placeholder:text-muted-foreground rounded-md pl-8 pr-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
-                    />
-                  </div>
                 </div>
 
                 {fetching ? (
-                  <div className="py-16 text-center text-muted-foreground flex flex-col items-center justify-center gap-2">
+                  <div className="flex-1 py-16 text-center text-muted-foreground flex flex-col items-center justify-center gap-2 min-h-[260px]">
                     <Loader2 size={20} className="animate-spin text-[#F26A4B]" />
                     <span className="text-xs">Loading acquisition history...</span>
                   </div>
-                ) : filteredUploads.length === 0 ? (
-                  <div className="py-16 text-center flex flex-col items-center justify-center border border-dashed border-border rounded-xl p-6">
+                ) : uploads.length === 0 ? (
+                  <div className="flex-1 py-16 text-center flex flex-col items-center justify-center border border-dashed border-border rounded-xl p-6 min-h-[260px]">
                     <FileSpreadsheet className="w-10 h-10 text-muted-foreground/50 mb-2" />
                     <h4 className="text-xs font-bold text-foreground">No Delivery Bills Found</h4>
                     <p className="text-[11px] text-muted-foreground mt-0.5 max-w-xs">
@@ -382,7 +364,7 @@ export default function DataEntry() {
                     </p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto border border-border rounded-lg">
+                  <div className="overflow-x-auto border border-border rounded-lg flex-1">
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="bg-accent/40 border-b border-border text-[11px] font-bold text-foreground uppercase tracking-wider">
@@ -395,7 +377,7 @@ export default function DataEntry() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border/50 text-xs">
-                        {filteredUploads.map((upload, idx) => {
+                        {uploads.map((upload, idx) => {
                           const matchedInvoice = invoices.find(inv => inv.vendor_upload_id === upload.id);
                           return (
                             <tr key={upload.id || idx} className="hover:bg-accent/20 transition-colors">

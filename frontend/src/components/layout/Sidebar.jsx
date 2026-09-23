@@ -23,7 +23,6 @@ const ROLE_LABELS = {
 const ALL_NAV_ITEMS = [
     // ── Admin Portal ──────────────────────────────────────────────────────
     { path: '/admin/dashboard',         label: 'Dashboard',           icon: LayoutDashboard, roles: ['admin', 'guest'] },
-    { path: '/admin/billing',           label: 'Billing Counter',     icon: ScanBarcode,     roles: ['admin', 'staff', 'guest'], badge: 'In Dev' },
     { path: '/admin/inventory',         label: 'Inventory',           icon: Package,          roles: ['admin', 'guest'] },
     { path: '/admin/stock-acquisition', label: 'Stock Acquisition',   icon: Upload,           roles: ['admin', 'vendor', 'guest'] },
     { path: '/admin/chat',              label: 'AI Assistant',        icon: MessageSquare,    roles: ['admin'] },

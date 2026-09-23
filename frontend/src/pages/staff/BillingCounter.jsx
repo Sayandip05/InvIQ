@@ -17,7 +17,7 @@ import {
 import { useBillingCounter } from '@/features/billing/hooks/useBillingCounter';
 import AlertsDropdown from '@/components/layout/AlertsDropdown';
 
-export default function BillingCounter() {
+export default function BillingCounter({ embedded = false }) {
     const {
         sessionId,
         status,
@@ -41,44 +41,46 @@ export default function BillingCounter() {
     const fmtCur = (n) => `₹${parseFloat(n || 0).toFixed(2)}`;
 
     return (
-        <div className="flex flex-col min-h-full bg-background font-sans text-foreground">
-            {/* ── Full-Width Sticky Top Navbar (Identical to Dashboard / Inventory) ── */}
-            <div className="sticky top-0 z-30 bg-card/90 backdrop-blur border-b border-border px-6 py-3.5 shadow-2xs">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h2 className="text-xl font-sans font-bold text-foreground tracking-tight flex items-center gap-2">
-                            Retail POS &amp; Billing Counter
-                            <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">
-                                In Development
-                            </span>
-                        </h2>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                            Interface preview for upcoming retail POS workflow (currently non-functional for live inventory).
-                        </p>
-                    </div>
-
-                    <div className="flex items-center gap-2.5 flex-wrap">
-                        {sessionId && (
-                            <div className="flex items-center gap-2">
-                                <span className="px-3 py-1.5 rounded-md text-xs font-mono font-bold bg-secondary text-secondary-foreground border border-border">
-                                    BILL #{sessionId}
+        <div className={`flex flex-col min-h-full font-sans text-foreground ${embedded ? 'bg-transparent' : 'bg-background'}`}>
+            {/* ── Full-Width Sticky Top Navbar (Only when standalone) ── */}
+            {!embedded && (
+                <div className="sticky top-0 z-30 bg-card/90 backdrop-blur border-b border-border px-6 py-3.5 shadow-2xs">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h2 className="text-xl font-sans font-bold text-foreground tracking-tight flex items-center gap-2">
+                                Retail POS &amp; Billing Counter
+                                <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                                    In Development
                                 </span>
-                                {status === 'open' && (
-                                    <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-800 border border-emerald-500/30 rounded-md">
-                                        ACTIVE
-                                    </span>
-                                )}
-                            </div>
-                        )}
+                            </h2>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                Interface preview for upcoming retail POS workflow (currently non-functional for live inventory).
+                            </p>
+                        </div>
 
-                        <div className="pl-1 border-l border-border">
-                            <AlertsDropdown />
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                            {sessionId && (
+                                <div className="flex items-center gap-2">
+                                    <span className="px-3 py-1.5 rounded-md text-xs font-mono font-bold bg-secondary text-secondary-foreground border border-border">
+                                        BILL #{sessionId}
+                                    </span>
+                                    {status === 'open' && (
+                                        <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-800 border border-emerald-500/30 rounded-md">
+                                            ACTIVE
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+
+                            <div className="pl-1 border-l border-border">
+                                <AlertsDropdown />
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
 
-            <div className="p-6 md:p-8 max-w-6xl mx-auto w-full space-y-6 flex-1">
+            <div className={`space-y-6 flex-1 ${embedded ? 'w-full' : 'p-6 md:p-8 max-w-6xl mx-auto w-full'}`}>
 
                 {/* In-Development Notice Banner */}
                 <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200">

@@ -131,7 +131,7 @@ const Inventory = () => {
 
             {/* Page Content Container */}
             <div className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6 flex-1">
-                <div className="bg-card border border-border rounded-lg overflow-hidden shadow-xs">
+                <div className="bg-card border border-border rounded-none overflow-hidden shadow-xs">
 
                 <div className="p-4 border-b border-border flex items-center justify-between gap-4">
                     <div className="relative flex-1 max-w-md">
