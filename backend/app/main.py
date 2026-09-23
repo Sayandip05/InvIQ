@@ -161,6 +161,18 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 
+try:
+    import redis.exceptions
+    def _redis_error_fallback(request: Request, exc: Exception):
+        logger.warning("Redis operation failed (%s: %s) — failing open", type(exc).__name__, exc)
+        return None
+
+    app.add_exception_handler(redis.exceptions.ConnectionError, _redis_error_fallback)
+    app.add_exception_handler(redis.exceptions.TimeoutError, _redis_error_fallback)
+    app.add_exception_handler(redis.exceptions.RedisError, _redis_error_fallback)
+except ImportError:
+    pass
+
 # ── Middleware ─────────────────────────────────────────────────────────────
 # NOTE: Starlette add_middleware() wraps in LIFO order — the middleware added
 # LAST runs FIRST. Order here: RequestLoggerMiddleware (runs 1st) → CORSMiddleware (runs 2nd).
