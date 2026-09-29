@@ -2,7 +2,7 @@
  * Stock Acquisition & Inbound Orders Page.
  *
  * Unified hub for all inbound inventory management:
- * 1. Upload Delivery Bills: Download Excel template, upload manifests (.xlsx / .csv), track batches, and download GST receipts.
+ * 1. Upload Delivery Bills: Download Excel template, upload manifests (.xlsx), track batches, and download GST receipts.
  * 2. Branch Stock Orders: View and authorize internal stock replenishment requests from counters & branches.
  */
 
@@ -73,10 +73,10 @@ export default function DataEntry() {
   return (
     <div className="flex flex-col min-h-full bg-background font-sans text-foreground">
       {/* ── Sticky Top Navbar ─── */}
-      <div className="sticky top-0 z-30 bg-card border-b border-border px-6 py-3.5 shadow-2xs">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="sticky top-0 z-30 bg-card border-b border-border px-6 h-[68px] flex items-center shadow-2xs">
+        <div className="w-full flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h2 className="text-xl font-sans font-bold text-foreground tracking-tight">Stock Acquisition &amp; Orders</h2>
+            <h2 className="text-xl font-sans font-bold text-foreground tracking-tight leading-tight">Stock Acquisition &amp; Orders</h2>
             <p className="text-xs text-muted-foreground font-medium mt-0.5">
               Upload supplier delivery bills or manage stock order requests from branch counters
             </p>
@@ -275,7 +275,7 @@ export default function DataEntry() {
                     <input
                       id="file-upload"
                       type="file"
-                      accept=".xlsx,.xls,.csv"
+                      accept=".xlsx,.xls"
                       onChange={handleInputChange}
                       className="hidden"
                     />
@@ -308,9 +308,9 @@ export default function DataEntry() {
                             <Upload size={18} />
                           </div>
                           <p className="text-xs font-medium text-foreground">
-                            Drop Excel/CSV bill here, or <span className="text-[#F26A4B] font-bold">browse</span>
+                            Drop Excel delivery bill here, or <span className="text-[#F26A4B] font-bold">browse</span>
                           </p>
-                          <p className="text-[11px] text-muted-foreground mt-1">Supports .xlsx, .xls, .csv · Max 10MB</p>
+                          <p className="text-[11px] text-muted-foreground mt-1">Supports .xlsx, .xls · Max 10MB</p>
                         </>
                       )}
                     </label>
@@ -360,7 +360,7 @@ export default function DataEntry() {
                     <FileSpreadsheet className="w-10 h-10 text-muted-foreground/50 mb-2" />
                     <h4 className="text-xs font-bold text-foreground">No Delivery Bills Found</h4>
                     <p className="text-[11px] text-muted-foreground mt-0.5 max-w-xs">
-                      Upload an Excel or CSV bill on the left to start auto-ingesting stock into your branches.
+                      Upload an Excel delivery bill on the left to start auto-ingesting stock into your branches.
                     </p>
                   </div>
                 ) : (

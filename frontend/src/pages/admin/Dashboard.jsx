@@ -24,14 +24,16 @@ import ExpiryLineChart from '../../components/ui/ExpiryLineChart';
 
 export const DashboardSkeleton = () => {
     return (
-        <div className="flex flex-col min-h-full">
+        <div className="flex flex-col min-h-full bg-background text-foreground">
             {/* Top Bar Skeleton */}
-            <div className="sticky top-0 z-30 bg-card/90 backdrop-blur border-b border-border px-6 py-3.5 shadow-2xs">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <Skeleton className="h-7 w-48 rounded-md" />
+            <div className="sticky top-0 z-30 bg-card/90 backdrop-blur border-b border-border px-6 h-[68px] shrink-0 flex items-center shadow-2xs">
+                <div className="w-full flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <Skeleton className="h-7 w-48 rounded-md" />
+                        <Skeleton className="h-3.5 w-64 rounded-md mt-1" />
+                    </div>
                     <div className="flex items-center gap-2.5 flex-wrap">
                         <Skeleton className="h-8 w-40 rounded-md" />
-                        <Skeleton className="h-8 w-36 rounded-md" />
                         <div className="pl-1 border-l border-border">
                             <Skeleton className="h-8 w-8 rounded-md" />
                         </div>
@@ -240,10 +242,10 @@ const Dashboard = () => {
     return (
         <div className="flex flex-col min-h-full bg-background text-foreground">
             {/* Full-Width Top Navbar */}
-            <div className="sticky top-0 z-30 bg-card/90 backdrop-blur border-b border-border px-6 py-3.5 shadow-2xs">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="sticky top-0 z-30 bg-card/90 backdrop-blur border-b border-border px-6 h-[68px] shrink-0 flex items-center shadow-2xs">
+                <div className="w-full flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-xl font-sans font-bold text-foreground tracking-tight">Dashboard Overview</h2>
+                        <h2 className="text-xl font-sans font-bold text-foreground tracking-tight leading-tight">Dashboard Overview</h2>
                         <p className="text-xs text-muted-foreground mt-0.5">Overview of stock levels, reorder alerts, and expiring medicines</p>
                     </div>
 

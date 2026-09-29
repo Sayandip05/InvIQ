@@ -10,7 +10,7 @@ Independent retail medical stores and local pharmacy chains in Tier-2/3 cities l
 
 1. **Zero Expiry Loss (FEFO)**: Real-time alerts at 30, 60, and 90 days before batch expiration so chemists can return stock to distributors on time.
 2. **Counter Dispensing & POS (In Development)**: Counter billing workflow and checkout interface currently under active development.
-3. **1-Click Distributor Bill Ingest**: Upload wholesaler Excel/CSV delivery manifests to auto-increment live stock in seconds.
+3. **1-Click Distributor Bill Ingest**: Upload wholesaler Excel delivery manifests to auto-increment live stock in seconds.
 4. **Single & Multi-Shop Chains**: Centralized dashboard to track stock across 1 to 10+ shop counters from a phone or tablet.
 
 ---
@@ -145,7 +145,7 @@ graph TB
 
     subgraph AsyncWorkers["⚡ Asynchronous Processing & Background Workers"]
         CeleryApp["Celery Worker Engine (Redis Broker)"]
-        TaskImport["📄 CSV/Excel Import Task"]
+        TaskImport["📄 Excel Delivery Import Task"]
         TaskInvoice["🧾 PDF Invoice Generation Task"]
         TaskVector["🧠 Vector Embeddings Sync Task"]
         TaskEmail["📧 Transactional Email Task"]

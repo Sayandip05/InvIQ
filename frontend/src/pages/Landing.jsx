@@ -67,7 +67,7 @@ export default function Landing() {
   const faqs = [
     {
       question: "How does InvIQ replace our daily Excel spreadsheets and notebooks?",
-      answer: "Instead of manually typing every purchase invoice into fragile spreadsheets, you simply upload your distributor Excel or CSV delivery bill. InvIQ automatically parses medicine names, batches, expiry dates, purchase rates, and MRP with all-or-nothing validation."
+      answer: "Instead of manually typing every purchase invoice into fragile spreadsheets, you simply upload your distributor Excel delivery bill. InvIQ automatically parses medicine names, batches, expiry dates, purchase rates, and MRP with all-or-nothing validation."
     },
     {
       question: "How does the system prevent medicine expiry losses?",
@@ -197,14 +197,14 @@ export default function Landing() {
             <span>Built for Single Chemists &amp; Multi-Branch Pharmacy Networks</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl md:text-7xl font-poppins font-bold tracking-tight text-foreground mb-5 md:mb-7 leading-[1.15] cursor-default">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-poppins font-bold tracking-tight text-foreground mb-5 md:mb-7 leading-[1.15] cursor-default">
             Never Lose Money on<br />
-            <span className="text-[#F26A4B] inline-block min-h-[1.2em]">
+            <span className="text-[#F26A4B] inline-block min-h-[1.2em] whitespace-nowrap">
               <Typewriter
                 words={[
-                  "Expired Medicine Batches",
-                  "Messy Excel Spreadsheets",
-                  "Sudden Stockout Surprises",
+                  "Expired Batches",
+                  "Sudden Stockouts",
+                  "Messy Spreadsheets",
                 ]}
                 speed={75}
                 deleteSpeed={40}
@@ -320,7 +320,7 @@ export default function Landing() {
               </div>
               <h3 className="text-xl font-bold text-card-foreground mb-3 group-hover:text-[#F26A4B] transition-colors">1-Click Distributor Excel Ingest</h3>
               <p className="text-muted-foreground leading-relaxed">
-                Drop wholesaler delivery manifests in Excel or CSV format. Our system verifies rows, creates missing medicines on the fly, and updates ledgers with zero manual typing.
+                Drop wholesaler delivery manifests in Excel format. Our system verifies rows, creates missing medicines on the fly, and updates ledgers with zero manual typing.
               </p>
             </div>
 
@@ -392,7 +392,7 @@ export default function Landing() {
               <div className="bg-card rounded-3xl p-8 border border-border shadow-xs hover:shadow-xl hover:border-primary/50 hover:-translate-y-2 transition-all duration-300 w-full h-full">
                 <h3 className="text-lg font-bold text-card-foreground mb-3 group-hover:text-[#F26A4B] transition-colors">Ingest Distributor Delivery Bills</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Upload wholesaler Excel or CSV delivery invoices directly. InvIQ extracts medicines, batch codes, rates, and expiry dates safely.
+                  Upload wholesaler Excel delivery invoices directly. InvIQ extracts medicines, batch codes, rates, and expiry dates safely.
                 </p>
               </div>
             </div>

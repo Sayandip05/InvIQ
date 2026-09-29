@@ -46,7 +46,7 @@ logger = logging.getLogger("smart_inventory.data_import")
 
 router = APIRouter(prefix="/data-import", tags=["Data Import"])
 
-ALLOWED_EXTENSIONS = (".csv", ".xlsx", ".xls")
+ALLOWED_EXTENSIONS = (".xlsx", ".xls")
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB matches existing vendor upload limit
 SUPPORTED_ENTITIES = {"inventory_transaction", "item", "location"}
 
@@ -114,7 +114,7 @@ def upload_and_map_file(
     current_user: User = Depends(require_staff),
 ):
     """
-    Step 1: Upload CSV or Excel file.
+    Step 1: Upload Excel file (.xlsx / .xls).
     Extracts headers and 3 sample rows, queries LLM for column mapping,
     and returns a preview for user review/editing.
     """
@@ -161,7 +161,7 @@ def upload_and_map_file(
 
     if storage.is_available:
         file_blob_path = f"imports/{current_user.org_id or 'global'}/{uuid.uuid4().hex[:12]}/{file.filename}"
-        content_type = "text/csv" if file.filename.lower().endswith(".csv") else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         uploaded_url = storage.upload_file(
             file_bytes=content,
             blob_name=file_blob_path,

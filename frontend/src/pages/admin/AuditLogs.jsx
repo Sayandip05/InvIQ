@@ -106,8 +106,8 @@ const AuditLogs = () => {
     return (
         <div className="flex flex-col min-h-full">
             {/* Full-Width Top Navbar — Seamlessly Joined to Left Sidebar & Top Edge */}
-            <div className="sticky top-0 z-30 bg-white border-b border-slate-200 px-6 py-3.5 shadow-2xs">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="sticky top-0 z-30 bg-card/90 backdrop-blur border-b border-border px-6 h-[68px] flex items-center shadow-2xs">
+                <div className="w-full flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h2 className="text-xl font-bold text-slate-900 tracking-tight">Audit Trail & Activity</h2>
                     </div>

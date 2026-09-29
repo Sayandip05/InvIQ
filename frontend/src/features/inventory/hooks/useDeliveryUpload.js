@@ -96,8 +96,8 @@ export function useDeliveryUpload() {
 
     const handleFileChange = (selectedFile) => {
         if (!selectedFile) return;
-        if (!selectedFile.name.endsWith('.xlsx') && !selectedFile.name.endsWith('.xls') && !selectedFile.name.endsWith('.csv')) {
-            setError('Only .xlsx, .xls, or .csv files are accepted');
+        if (!selectedFile.name.endsWith('.xlsx') && !selectedFile.name.endsWith('.xls')) {
+            setError('Only .xlsx or .xls files are accepted');
             setFile(null);
             return;
         }
@@ -128,7 +128,7 @@ export function useDeliveryUpload() {
             return;
         }
         if (!file) {
-            setError('Please select an Excel or CSV delivery file');
+            setError('Please select an Excel delivery file');
             return;
         }
 

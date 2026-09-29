@@ -198,7 +198,7 @@ export default function PreviewDashboard() {
             {/* Help & Support Modal */}
             {showHelp && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-                    <div className="bg-card border border-border w-full max-w-md p-6 shadow-2xl space-y-4 rounded-xl text-card-foreground">
+                    <div className="bg-card border border-border w-full max-w-md p-6 shadow-2xl space-y-4 rounded-none text-card-foreground">
                         <div className="flex items-center justify-between pb-3 border-b border-border">
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 bg-primary text-primary-foreground flex items-center justify-center rounded-md">

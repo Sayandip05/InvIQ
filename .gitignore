@@ -255,7 +255,8 @@ explanation.md
 *.model
 models/
 checkpoints/
-
+backend/scripts/
+**/scripts/
 # ═══════════════════════════════════════════════════════════
 # Certificates & Keys (NEVER COMMIT!)
 # ═══════════════════════════════════════════════════════════

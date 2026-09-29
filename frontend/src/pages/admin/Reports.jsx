@@ -113,10 +113,10 @@ const Reports = () => {
     return (
         <div className="flex flex-col min-h-full bg-background font-sans text-foreground">
             {/* ── Full-Width Sticky Top Navbar (Identical to Dashboard / Inventory / Staff) ── */}
-            <div className="sticky top-0 z-30 bg-card/90 backdrop-blur border-b border-border px-6 py-3.5 shadow-2xs">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="sticky top-0 z-30 bg-card/90 backdrop-blur border-b border-border px-6 h-[68px] flex items-center shadow-2xs">
+                <div className="w-full flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-xl font-sans font-bold text-foreground tracking-tight">Reports &amp; Analytics</h2>
+                        <h2 className="text-xl font-sans font-bold text-foreground tracking-tight leading-tight">Reports &amp; Analytics</h2>
                         <p className="text-xs text-muted-foreground mt-0.5">
                             Generate compliance audits, stock valuations, and movement manifests
                         </p>

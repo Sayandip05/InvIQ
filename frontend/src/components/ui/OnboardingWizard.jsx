@@ -318,7 +318,7 @@ export default function OnboardingWizard({ isOpen: externalIsOpen, onClose: exte
                                                 <span>Guided First Medicine Catalog Import</span>
                                                 <span className="px-1.5 py-0.2 bg-accent text-foreground text-[10px] rounded-none font-bold border border-border">Recommended</span>
                                             </p>
-                                            <p className="text-xs text-muted-foreground">Import your existing stock CSV/Excel with auto-mapping &amp; validation preview.</p>
+                                            <p className="text-xs text-muted-foreground">Import your existing stock Excel with auto-mapping &amp; validation preview.</p>
                                         </div>
                                     </div>
                                     <ArrowRight size={16} className="text-foreground shrink-0" />

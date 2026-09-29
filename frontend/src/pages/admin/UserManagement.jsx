@@ -118,10 +118,10 @@ const UserManagement = () => {
     return (
         <div className="flex flex-col min-h-full bg-background font-sans text-foreground">
             {/* ── Sticky Top Navbar ────────────────────────────────────────── */}
-            <div className="sticky top-0 z-30 bg-card border-b border-border px-6 py-3.5 shadow-2xs">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="sticky top-0 z-30 bg-card border-b border-border px-6 h-[68px] flex items-center shadow-2xs">
+                <div className="w-full flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 className="font-sans text-xl font-bold text-foreground tracking-tight">Staff &amp; User Management</h2>
+                        <h2 className="font-sans text-xl font-bold text-foreground tracking-tight leading-tight">Staff &amp; User Management</h2>
                         <p className="text-xs text-muted-foreground font-medium mt-0.5">
                             Allocate staff members to your pharmacy organization and assign branch counters
                         </p>
