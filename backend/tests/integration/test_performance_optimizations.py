@@ -72,9 +72,9 @@ def test_vendor_service_prefetched_stock_processing(db):
         db.add(loc)
         db.commit()
 
-    item = db.query(Item).first()
+    item = db.query(Item).filter(Item.org_id == loc.org_id).first()
     if not item:
-        item = Item(org_id=1, name="Ceftriaxone 1g", category="Antibiotics", unit="Vials", lead_time_days=2, min_stock=20)
+        item = Item(org_id=loc.org_id, name="Ceftriaxone 1g", category="Antibiotics", unit="Vials", lead_time_days=2, min_stock=20)
         db.add(item)
         db.commit()
 

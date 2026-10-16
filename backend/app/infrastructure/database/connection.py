@@ -38,6 +38,10 @@ def sanitize_db_url(url: str) -> str:
     cleaned = re.sub(r"([?&])pgbouncer=[^&#]*(&?)", lambda m: m.group(1) if m.group(2) else "", url)
     cleaned = re.sub(r"[?&]$", "", cleaned)
     cleaned = re.sub(r"\?&", "?", cleaned)
+    if cleaned.startswith("postgres://"):
+        cleaned = "postgresql+psycopg2://" + cleaned[len("postgres://"):]
+    elif cleaned.startswith("postgresql://"):
+        cleaned = "postgresql+psycopg2://" + cleaned[len("postgresql://"):]
     return cleaned
 
 DATABASE_URL = sanitize_db_url(settings.DATABASE_URL)

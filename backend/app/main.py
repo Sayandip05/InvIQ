@@ -183,7 +183,7 @@ from slowapi.middleware import SlowAPIMiddleware
 app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -224,18 +224,35 @@ def root():
 @app.get("/health")
 def health_check():
     from app.infrastructure.cache.redis_client import is_redis_available
+    from app.infrastructure.database.connection import engine
+    from sqlalchemy import text
     from fastapi.responses import JSONResponse
 
+    db_ok = False
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        db_ok = True
+    except Exception as e:
+        logger.warning("Database health check ping failed: %s", e)
+
     redis_ok = is_redis_available()
-    status = "healthy" if redis_ok else "degraded"
-    http_status = 200 if redis_ok else 503
+
+    # The service can serve traffic when the database is reachable.
+    # If Redis is unavailable, it gracefully operates in degraded (in-memory) mode.
+    if db_ok:
+        status = "healthy" if redis_ok else "degraded"
+        http_status = 200
+    else:
+        status = "unhealthy"
+        http_status = 503
 
     return JSONResponse(
         status_code=http_status,
         content={
             "status": status,
             "version": settings.VERSION,
-            "database": "connected",
+            "database": "connected" if db_ok else "disconnected",
             "redis": "connected" if redis_ok else "unavailable",
         },
     )

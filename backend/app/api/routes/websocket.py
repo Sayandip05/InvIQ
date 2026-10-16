@@ -257,16 +257,8 @@ async def start_redis_subscriber():
         import redis.asyncio as aioredis
         from app.core.config import settings
 
-        url = settings.REDIS_URL
-        if not url and settings.UPSTASH_REDIS_REST_URL:
-            # Convert Upstash HTTPS REST URL → rediss:// for asyncio client
-            url = (
-                settings.UPSTASH_REDIS_REST_URL
-                .replace("https://", "rediss://")
-                .replace("http://", "redis://")
-            )
-
-        if not url:
+        url = settings.rate_limit_storage_url
+        if not url or url == "memory://":
             logger.info("Redis not configured — WebSocket alerts use in-process queue (single-worker only)")
             return
 
