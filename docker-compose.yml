@@ -18,13 +18,16 @@ x-backend-env: &backend-env
   ENVIRONMENT: ${ENVIRONMENT:-development}
   PROJECT_NAME: "Smart Inventory Assistant"
   
-  # Database (Local PostgreSQL)
+  # Database (PostgreSQL / Supabase)
   DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@db:5432/inviq_dev}
+  DIRECT_URL: ${DIRECT_URL:-}
   DB_POOL_SIZE: ${DB_POOL_SIZE:-5}
   DB_MAX_OVERFLOW: ${DB_MAX_OVERFLOW:-5}
   
-  # Redis / Celery Broker (Local Redis)
+  # Redis / Celery Broker
   REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+  UPSTASH_REDIS_REST_URL: ${UPSTASH_REDIS_REST_URL:-}
+  UPSTASH_REDIS_REST_TOKEN: ${UPSTASH_REDIS_REST_TOKEN:-}
   REDIS_ENABLED: ${REDIS_ENABLED:-true}
   
   # Frontend & CORS
@@ -131,6 +134,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: inviq-backend:latest
     container_name: inviq_dev_backend
     restart: unless-stopped
     ports:
@@ -158,9 +162,7 @@ services:
 
   # ── 4. Celery Worker (Asynchronous Task Processing Engine) ────────────────
   celery_worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: inviq-backend:latest
     container_name: inviq_dev_celery_worker
     restart: unless-stopped
     command: ["/venv/bin/celery", "-A", "app.workers.celery_app.celery_app", "worker", "--loglevel=info", "--concurrency=4"]
@@ -176,14 +178,18 @@ services:
       <<: *backend-env
     volumes:
       - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "/venv/bin/celery", "-A", "app.workers.celery_app.celery_app", "status"]
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 3
     networks:
       - inviq_network
 
   # ── 5. Celery Beat (Periodic Job Scheduler) ───────────────────────────────
   celery_beat:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: inviq-backend:latest
     container_name: inviq_dev_celery_beat
     restart: unless-stopped
     command: ["/venv/bin/celery", "-A", "app.workers.celery_app.celery_app", "beat", "--loglevel=info"]
@@ -197,6 +203,8 @@ services:
       <<: *backend-env
     volumes:
       - ./logs:/app/logs
+    healthcheck:
+      disable: true
     networks:
       - inviq_network
 

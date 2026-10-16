@@ -1,55 +1,47 @@
-# ── Multi-stage Dockerfile for InvIQ Smart Inventory Assistant ───────────
-# Optimized for cloud deployment with Supabase PostgreSQL + Upstash Redis
+# ── Multi-stage Dockerfile for InvIQ Smart Inventory Assistant (Backend) ─────
+# Optimized for cloud deployment (Azure App Service / Azure Container Apps / Docker)
 # Stage 1: Builder — install dependencies into a virtual environment
-# Stage 2: Runner — slim image that copies only the venv and app code
+# Stage 2: Runner — slim image with non-root security context
 
-# ── Stage 1: Builder ────────────────────────────────────────────────────
+# ── Stage 1: Builder ──────────────────────────────────────────────────────────
 FROM python:3.11-slim AS builder
 
 WORKDIR /build
 
-# Install system deps needed to compile psycopg2 and argon2
+# Install system dependencies needed to compile C-extensions (psycopg2, argon2)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
     libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a virtual environment — this is the correct multi-stage pattern.
-# The entire venv folder is copied to the runner stage, so every package
-# (including typing_extensions and all transitive deps) is captured.
+# Create virtual environment
 RUN python -m venv /venv
 ENV PATH="/venv/bin:$PATH"
 
-# Upgrade pip inside the venv
+# Upgrade pip
 RUN pip install --no-cache-dir --upgrade pip
 
-# Pre-install CPU-only PyTorch BEFORE sentence-transformers.
-# Without this, sentence-transformers pulls torch + full CUDA stack (~2 GB).
-# CPU-only torch is ~200 MB and sufficient for embedding inference.
-RUN pip install --no-cache-dir \
-    torch \
-    --index-url https://download.pytorch.org/whl/cpu
-
-# Install all remaining Python dependencies into the venv
+# Install application dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# ── Stage 2: Runner ─────────────────────────────────────────────────────
+# ── Stage 2: Runner ───────────────────────────────────────────────────────────
 FROM python:3.11-slim AS runner
 
 WORKDIR /app
 
-# Install runtime system libs only (no compiler) + curl for health checks
+# Install minimal runtime system libraries + curl for health checks
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Create log directory for the rotating file handler
-RUN mkdir -p /app/logs
+# Security: Create non-root system user and group
+RUN groupadd -r -g 1001 inviq && \
+    useradd -r -u 1001 -g inviq -d /app -s /bin/bash inviq
 
-# Copy the entire venv from the builder stage
+# Copy the entire pre-built venv from builder
 COPY --from=builder /venv /venv
 
 # Copy application code and Alembic migrations
@@ -58,31 +50,34 @@ COPY backend/alembic ./backend/alembic
 COPY backend/alembic.ini ./backend/alembic.ini
 COPY requirements.txt .
 
-# Activate the venv for all subsequent commands
-ENV PATH="/venv/bin:$PATH"
-ENV VIRTUAL_ENV="/venv"
+# Create logs directory and ensure non-root user permissions
+RUN mkdir -p /app/logs && chown -R inviq:inviq /app
 
-# Ensure venv site-packages and app modules are in Python search path
-ENV PYTHONPATH="/app/backend:/app"
-ENV PYTHONHOME=""
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# Environment variables
+ENV PATH="/venv/bin:$PATH" \
+    VIRTUAL_ENV="/venv" \
+    PYTHONPATH="/app/backend:/app" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=8000
 
-# Expose port 8000 for FastAPI
+# Switch to non-root user
+USER inviq
+
+# Expose default HTTP port
 EXPOSE 8000
 
-# Health check endpoint (used by Docker and orchestrators)
+# Health check endpoint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Run alembic migrations from /app/backend then start gunicorn from /app.
-# `exec` replaces the shell so signals (SIGTERM) still reach gunicorn.
+# Run alembic migrations and start production gunicorn server
 CMD ["sh", "-c", \
      "cd /app/backend && /venv/bin/alembic upgrade head && \
       cd /app && exec /venv/bin/gunicorn app.main:app \
         --worker-class uvicorn.workers.UvicornWorker \
         --workers 3 \
-        --bind 0.0.0.0:8000 \
+        --bind 0.0.0.0:${PORT:-8000} \
         --timeout 120 \
         --access-logfile - \
         --error-logfile - \

@@ -21,6 +21,7 @@ x-backend-env: &backend-env
   
   # Database (PostgreSQL)
   DATABASE_URL: ${DATABASE_URL}
+  DIRECT_URL: ${DIRECT_URL:-}
   DB_POOL_SIZE: ${DB_POOL_SIZE:-5}
   DB_MAX_OVERFLOW: ${DB_MAX_OVERFLOW:-5}
   
@@ -100,6 +101,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: ${BACKEND_IMAGE:-inviq-backend:latest}
     container_name: inviq_prod_backend
     restart: always
     ports:
@@ -122,9 +124,7 @@ services:
 
   # ── 2. Celery Worker (Heavy Asynchronous Tasks) ───────────────────────────
   celery_worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ${BACKEND_IMAGE:-inviq-backend:latest}
     container_name: inviq_prod_celery_worker
     restart: always
     command: ["/venv/bin/celery", "-A", "app.workers.celery_app.celery_app", "worker", "--loglevel=info", "--concurrency=4"]
@@ -136,14 +136,18 @@ services:
       <<: *backend-env
     volumes:
       - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "/venv/bin/celery", "-A", "app.workers.celery_app.celery_app", "status"]
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 3
     networks:
       - inviq_prod_network
 
   # ── 3. Celery Beat (Periodic Recurring Job Scheduler) ─────────────────────
   celery_beat:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ${BACKEND_IMAGE:-inviq-backend:latest}
     container_name: inviq_prod_celery_beat
     restart: always
     command: ["/venv/bin/celery", "-A", "app.workers.celery_app.celery_app", "beat", "--loglevel=info"]
@@ -155,6 +159,8 @@ services:
       <<: *backend-env
     volumes:
       - ./logs:/app/logs
+    healthcheck:
+      disable: true
     networks:
       - inviq_prod_network
 
