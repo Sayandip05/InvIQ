@@ -33,7 +33,7 @@ def _require_vendor_role(current_user: User) -> None:
 _has_location_access = has_location_access
 
 
-# ── POST /vendor/upload-delivery ───────────────────────────────────────────
+# POST /vendor/upload-delivery
 
 @router.post("/upload-delivery")
 @limiter.limit("10/minute")
@@ -92,7 +92,7 @@ def upload_delivery(
     return result
 
 
-# ── GET /vendor/my-uploads ─────────────────────────────────────────────────
+# GET /vendor/my-uploads
 
 @router.get("/my-uploads")
 def get_my_uploads(
@@ -112,7 +112,7 @@ def get_my_uploads(
     }
 
 
-# ── GET /vendor/template ──────────────────────────────────────────────────
+# GET /vendor/template
 
 @router.get("/template")
 def download_template(
@@ -214,7 +214,7 @@ def download_template(
     )
 
 
-# ── GET /vendor/invoices ──────────────────────────────────────────────────
+# GET /vendor/invoices
 
 @router.get("/invoices")
 def list_invoices(
@@ -274,7 +274,7 @@ def list_invoices(
     }
 
 
-# ── GET /vendor/invoices/{invoice_id} ─────────────────────────────────────
+# GET /vendor/invoices/{invoice_id}
 
 @router.get("/invoices/{invoice_id}")
 def get_invoice_detail(
@@ -326,7 +326,7 @@ def get_invoice_detail(
     }
 
 
-# ── GET /vendor/invoices/{invoice_id}/pdf ─────────────────────────────────
+# GET /vendor/invoices/{invoice_id}/pdf
 
 @router.get("/invoices/{invoice_id}/pdf")
 def download_invoice_pdf(
@@ -409,7 +409,7 @@ def download_invoice_pdf(
     )
 
 
-# ── GET /vendor/uploads/{upload_id}/invoice ───────────────────────────────
+# GET /vendor/uploads/{upload_id}/invoice
 
 @router.get("/uploads/{upload_id}/invoice")
 def get_invoice_by_upload(

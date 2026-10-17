@@ -79,9 +79,6 @@ def get_all_locations(
         ],
     }
     cache_set(cache_key, res, ttl=300)
-    if limit == 50 and offset == 0:
-        cache_set(f"ref:locations:{org_id}", res, ttl=300)
-        cache_set("ref:locations", res, ttl=300)
     return res
 
 
@@ -117,9 +114,6 @@ def get_all_items(
         ],
     }
     cache_set(cache_key, res, ttl=300)
-    if limit == 50 and offset == 0:
-        cache_set(f"ref:items:{org_id}", res, ttl=300)
-        cache_set("ref:items", res, ttl=300)
     return res
 
 

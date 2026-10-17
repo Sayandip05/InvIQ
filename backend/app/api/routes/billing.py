@@ -45,7 +45,7 @@ logger = logging.getLogger("smart_inventory.billing")
 router = APIRouter(prefix="/billing", tags=["Billing Counter"])
 
 
-# ── Pydantic request schemas ──────────────────────────────────────────────────
+# Pydantic request schemas
 
 class OpenSessionRequest(BaseModel):
     location_id: int = Field(gt=0, description="Counter / branch location ID")
@@ -58,7 +58,7 @@ class ScanItemRequest(BaseModel):
     unit:        Optional[str] = Field(default=None, description="Packaging unit (e.g. strip, box, tablet)")
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# Helpers
 
 def _get_session_or_404(billing_repo: BillingRepository, session_id: int, org_id: Optional[int]):
     session = billing_repo.get_by_id(session_id, org_id=org_id)
@@ -75,7 +75,7 @@ def _require_open(session):
         )
 
 
-# ── Endpoints ─────────────────────────────────────────────────────────────────
+# Endpoints
 
 
 @router.post("/sessions", response_model=dict)

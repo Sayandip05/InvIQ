@@ -34,10 +34,10 @@ logger = logging.getLogger("smart_inventory.websocket")
 
 router = APIRouter(tags=["WebSocket"])
 
-# ── Redis pub/sub channel name ────────────────────────────────────────────────
+# Redis pub/sub channel name
 _ALERT_CHANNEL = "inviq:ws:alerts"
 
-# ── Single-use WebSocket Tickets (30-second TTL) ──────────────────────────────
+# Single-use WebSocket Tickets (30-second TTL)
 _tickets_lock = threading.Lock()
 _ws_tickets: Dict[str, Dict[str, Any]] = {}
 
@@ -189,7 +189,7 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-# ── In-process fallback queue (single-worker / no-Redis only) ─────────────────
+# In-process fallback queue (single-worker / no-Redis only)
 _alerts_lock = threading.Lock()
 _pending_alerts: list = []
 pending_alerts = _pending_alerts  # Backwards compatibility alias

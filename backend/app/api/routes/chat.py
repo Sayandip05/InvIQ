@@ -52,9 +52,7 @@ logger = logging.getLogger("smart_inventory.chat")
 router = APIRouter(prefix="/chat", tags=["Chatbot"])
 
 
-# ---------------------------------------------------------------------------
 # Helpers
-# ---------------------------------------------------------------------------
 
 def _get_conversation_history(db: Session, conversation_id: str, limit: int = 10) -> list[dict]:
     """Load the last N messages from a conversation for context."""
@@ -151,7 +149,7 @@ def _build_agent_response(
     if conversation_id:
         history = _get_conversation_history(db, conversation_id, limit=6)
 
-    # ── Try LLM agent first ────────────────────────────────────────────
+    # Try LLM agent first
     llm_inference_ms = 0.0
     if is_agent_available():
         try:
@@ -188,7 +186,7 @@ def _build_agent_response(
         except RuntimeError as e:
             logger.warning("LLM agent failed, falling back to rule-based: %s", e)
 
-    # ── Rule-based fallback ────────────────────────────────────────────
+    # Rule-based fallback
     total_rag_ms = (time.perf_counter() - rag_start) * 1000
     res = _rule_based_response(
         question=question,
@@ -339,9 +337,7 @@ def _verify_session_ownership(db: Session, conversation_id: str, user_id: int) -
         raise AuthorizationError("You do not have access to this conversation")
 
 
-# ---------------------------------------------------------------------------
 # Routes
-# ---------------------------------------------------------------------------
 
 @router.post("/query", response_model=ChatResponse)
 @limiter.limit("20/minute")
@@ -384,7 +380,12 @@ def chat_query(
                 if len(chat_request.question) > 50
                 else chat_request.question
             )
-            session = ChatSession(id=conv_id, user_id=current_user.id, title=title)
+            session = ChatSession(
+                id=conv_id,
+                user_id=current_user.id,
+                org_id=current_user.org_id,
+                title=title,
+            )
             db.add(session)
 
         db.add(ChatMessage(session_id=conv_id, role="user", content=chat_request.question))
@@ -560,7 +561,7 @@ def get_chat_sessions(
     return {"success": True, "sessions": sessions}
 
 
-# ── Audio Upload Security Policy ──────────────────────────────────────────
+# Audio Upload Security Policy
 MAX_AUDIO_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB strict limit for speech audio
 ALLOWED_AUDIO_MIME_TYPES = {
     "audio/webm",

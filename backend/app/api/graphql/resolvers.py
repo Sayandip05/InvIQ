@@ -129,7 +129,7 @@ def _to_alert_item(raw_dict: dict, privileged: bool) -> AlertItem:
     )
 
 
-# ── Query class ──────────────────────────────────────────────────────────
+# Query class
 
 
 @strawberry.type

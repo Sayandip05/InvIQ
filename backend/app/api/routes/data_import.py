@@ -101,7 +101,7 @@ def _run_background_import(
         db.close()
 
 
-# ── 1. Upload & AI Mapping ───────────────────────────────────────────────────
+# 1. Upload & AI Mapping
 
 @router.post("/jobs", response_model=ImportPreviewResponse)
 @router.post("/upload", response_model=ImportPreviewResponse)
@@ -201,7 +201,7 @@ def upload_and_map_file(
     )
 
 
-# ── 2. Confirm & Ingest ──────────────────────────────────────────────────────
+# 2. Confirm & Ingest
 
 @router.post("/confirm", response_model=ImportStatusResponse)
 @limiter.limit("10/minute")
@@ -220,7 +220,7 @@ def confirm_and_execute_import(
     if not job:
         raise NotFoundError("DataImportJob", body.job_id)
 
-    # ── Tenant isolation and user ownership checks ──
+    # Tenant isolation and user ownership checks
     if current_user.org_id is None or job.org_id != current_user.org_id:
         raise AuthorizationError("Import job does not belong to your organization")
     if job.uploaded_by_user_id != current_user.id and current_user.role != "admin":
@@ -230,7 +230,7 @@ def confirm_and_execute_import(
         raise ValidationError(f"Job #{job.id} cannot be confirmed (current status: {job.status})")
 
 
-    # ── Default location validation against tenant ──
+    # Default location validation against tenant
     if body.default_location_id is not None:
         if current_user.org_id is None:
             raise AuthorizationError("User is not assigned to an organization")
@@ -351,7 +351,7 @@ def confirm_and_execute_import(
     )
 
 
-# ── 3. Check Job Status ──────────────────────────────────────────────────────
+# 3. Check Job Status
 
 @router.get("/jobs/{job_id}", response_model=ImportStatusResponse)
 def get_import_job_status(
@@ -386,7 +386,7 @@ def get_import_job_status(
     )
 
 
-# ── 4. View Quarantined Rows ─────────────────────────────────────────────────
+# 4. View Quarantined Rows
 
 @router.get("/jobs/{job_id}/quarantine", response_model=QuarantineListResponse)
 def get_quarantined_rows(

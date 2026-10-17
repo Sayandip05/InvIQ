@@ -111,11 +111,11 @@ def _recover_interrupted_import_jobs() -> None:
         logger.warning("Could not recover interrupted import jobs: %s", e)
 
 
-# ── Lifespan (Graceful Startup + Shutdown) ─────────────────────────────────
+# Lifespan (Graceful Startup + Shutdown)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage startup and shutdown lifecycle."""
-    # ── Startup ──
+    # Startup
     configure_langsmith()          # apply LangSmith env-vars (no import-time side effects)
 
     # In production, schemas are managed exclusively via Alembic migrations.
@@ -139,7 +139,7 @@ async def lifespan(app: FastAPI):
         7,
     )
     yield
-    # ── Shutdown ──
+    # Shutdown
     subscriber_task.cancel()
     # Drain in-flight background import jobs before closing DB connections.
     from app.api.routes.data_import import shutdown_import_executor
@@ -157,7 +157,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# ── Rate Limiter ───────────────────────────────────────────────────────────
+# Rate Limiter
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 
@@ -173,7 +173,7 @@ try:
 except ImportError:
     pass
 
-# ── Middleware ─────────────────────────────────────────────────────────────
+# Middleware
 # NOTE: Starlette add_middleware() wraps in LIFO order — the middleware added
 # LAST runs FIRST. Order here: RequestLoggerMiddleware (runs 1st) → CORSMiddleware (runs 2nd).
 # RequestLoggerMiddleware must run first so it can pass WebSocket upgrade
@@ -192,10 +192,10 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestLoggerMiddleware)
 
 
-# ── Exception Handlers ────────────────────────────────────────────────────
+# Exception Handlers
 register_exception_handlers(app)
 
-# ── Routes ─────────────────────────────────────────────────────────────────
+# Routes
 app.include_router(auth.router, prefix=settings.API_V1_PREFIX)
 app.include_router(analytics.router, prefix=settings.API_V1_PREFIX)
 app.include_router(chat.router, prefix=settings.API_V1_PREFIX)
@@ -207,7 +207,7 @@ app.include_router(data_import_routes.router, prefix=settings.API_V1_PREFIX)
 app.include_router(billing_routes.router, prefix=settings.API_V1_PREFIX)
 app.include_router(ws_router)
 
-# ── GraphQL (analytics reads only — REST handles all mutations) ────────────
+# GraphQL (analytics reads only — REST handles all mutations)
 app.include_router(graphql_router, prefix="/graphql/analytics")
 
 

@@ -49,7 +49,7 @@ class UpdatePharmacyOrganizationRequest(BaseModel):
     settings: Optional[dict] = None
 
 
-# ── GET & PUT /admin/organization ──────────────────────────────────────────
+# GET & PUT /admin/organization
 
 
 @router.get("/organization", response_model=dict)
@@ -167,7 +167,7 @@ def update_pharmacy_organization(
 
 
 
-# ── GET /admin/overview ────────────────────────────────────────────────────
+# GET /admin/overview
 
 
 @router.get("/overview", response_model=dict)
@@ -259,7 +259,7 @@ def get_platform_overview(
     return res
 
 
-# ── GET /admin/audit-logs ─────────────────────────────────────────────────
+# GET /admin/audit-logs
 
 
 @router.get("/audit-logs", response_model=dict)
@@ -308,7 +308,7 @@ def get_audit_logs(
     }
 
 
-# ── GET /admin/users/summary ──────────────────────────────────────────────
+# GET /admin/users/summary
 
 
 @router.get("/users/summary", response_model=dict)
@@ -366,7 +366,7 @@ def get_users_summary(
 
 
 
-# ── SUPPLIER / DISTRIBUTOR MANAGEMENT ─────────────────────────────────────
+# SUPPLIER / DISTRIBUTOR MANAGEMENT
 
 import secrets
 from pydantic import BaseModel, Field, EmailStr
@@ -590,7 +590,7 @@ def delete_supplier(
 
 
 
-# ── GET /admin/reports/generate & /admin/reports/export ────────────────────
+# GET /admin/reports/generate & /admin/reports/export
 
 
 @router.get("/reports")
@@ -612,7 +612,7 @@ def generate_pdf_report(
     Supports: inventory, requisitions, low_stock, monthly_sales
     Data fetching is delegated to ReportService and PDF rendering to build_pdf_report.
     """
-    # ── Tenant boundary check ──────────────────────────────────────────
+    # Tenant boundary check
     caller_org_id = current_user.org_id
     if caller_org_id is None:
         raise AuthorizationError("User is not assigned to an organization")
@@ -623,7 +623,7 @@ def generate_pdf_report(
         if not loc:
             raise NotFoundError("Location", location_id)
 
-    # ── Data & PDF Layer ────────────────────────────────────────────────
+    # Data & PDF Layer
     svc = ReportService(db)
     buffer, filename = build_pdf_report(
         svc=svc,
@@ -665,7 +665,7 @@ def generate_pdf_report(
     )
 
 
-# ── Discount Settings ─────────────────────────────────────────────────────────
+# Discount Settings
 
 
 class TieredSlab(BaseModel):
@@ -751,7 +751,7 @@ def update_discount_settings(
     }
 
 
-# ── Monthly Sales & Profit Report ─────────────────────────────────────────────
+# Monthly Sales & Profit Report
 
 
 @router.get("/reports/monthly-sales", response_model=dict)
@@ -775,7 +775,7 @@ def get_monthly_sales_report(
     org_id    = current_user.org_id
     month_key = f"{year:04d}-{month:02d}"
 
-    # ── 1. Try Redis cache (fast path) ──────────────────────────────────
+    # 1. Try Redis cache (fast path)
     summary = None
     try:
         from app.infrastructure.cache.redis_client import get_redis, is_redis_available
@@ -800,7 +800,7 @@ def get_monthly_sales_report(
     except Exception as e:
         logger.warning("Redis monthly sales cache read failed: %s", e)
 
-    # ── 2. DB fallback ──────────────────────────────────────────────────
+    # 2. DB fallback
     if summary is None:
         try:
             from app.infrastructure.database.billing_repo import BillingRepository

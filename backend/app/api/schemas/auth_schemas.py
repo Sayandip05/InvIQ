@@ -4,7 +4,7 @@ from datetime import datetime
 import re
 
 
-# ── Shared password strength validator ────────────────────────────────────────
+# Shared password strength validator
 
 def _validate_password_strength(v: str) -> str:
     """Enforce minimum password complexity for all password fields.

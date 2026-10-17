@@ -67,12 +67,12 @@ logger = logging.getLogger("smart_inventory.auth")
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
-# ── Constants ──────────────────────────────────────────────────────────────
+# Constants
 MAX_LOGIN_ATTEMPTS = settings.MAX_LOGIN_ATTEMPTS
 LOCKOUT_DURATION_MINUTES = settings.LOCKOUT_DURATION_MINUTES
 
 
-# ── Email & Token Helpers ─────────────────────────────────────────────────
+# Email & Token Helpers
 
 
 def _generate_verification_token(user_id: int, email: str) -> str:
@@ -154,7 +154,7 @@ def _send_password_reset_email(user: User) -> bool:
     return _send_email(user.email, "Reset your password - InvIQ", html)
 
 
-# ── Helpers ────────────────────────────────────────────────────────────────
+# Helpers
 
 
 def _parse_location_ids(raw) -> list:
@@ -203,7 +203,7 @@ def _user_dict(user: User) -> dict:
 _get_client_ip = get_client_ip
 
 
-# ── POST /register ─────────────────────────────────────────────────────────
+# POST /register
 
 
 @router.post("/register", response_model=dict)
@@ -291,7 +291,7 @@ def register(
     }
 
 
-# ── POST /signup ───────────────────────────────────────────────────────────
+# POST /signup
 
 
 @router.post("/signup", response_model=dict)
@@ -440,7 +440,7 @@ def _clear_auth_cookies(response: Response) -> None:
     response.delete_cookie(key="refresh_token", path="/")
 
 
-# ── POST /login ────────────────────────────────────────────────────────────
+# POST /login
 
 
 
@@ -473,7 +473,7 @@ def login(
             # Lock period expired, reset
             db.reset_login_attempts(user)
 
-    # ── Verify password (timing-safe via authenticate_user) ─────────────
+    # Verify password (timing-safe via authenticate_user)
     if not authenticate_user(user, request_body.password):
         if user is not None:
             db.increment_login_attempts(user)
@@ -547,7 +547,7 @@ def login(
     return json_resp
 
 
-# ── POST /logout ───────────────────────────────────────────────────────────
+# POST /logout
 
 
 @router.post("/logout")
@@ -599,7 +599,7 @@ def logout(
     return json_resp
 
 
-# ── POST /refresh ──────────────────────────────────────────────────────────
+# POST /refresh
 
 
 @router.post("/refresh")
@@ -638,7 +638,7 @@ def refresh_token(
     if not user.is_active:
         raise AuthenticationError("User account is disabled")
 
-    # ── Token rotation: blacklist the old refresh token ────────────────
+    # Token rotation: blacklist the old refresh token
     bl_refresh(refresh_token_str)
 
     access_token = create_access_token(
@@ -668,7 +668,7 @@ def refresh_token(
 
 
 
-# ── GET /me ────────────────────────────────────────────────────────────────
+# GET /me
 
 
 @router.get("/me", response_model=dict)
@@ -679,7 +679,7 @@ def get_current_user_info(current_user: User = Depends(get_current_user)):
     }
 
 
-# ── PATCH /me ──────────────────────────────────────────────────────────────
+# PATCH /me
 
 
 @router.patch("/me", response_model=dict)
@@ -756,7 +756,7 @@ def update_my_profile(
     }
 
 
-# ── POST /change-password ─────────────────────────────────────────────────
+# POST /change-password
 
 
 @router.post("/change-password", response_model=dict)
@@ -834,7 +834,7 @@ def change_password(
     }
 
 
-# ── GET /users ─────────────────────────────────────────────────────────────
+# GET /users
 
 
 @router.get("/users", response_model=dict)
@@ -881,7 +881,7 @@ def _enforce_tenant_user_access(target_user: User, current_user: User) -> None:
         raise AuthorizationError("Cross-tenant operation denied: user belongs to another organization")
 
 
-# ── GET /users/{user_id} ──────────────────────────────────────────────────
+# GET /users/{user_id}
 
 
 @router.get("/users/{user_id}", response_model=dict)
@@ -902,7 +902,7 @@ def get_user_detail(
     }
 
 
-# ── PUT /users/{user_id} ──────────────────────────────────────────────────
+# PUT /users/{user_id}
 
 
 
@@ -993,7 +993,7 @@ def update_user_profile_by_admin(
     }
 
 
-# ── PUT /users/{user_id}/role ─────────────────────────────────────────────
+# PUT /users/{user_id}/role
 
 
 
@@ -1042,7 +1042,7 @@ def update_user_role(
     }
 
 
-# ── PUT /users/{user_id}/activate ─────────────────────────────────────────
+# PUT /users/{user_id}/activate
 
 
 def _set_user_active_state(
@@ -1085,7 +1085,7 @@ def activate_user(
     return _set_user_active_state(user_id, True, "USER_ACTIVATED", request, db, current_user)
 
 
-# ── PUT /users/{user_id}/deactivate ───────────────────────────────────────
+# PUT /users/{user_id}/deactivate
 
 
 @router.put("/users/{user_id}/deactivate", response_model=dict)
@@ -1098,7 +1098,7 @@ def deactivate_user(
     return _set_user_active_state(user_id, False, "USER_DEACTIVATED", request, db, current_user)
 
 
-# ── POST /users/{user_id}/reset-password ──────────────────────────────────
+# POST /users/{user_id}/reset-password
 
 
 @router.post("/users/{user_id}/reset-password", response_model=dict)
@@ -1161,7 +1161,7 @@ def admin_reset_password(
     }
 
 
-# ── DELETE /users/{user_id} ───────────────────────────────────────────────
+# DELETE /users/{user_id}
 
 
 @router.delete("/users/{user_id}", response_model=dict)
@@ -1203,7 +1203,7 @@ def delete_user(
 
 
 
-# ── POST /request-password-reset ────────────────────────────────────────────
+# POST /request-password-reset
 
 
 @router.post("/request-password-reset", response_model=dict)
@@ -1244,7 +1244,7 @@ def request_password_reset(
     }
 
 
-# ── POST /reset-password ───────────────────────────────────────────────────
+# POST /reset-password
 
 
 @router.post("/reset-password", response_model=dict)
@@ -1267,7 +1267,7 @@ def reset_password(
     if payload.get("type") != "password_reset":
         raise AuthenticationError("Invalid token type")
 
-    # ── Single-use check: consume the JTI atomically ──────────────────────
+    # Single-use check: consume the JTI atomically
     jti = payload.get("jti")
     if not jti:
         raise AuthenticationError("Invalid password reset token: missing jti")
@@ -1291,7 +1291,7 @@ def reset_password(
     user.locked_until = None
     db.update(user)
 
-    # ── Invalidate all existing sessions for this user ────────────────────
+    # Invalidate all existing sessions for this user
     # Stores a user-level marker checked by dependencies.py on each request.
     # Soft-fail: the token was already consumed (single-use), so the reset
     # cannot be re-attempted. Log clearly for ops visibility.
@@ -1331,7 +1331,7 @@ def reset_password(
     }
 
 
-# ── POST /verify-email ─────────────────────────────────────────────────────
+# POST /verify-email
 
 
 @router.post("/verify-email", response_model=dict)
@@ -1392,7 +1392,7 @@ def verify_email(
     }
 
 
-# ── POST /google-auth ──────────────────────────────────────────────────────
+# POST /google-auth
 
 
 @router.post("/google-auth")

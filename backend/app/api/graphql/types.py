@@ -14,7 +14,7 @@ from strawberry.scalars import JSON
 from typing import Optional
 
 
-# ── Stock health / alert types ────────────────────────────────────────────
+# Stock health / alert types
 
 
 @strawberry.type
@@ -65,7 +65,7 @@ class AlertItem:
     lead_time_days: Optional[int]
 
 
-# ── Alerts response ───────────────────────────────────────────────────────
+# Alerts response
 
 
 @strawberry.type
@@ -75,7 +75,7 @@ class AlertsResponse:
     alerts: list[AlertItem]
 
 
-# ── Heatmap types ─────────────────────────────────────────────────────────
+# Heatmap types
 
 
 @strawberry.type
@@ -97,7 +97,7 @@ class HeatmapData:
     details: list[StockHealthItem]
 
 
-# ── Summary types ─────────────────────────────────────────────────────────
+# Summary types
 
 
 @strawberry.type
@@ -132,7 +132,7 @@ class SummaryData:
     categories: list[CategoryBreakdown]
 
 
-# ── Dashboard stats types ─────────────────────────────────────────────────
+# Dashboard stats types
 
 
 @strawberry.type
