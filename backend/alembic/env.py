@@ -15,9 +15,7 @@ from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 
-# ---------------------------------------------------------------------------
 # Load application config so DATABASE_URL comes from .env via pydantic-settings
-# ---------------------------------------------------------------------------
 
 import sys
 import os
@@ -33,9 +31,7 @@ from app.infrastructure.database.connection import Base, sanitize_db_url  # noqa
 # If you add a new model, import its module below.
 import app.infrastructure.database.models  # noqa: F401, E402
 
-# ---------------------------------------------------------------------------
 # Alembic config object (gives access to values in alembic.ini)
-# ---------------------------------------------------------------------------
 
 config = context.config
 
@@ -46,23 +42,17 @@ config = context.config
 migration_url = sanitize_db_url(settings.DIRECT_URL or settings.DATABASE_URL)
 config.set_main_option("sqlalchemy.url", migration_url.replace("%", "%%"))
 
-# ---------------------------------------------------------------------------
 # Logging
-# ---------------------------------------------------------------------------
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# ---------------------------------------------------------------------------
 # Target metadata — required for --autogenerate
-# ---------------------------------------------------------------------------
 
 target_metadata = Base.metadata
 
 
-# ---------------------------------------------------------------------------
 # Offline migration (generates SQL script without a live connection)
-# ---------------------------------------------------------------------------
 
 def run_migrations_offline() -> None:
     """
@@ -86,9 +76,7 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-# ---------------------------------------------------------------------------
 # Online migration (applies changes to a live database)
-# ---------------------------------------------------------------------------
 
 def run_migrations_online() -> None:
     """
@@ -114,9 +102,7 @@ def run_migrations_online() -> None:
             context.run_migrations()
 
 
-# ---------------------------------------------------------------------------
 # Entry point
-# ---------------------------------------------------------------------------
 
 if context.is_offline_mode():
     run_migrations_offline()

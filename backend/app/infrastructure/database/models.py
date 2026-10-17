@@ -17,7 +17,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.infrastructure.database.connection import Base
 
-# ── Enum types (enforced at DB driver level) ───────────────────────────────
+# Enum types (enforced at DB driver level)
 _UserRoleEnum = Enum(
     "admin", "staff", "vendor",
     name="user_role",
@@ -28,7 +28,7 @@ _OrgPlanEnum = Enum(
 )
 
 
-# ── Multi-tenancy root ────────────────────────────────────────────────────
+# Multi-tenancy root
 
 class Organization(Base):
     """Multi-tenancy root — every entity belongs to an org."""
@@ -53,7 +53,7 @@ class Organization(Base):
     items = relationship("Item", back_populates="organization")
 
 
-# ── Users ─────────────────────────────────────────────────────────────────
+# Users
 
 class User(Base):
     __tablename__ = "users"
@@ -82,7 +82,7 @@ class User(Base):
     organization = relationship("Organization", back_populates="users")
 
 
-# ── Inventory ─────────────────────────────────────────────────────────────
+# Inventory
 
 class Location(Base):
     __tablename__ = "locations"
@@ -130,7 +130,7 @@ class Item(Base):
     min_stock = Column(Integer, nullable=False, default=10)
 
 
-    # ── Pharmacy-specific field ───────────────────────────────────────────
+    # Pharmacy-specific field
     storage_temp = Column(String(20), nullable=False, default="ambient")  # ambient | cold_chain
 
     created_at = Column(TIMESTAMP, server_default=func.now())
@@ -175,7 +175,7 @@ class ItemPackaging(Base):
 class InventoryTransaction(Base):
     __tablename__ = "inventory_transactions"
     __table_args__ = (
-        Index("ix_inv_tx_loc_item_date", "location_id", "item_id", "date"),
+        Index("ix_inv_tx_org_loc_item_date", "org_id", "location_id", "item_id", "date"),
         Index("ix_inv_tx_item_date", "item_id", "date"),
         Index("ix_inv_tx_closing_date", "closing_stock", "date"),
         Index("ix_inv_tx_expiry_closing", "expiry_date", "closing_stock"),
@@ -185,6 +185,7 @@ class InventoryTransaction(Base):
     id = Column(Integer, primary_key=True, index=True)
     location_id = Column(Integer, ForeignKey("locations.id"), nullable=False, index=True)
     item_id = Column(Integer, ForeignKey("items.id"), nullable=False, index=True)
+    org_id = Column(Integer, ForeignKey("organizations.id"), nullable=False, index=True)
     date = Column(Date, nullable=False, index=True)
     opening_stock = Column(Integer, nullable=False)
     received = Column(Integer, nullable=False, default=0)
@@ -193,11 +194,11 @@ class InventoryTransaction(Base):
     notes = Column(Text)
     entered_by = Column(String(100), default="system")
 
-    # ── Batch-level pharmacy fields ──────────────────────────────────────
+    # Batch-level pharmacy fields
     batch_number = Column(String(50), nullable=True, index=True)   # e.g. "BT-25-4821"
     expiry_date = Column(Date, nullable=True, index=True)           # expiry of this batch
 
-    # ── Unit of Measure (UOM) context fields ──────────────────────────────
+    # Unit of Measure (UOM) context fields
     transacted_unit = Column(String(50), nullable=True)  # e.g. "strip", "box", "tablet"
     transacted_qty  = Column(Integer, nullable=True)     # e.g. 2 (boxes)
     multiplier      = Column(Integer, nullable=True, default=1)  # e.g. 100
@@ -209,13 +210,14 @@ class InventoryTransaction(Base):
 
 
 
-# ── Chat ──────────────────────────────────────────────────────────────────
+# Chat
 
 class ChatSession(Base):
     __tablename__ = "chat_sessions"
 
     id = Column(String(36), primary_key=True)  # UUID4 = 36 chars
-    user_id = Column(Integer, nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    org_id = Column(Integer, ForeignKey("organizations.id"), nullable=True, index=True)
     title = Column(String(200), default="New Conversation")
     created_at = Column(TIMESTAMP, server_default=func.now())
     updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
@@ -243,7 +245,7 @@ class ChatMessage(Base):
     session = relationship("ChatSession", back_populates="messages")
 
 
-# ── Requisitions ──────────────────────────────────────────────────────────
+# Requisitions
 
 class Requisition(Base):
     __tablename__ = "requisitions"
@@ -251,11 +253,13 @@ class Requisition(Base):
         Index("ix_requisitions_status_urgency", "status", "urgency"),
         Index("ix_requisitions_loc_created", "location_id", "created_at"),
         Index("ix_requisitions_loc_status", "location_id", "status"),
+        Index("ix_requisitions_org_status", "org_id", "status"),
     )
 
     id = Column(Integer, primary_key=True, index=True)
     requisition_number = Column(String(50), unique=True, nullable=False, index=True)
     location_id = Column(Integer, ForeignKey("locations.id"), nullable=False, index=True)
+    org_id = Column(Integer, ForeignKey("organizations.id"), nullable=False, index=True)
     requested_by = Column(String(100), nullable=False)
     department = Column(String(100), nullable=False)
     urgency = Column(String(20), nullable=False, default="NORMAL", index=True)
@@ -286,7 +290,7 @@ class RequisitionItem(Base):
     quantity_requested = Column(Integer, nullable=False)
     quantity_approved = Column(Integer, nullable=True)
 
-    # ── Unit of Measure (UOM) fields ──────────────────────────────────────
+    # Unit of Measure (UOM) fields
     packaging_unit          = Column(String(50), nullable=True)  # e.g. "strip", "box", "tablet"
     multiplier              = Column(Integer, nullable=False, default=1)  # base units per package
     base_quantity_requested = Column(Integer, nullable=True)  # total base units requested
@@ -300,7 +304,7 @@ class RequisitionItem(Base):
     item = relationship("Item")
 
 
-# ── Vendor Uploads ────────────────────────────────────────────────────────
+# Vendor Uploads
 
 class VendorUpload(Base):
     """Tracks Excel delivery uploads by vendors."""
@@ -323,7 +327,7 @@ class VendorUpload(Base):
     invoice = relationship("VendorInvoice", back_populates="vendor_upload", uselist=False)
 
 
-# ── Vendor Invoices ───────────────────────────────────────────────────────
+# Vendor Invoices
 
 class VendorInvoice(Base):
     """
@@ -353,7 +357,7 @@ class VendorInvoice(Base):
     organization = relationship("Organization")
 
 
-# ── Audit Log ─────────────────────────────────────────────────────────────
+# Audit Log
 
 class AuditLog(Base):
     """Tracks all user actions for audit trail."""
@@ -379,7 +383,7 @@ class AuditLog(Base):
     user = relationship("User")
 
 
-# ── Data Import ───────────────────────────────────────────────────────────
+# Data Import
 
 class DataImportJob(Base):
     __tablename__ = "data_import_jobs"
@@ -427,7 +431,7 @@ class ImportQuarantineRow(Base):
     job = relationship("DataImportJob", back_populates="quarantine_rows")
 
 
-# ── Billing Sessions ──────────────────────────────────────────────────────
+# Billing Sessions
 
 class BillingSession(Base):
     """

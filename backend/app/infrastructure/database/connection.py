@@ -16,7 +16,7 @@ from app.core.config import settings
 
 logger = logging.getLogger("smart_inventory.db")
 
-# ── Validate DATABASE_URL ─────────────────────────────────────────────────
+# Validate DATABASE_URL
 
 if not settings.DATABASE_URL:
     raise ValueError(
@@ -48,7 +48,7 @@ DATABASE_URL = sanitize_db_url(settings.DATABASE_URL)
 
 logger.info("Database: PostgreSQL")
 
-# ── Engine — connection pool optimized for production ─────────────────────
+# Engine — connection pool optimized for production
 
 is_sqlite = DATABASE_URL.startswith("sqlite")
 
@@ -137,7 +137,7 @@ def get_db():
 
 import threading
 
-# ── Query Performance Profiler ─────────────────────────────────────────────
+# Query Performance Profiler
 _query_stats_lock = threading.Lock()
 _query_history = []  # List of {"statement": str, "duration_ms": float}
 
