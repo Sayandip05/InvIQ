@@ -71,6 +71,7 @@ class TestAnalyticsService:
         tx = InventoryTransaction(
             location_id=location.id,
             item_id=item.id,
+            org_id=item.org_id,
             date=date(2026, 4, 9),
             opening_stock=0,
             received=100,

@@ -15,7 +15,7 @@ from unittest.mock import patch, MagicMock
 from tests.conftest import get_auth_header
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────
+# Helpers
 
 def _mock_agent_response(text: str = "Stock is healthy across all locations."):
     """Return a mock that replaces invoke_agent with a canned answer."""
@@ -54,7 +54,7 @@ def _mock_inventory_has_data(has_data: bool = True):
     )
 
 
-# ── /api/chat/query ───────────────────────────────────────────────────────
+# /api/chat/query
 
 class TestChatQuery:
     """POST /api/chat/query"""
@@ -173,7 +173,7 @@ class TestChatQuery:
         assert "export_reorder_list" in action_types
 
 
-# ── Session ownership ─────────────────────────────────────────────────────
+# Session ownership
 
 class TestChatSessionOwnership:
     """Users may not access another user's conversation."""
@@ -216,7 +216,7 @@ class TestChatSessionOwnership:
         assert r.status_code in [403, 401]
 
 
-# ── /api/chat/history ─────────────────────────────────────────────────────
+# /api/chat/history
 
 class TestChatHistory:
     """GET + DELETE /api/chat/history/{conversation_id}"""
@@ -263,7 +263,7 @@ class TestChatHistory:
         assert r.status_code in [401, 403]
 
 
-# ── /api/chat/sessions ────────────────────────────────────────────────────
+# /api/chat/sessions
 
 class TestChatSessions:
     """GET /api/chat/sessions"""
@@ -296,7 +296,7 @@ class TestChatSessions:
         assert count_after >= count_before + 1
 
 
-# ── /api/chat/suggestions ─────────────────────────────────────────────────
+# /api/chat/suggestions
 
 class TestChatSuggestions:
     """GET /api/chat/suggestions — authenticated endpoint."""
@@ -325,7 +325,7 @@ class TestChatSuggestions:
             assert isinstance(group["questions"], list)
 
 
-# ── /api/chat/transcribe ──────────────────────────────────────────────────
+# /api/chat/transcribe
 
 class TestVoiceTranscribe:
     """POST /api/chat/transcribe — English-only voice transcription via Sarvam AI."""

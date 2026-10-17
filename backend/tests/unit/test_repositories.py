@@ -51,7 +51,7 @@ class TestInventoryRepository:
 
         # 1. Inbound with batch info
         tx1 = repo.create_transaction(
-            location_id=location.id, item_id=item.id, date=date(2026, 4, 1),
+            location_id=location.id, item_id=item.id, org_id=1, date=date(2026, 4, 1),
             opening_stock=0, received=100, issued=0, closing_stock=100, entered_by="testuser",
             batch_number="BT-25-001", expiry_date=date(2027, 6, 30),
         )
@@ -60,11 +60,11 @@ class TestInventoryRepository:
         # 3. Same-day transactions (e.g. morning receive + afternoon dispense on same date)
         today = date(2026, 4, 10)
         tx3_morning = repo.create_transaction(
-            location_id=location.id, item_id=item.id, date=today,
+            location_id=location.id, item_id=item.id, org_id=1, date=today,
             opening_stock=70, received=50, issued=0, closing_stock=120, entered_by="morning_shift",
         )
         tx4_afternoon = repo.create_transaction(
-            location_id=location.id, item_id=item.id, date=today,
+            location_id=location.id, item_id=item.id, org_id=1, date=today,
             opening_stock=120, received=0, issued=45, closing_stock=75, entered_by="afternoon_shift",
         )
 
@@ -91,6 +91,7 @@ class TestRequisitionRepository:
         req = repo.create(
             requisition_number=f"{unique_prefix}001",
             location_id=location.id,
+            org_id=location.org_id,
             requested_by="testuser",
             department="Pharmacy",
             urgency="NORMAL",

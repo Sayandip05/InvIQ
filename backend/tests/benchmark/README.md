@@ -14,6 +14,8 @@ This directory contains dedicated performance benchmarking, latency profiling, a
 - **`locustfile.py`**: Distributed load testing suite with Locust simulating concurrent pharmacy users.
 - **`benchmark_results.json`**: Automated output containing measured percentiles (p50, p95, p99), averages, min/max, and query timings.
 
+**Measured result (committed `benchmark_results.json`):** the assistant path (`ai.total_rag`) averaged **4,950 ms** on the Aug 17 run and **2,460 ms** on the Aug 25 run — both under 5 s. The `llm_inference` stage reads **0** because those runs had no Groq key, so the rule-based fallback answered; the total still measures the full assistant path.
+
 ---
 
 ## 📊 Latency Percentiles Explained

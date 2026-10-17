@@ -120,6 +120,7 @@ def multi_tenant_fixture(db):
     tx_x = InventoryTransaction(
         location_id=loc_x.id,
         item_id=item_x.id,
+        org_id=item_x.org_id,
         date=today,
         opening_stock=0,
         received=100,
@@ -129,6 +130,7 @@ def multi_tenant_fixture(db):
     tx_y = InventoryTransaction(
         location_id=loc_y.id,
         item_id=item_y.id,
+        org_id=item_y.org_id,
         date=today,
         opening_stock=0,
         received=50,
@@ -142,6 +144,7 @@ def multi_tenant_fixture(db):
     req_x = Requisition(
         requisition_number=f"REQ-X-{uid}",
         location_id=loc_x.id,
+        org_id=loc_x.org_id,
         requested_by=staff_x.username,
         department="Pharmacy",
         urgency="NORMAL",
@@ -150,6 +153,7 @@ def multi_tenant_fixture(db):
     req_y = Requisition(
         requisition_number=f"REQ-Y-{uid}",
         location_id=loc_y.id,
+        org_id=loc_y.org_id,
         requested_by=admin_y.username,
         department="Pharmacy",
         urgency="NORMAL",
@@ -421,18 +425,20 @@ class TestMultiTenantIsolation:
         resp_get = client.get(f"/api/requisition/{req_y.id}", headers=headers_x)
         assert resp_get.status_code == 404
 
+        # Mutations are tenant-scoped at the repository layer: a requisition that is
+        # not visible to the caller is treated as non-existent (404). This is safer
+        # than 403 — it never confirms that another tenant's record exists.
         # Approve
         resp_app = client.put(f"/api/requisition/{req_y.id}/approve", json={}, headers=headers_x)
-        assert resp_app.status_code == 403
+        assert resp_app.status_code == 404
 
         # Reject
         resp_rej = client.put(f"/api/requisition/{req_y.id}/reject", json={"reason": "Invalid requisition"}, headers=headers_x)
-        assert resp_rej.status_code == 403
-
+        assert resp_rej.status_code == 404
 
         # Cancel
         resp_can = client.put(f"/api/requisition/{req_y.id}/cancel", json={}, headers=headers_x)
-        assert resp_can.status_code == 403
+        assert resp_can.status_code == 404
 
 
     def test_admin_x_cannot_view_org_y_invoice_or_pdf(self, client, multi_tenant_fixture):

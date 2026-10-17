@@ -67,6 +67,7 @@ def test_rest_analytics_org_scoping_and_caching(client, db):
     tx_x = InventoryTransaction(
         location_id=loc_x.id,
         item_id=item_x.id,
+        org_id=item_x.org_id,
         date=date.today(),
         opening_stock=0,
         received=100,

@@ -211,9 +211,7 @@ class TestFormatStockItem:
         assert result["days_remaining"] == 14.3
 
 
-# ---------------------------------------------------------------------------
 # StockStatus
-# ---------------------------------------------------------------------------
 
 class TestStockStatus:
     """Test StockStatus enum — classification and color mapping."""
@@ -258,9 +256,7 @@ class TestStockStatus:
         assert StockStatus.HEALTHY == "HEALTHY"
 
 
-# ---------------------------------------------------------------------------
 # StockThresholds
-# ---------------------------------------------------------------------------
 
 class TestStockThresholds:
     """Verify threshold constants are correct and consistent."""
@@ -281,9 +277,7 @@ class TestStockThresholds:
         assert StockThresholds.DEFAULT_SAFETY_FACTOR == 2.0
 
 
-# ---------------------------------------------------------------------------
 # ReorderPolicy
-# ---------------------------------------------------------------------------
 
 class TestReorderPolicy:
     """Test the value-object API for reorder quantity calculation."""
@@ -317,9 +311,7 @@ class TestReorderPolicy:
             policy.avg_daily_usage = 99.0  # type: ignore[misc]
 
 
-# ---------------------------------------------------------------------------
 # classify_stock_health
-# ---------------------------------------------------------------------------
 
 class TestClassifyStockHealth:
     """Test the pure classify_stock_health() domain function."""

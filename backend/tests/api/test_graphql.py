@@ -14,7 +14,7 @@ from app.api.graphql.schema import schema
 import strawberry
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────
+# Helpers
 
 def _ctx(db, role: str = "admin", org_id: int = 1):
     """Build a minimal GraphQL context dict mimicking get_graphql_context."""
@@ -37,7 +37,7 @@ def _exec(query_str: str, ctx: dict):
     return schema.execute_sync(query_str, context_value=ctx)
 
 
-# ── Dashboard Stats ───────────────────────────────────────────────────────
+# Dashboard Stats
 
 class TestGraphQLDashboardStats:
     """dashboardStats query — shape and field presence."""
@@ -80,7 +80,7 @@ class TestGraphQLDashboardStats:
         assert any("Authentication required" in str(e) for e in result.errors)
 
 
-# ── Heatmap ───────────────────────────────────────────────────────────────
+# Heatmap
 
 class TestGraphQLHeatmap:
     """heatmap query — role-based field masking."""
@@ -129,6 +129,7 @@ class TestGraphQLHeatmap:
 
         tx = InventoryTransaction(
             location_id=loc.id, item_id=item.id,
+            org_id=item.org_id,
             date=date(2026, 1, 1),
             opening_stock=0, received=50, issued=10, closing_stock=40,
             entered_by="testuser",
@@ -166,7 +167,7 @@ class TestGraphQLHeatmap:
         assert result.errors is not None
         assert any("Authentication required" in str(e) for e in result.errors)
 
-# ── Alerts ────────────────────────────────────────────────────────────────
+# Alerts
 
 class TestGraphQLAlerts:
     """alerts query — severity parameter and field masking."""
@@ -224,7 +225,7 @@ class TestGraphQLAlerts:
         assert result.errors is None
 
 
-# ── Summary ───────────────────────────────────────────────────────────────
+# Summary
 
 class TestGraphQLSummary:
     """summary query — overview + health + categories."""
@@ -262,7 +263,7 @@ class TestGraphQLSummary:
         assert isinstance(result.data["summary"]["categories"], list)
 
 
-# ── Stock Health ──────────────────────────────────────────────────────────
+# Stock Health
 
 class TestGraphQLStockHealth:
     """stockHealth query — filters and field masking."""
@@ -330,7 +331,7 @@ class TestGraphQLStockHealth:
         assert any("Authentication required" in str(e) for e in result.errors)
 
 
-# ── Tenant Isolation ──────────────────────────────────────────────────────
+# Tenant Isolation
 
 class TestGraphQLTenantIsolation:
     """Ensure GraphQL resolvers respect multi-tenant scoping and use isolated cache keys."""
@@ -353,8 +354,8 @@ class TestGraphQLTenantIsolation:
         db.refresh(item2)
 
         today = date.today()
-        tx1 = InventoryTransaction(location_id=loc1.id, item_id=item1.id, date=today, opening_stock=0, received=20, issued=0, closing_stock=20)
-        tx2 = InventoryTransaction(location_id=loc2.id, item_id=item2.id, date=today, opening_stock=0, received=20, issued=0, closing_stock=20)
+        tx1 = InventoryTransaction(location_id=loc1.id, item_id=item1.id, org_id=item1.org_id, date=today, opening_stock=0, received=20, issued=0, closing_stock=20)
+        tx2 = InventoryTransaction(location_id=loc2.id, item_id=item2.id, org_id=item2.org_id, date=today, opening_stock=0, received=20, issued=0, closing_stock=20)
         db.add_all([tx1, tx2])
         db.commit()
 

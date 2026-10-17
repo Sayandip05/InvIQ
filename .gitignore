@@ -241,7 +241,8 @@ temp/
 # ═══════════════════════════════════════════════════════════
 # Documentation (Internal/Generated)
 # ═══════════════════════════════════════════════════════════
-docs/
+docs/*
+!docs/interview.md
 explanation.md
 
 

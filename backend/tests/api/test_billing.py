@@ -66,6 +66,7 @@ def setup_billing_env(db, admin_user):
         tx = InventoryTransaction(
             location_id=10,
             item_id=100,
+            org_id=1,
             date=date.today(),
             opening_stock=0,
             received=100,

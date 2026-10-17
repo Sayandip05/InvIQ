@@ -266,6 +266,7 @@ class TestInventoryTransactions:
         tx = InventoryTransaction(
             location_id=location.id,
             item_id=item.id,
+            org_id=item.org_id,
             date=date(2026, 4, 9),
             opening_stock=0,
             received=150,
@@ -345,7 +346,7 @@ class TestInventoryTransactions:
 
         # Seed opening stock
         db.add(InventoryTransaction(
-            location_id=location.id, item_id=item.id,
+            location_id=location.id, item_id=item.id, org_id=item.org_id,
             date=date(2026, 4, 1), opening_stock=0,
             received=200, issued=0, closing_stock=200, entered_by="seed",
         ))

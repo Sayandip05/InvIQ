@@ -46,6 +46,7 @@ class TestBarcodeDispense:
         tx_in = InventoryTransaction(
             location_id=location.id,
             item_id=item.id,
+            org_id=item.org_id,
             date=date.today(),
             opening_stock=0,
             received=50,
@@ -96,6 +97,7 @@ class TestBarcodeDispense:
         tx_in = InventoryTransaction(
             location_id=location.id,
             item_id=item.id,
+            org_id=item.org_id,
             date=date.today(),
             opening_stock=0,
             received=20,
@@ -143,6 +145,7 @@ class TestBarcodeDispense:
         tx_in = InventoryTransaction(
             location_id=location.id,
             item_id=item.id,
+            org_id=item.org_id,
             date=date.today(),
             opening_stock=0,
             received=2,
@@ -185,6 +188,7 @@ class TestBarcodeDispense:
         tx_in = InventoryTransaction(
             location_id=location.id,
             item_id=item.id,
+            org_id=item.org_id,
             date=date.today(),
             opening_stock=0,
             received=10,

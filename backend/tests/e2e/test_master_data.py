@@ -117,6 +117,7 @@ def test_item_master_data_crud_and_barcode_lookup(client, db):
     tx = InventoryTransaction(
         location_id=loc_1.id,
         item_id=item_id,
+        org_id=loc_1.org_id,
         date=date.today(),
         opening_stock=0,
         received=50,

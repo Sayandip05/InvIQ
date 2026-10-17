@@ -184,6 +184,7 @@ class TestRequisitionDetails:
         req = Requisition(
             requisition_number="REQ-TEST-001",
             location_id=location.id,
+            org_id=location.org_id,
             requested_by="testuser",
             department="Pharmacy",
             urgency="NORMAL",
@@ -246,6 +247,7 @@ class TestRequisitionApproval:
         tx = InventoryTransaction(
             location_id=location.id,
             item_id=item.id,
+            org_id=item.org_id,
             date=date(2026, 4, 1),
             opening_stock=0,
             received=200,
@@ -259,6 +261,7 @@ class TestRequisitionApproval:
         req = Requisition(
             requisition_number="REQ-APPROVE-001",
             location_id=location.id,
+            org_id=location.org_id,
             requested_by="testuser",
             department="Pharmacy",
             urgency="NORMAL",
@@ -304,6 +307,7 @@ class TestRequisitionRejection:
         req = Requisition(
             requisition_number="REQ-REJECT-001",
             location_id=location.id,
+            org_id=location.org_id,
             requested_by="testuser",
             department="Pharmacy",
             urgency="NORMAL",

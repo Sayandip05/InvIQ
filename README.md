@@ -8,7 +8,7 @@
 
 Independent retail medical stores and local pharmacy chains in Tier-2/3 cities lose significant revenue every month due to **expired medications (FEFO loss)**, missed customer sales from sudden stockouts, and manual paper-heavy distributor bills. **InvIQ provides a simple, ultra-fast, mobile-friendly platform tailored specifically for chemist shop owners:**
 
-1. **Zero Expiry Loss (FEFO)**: Real-time alerts at 30, 60, and 90 days before batch expiration so chemists can return stock to distributors on time.
+1. **Zero Expiry Loss (FEFO)**: Real-time alerts for batches approaching expiry (configurable horizon, default 60 days) so chemists can return stock to distributors on time.
 2. **Counter Dispensing & POS (In Development)**: Counter billing workflow and checkout interface currently under active development.
 3. **1-Click Distributor Bill Ingest**: Upload wholesaler Excel delivery manifests to auto-increment live stock in seconds.
 4. **Single & Multi-Shop Chains**: Centralized dashboard to track stock across 1 to 10+ shop counters from a phone or tablet.
@@ -43,13 +43,13 @@ Independent retail medical stores and local pharmacy chains in Tier-2/3 cities l
 - 🚧 **Counter Billing & POS (In Development)** - Retail checkout & counter billing module is currently in active development (prototype preview; not functional for live production transactions).
 - 💊 **Streamlined Inventory Catalog** - Intuitive item stock management tracking available units, reorder levels, batches, and storage facilities without confusing packaging tiers or complex multipliers.
 - 📈 **Dynamic Expiry Risk Forecast & Analytics** - Dynamic spline line trajectory modeling 6-month batch expiration timelines against critical safe action margins, coupled with an optimal health distribution chart.
-- 📦 **FEFO Expiry Loss Shield** - Proactive batch alerts at 30, 60, and 90 days ensuring no expired medicine remains on shelves.
+- 📦 **FEFO Expiry Loss Shield** - Proactive batch-expiry alerts (configurable horizon, default 60 days) to rotate stock before it expires.
 - 🚚 **Supplier & Distributor Management** - Direct vendor portal with 1-click Excel delivery manifest ingestion and automated PDF invoices stored in Azure Blob Storage.
 - 🤖 **AI Chemist Assistant** - Ask questions in plain English: *"What medicines are running low in Counter 1?"* (System operates strictly in English).
 - 📊 **Real-Time Clean Analytics** - Live stock counts, critical shortages, cold-chain fridge monitoring, and store-by-store breakdowns.
-- 🔐 **Enterprise Multi-Tenant Security** - Strict non-nullable `org_id` schema, HttpOnly SameSite auth cookies, CSP headers, issued-at (`iat`) token invalidation, cryptographic Google OAuth ID-token verification, and tenant-scoped Redis pub/sub.
+- 🔐 **Enterprise Multi-Tenant Security** - Non-nullable `org_id` on tenant master tables (child tables derive tenancy via item/location), HttpOnly SameSite auth cookies, CSP headers, issued-at (`iat`) token invalidation, cryptographic Google OAuth ID-token verification, and tenant-scoped Redis pub/sub.
 - ☁️ **Dual Environment Architecture** - Strictly separated `DEVELOPMENT` (local dev & rapid testing) and `PRODUCTION` (containerized Azure App Service / Cloud with Alembic migrations).
-- ✅ **Production Test Suite** - Comprehensive 342+ test cases covering RBAC, multi-tenancy, and FEFO dispensing with 100% pass rate.
+- ✅ **Production Test Suite** - 353 backend tests (351 passing, 2 skipped) covering RBAC, multi-tenancy, FEFO dispensing, billing, and the AI agent.
 
 ---
 
@@ -133,7 +133,7 @@ graph TB
 
     subgraph BusinessLayer["⚙️ Domain & Application Services"]
         InvSvc["InventoryService & Stock Tracker<br/>• Batch-Aware FEFO Deductions<br/>• Redis Distributed Lock (SETNX)"]
-        AnalyticsSvc["AnalyticsService & FEFO Shield<br/>• 30/60/90 Day Expiry Calculations<br/>• Tenant-Scoped Cache Keys"]
+        AnalyticsSvc["AnalyticsService & FEFO Shield<br/>• Batch-Expiry Forecasting (60-day default)<br/>• Tenant-Scoped Cache Keys"]
         ReqSvc["RequisitionService<br/>• Chemist Purchase Orders<br/>• Draft → Approved → Fulfilled Lifecycle"]
         VendorSvc["VendorService<br/>• Excel Delivery Manifest Sync<br/>• PDF Invoices in Azure Blob"]
         ImportSvc["DataImportService<br/>• 2-Pass Synonym Heuristic/AI Mapping<br/>• Quarantine Error Inspection"]
@@ -274,7 +274,7 @@ flowchart TD
     Check -- Yes --> FEFO["🛡️ Batch Aggregation: FEFO Ordering (expiry_date ASC)"]
     FEFO --> Atomic["⚡ Atomic Ledger Transaction: closing = opening + received - issued"]
     
-    Atomic --> Cache["🧹 Invalidate Tenant Cache (cache:{org_id}:*)"]
+    Atomic --> Cache["🧹 Invalidate Tenant Cache (cache:analytics:*, cache:ref:*)"]
     Cache --> Threshold{"Stock < min_stock?"}
     
     Threshold -- Yes --> Alert["🚨 Publish Domain Event: stock.low to inviq:events:org:{id}"]
@@ -378,7 +378,7 @@ For detailed documentation, see the `/docs` folder:
 ## 🧪 Testing & Quality Assurance
 
 ```bash
-# Run all automated tests (344 test cases across Unit, Integration, API, E2E)
+# Run all automated tests (353 test cases across Unit, Integration, API, E2E)
 ./venv/bin/pytest backend/tests/ -v
 
 # Run by testing category
@@ -425,7 +425,7 @@ InvIQ/
 │   │   ├── infrastructure/       # Database models/repos, Upstash Redis, Azure Blob Storage, Qdrant
 │   │   └── workers/              # Celery background task processing & Celery Beat
 │   ├── scripts/                  # Database migration fixtures and demo seeding utilities
-│   └── tests/                    # 344 automated test cases & benchmark suite
+│   └── tests/                    # 353 automated test cases & benchmark suite
 │       ├── unit/                 # Domain, service, exception, security unit tests
 │       ├── integration/          # Multi-tenant isolation, UoM, import, event pipeline
 │       ├── api/                  # REST, GraphQL, WebSocket, Billing endpoints
@@ -448,7 +448,7 @@ InvIQ/
 
 ## 🔐 Security Features
 
-- **Multi-Tenant Data Isolation** - Strict non-nullable `org_id` on all tenant entities; complete isolation between pharmacy organizations (one admin cannot view or access another pharmacy's data).
+- **Multi-Tenant Data Isolation** - `org_id` is enforced on tenant master tables and derived through item/location on child tables; complete isolation between pharmacy organizations (one admin cannot view or access another pharmacy's data).
 - **JWT Authentication** - Short-lived access tokens (30min) + refresh tokens (7 days) with `iat` revocation on password reset.
 - **Argon2id Password Hashing** - GPU/ASIC cracking resistant algorithm with unified complexity validation.
 - **Google OAuth ID Token Verification** - Cryptographic verification via `google-auth` with mandatory email verification and audience matching.

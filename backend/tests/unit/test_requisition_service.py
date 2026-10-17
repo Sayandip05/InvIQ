@@ -146,3 +146,26 @@ class TestRequisitionService:
         # Rejecting already rejected requisition fails
         with pytest.raises(InvalidStateError):
             service.reject_requisition(requisition_id=1, rejected_by="admin", reason="Duplicate")
+
+    def test_fulfill_approved_requisition_succeeds(self, service, mock_req_repo):
+        """Fulfilling an APPROVED requisition transitions it to FULFILLED and commits."""
+        mock_req = Mock(id=1, status="APPROVED", requisition_number="REQ-1", items=[])
+        mock_req_repo.get_by_id.return_value = mock_req
+
+        result = service.fulfill_requisition(requisition_id=1, fulfilled_by="staff_user")
+
+        assert result["success"] is True
+        assert mock_req.status == "FULFILLED"
+        mock_req_repo.commit.assert_called()
+
+    def test_fulfill_pending_requisition_is_rejected(self, service, mock_req_repo):
+        """A PENDING requisition must be approved first: fulfilling it raises InvalidStateError
+        and leaves state and stock untouched (no commit)."""
+        mock_req = Mock(id=1, status="PENDING", requisition_number="REQ-2", items=[])
+        mock_req_repo.get_by_id.return_value = mock_req
+
+        with pytest.raises(InvalidStateError):
+            service.fulfill_requisition(requisition_id=1, fulfilled_by="staff_user")
+
+        assert mock_req.status == "PENDING"
+        mock_req_repo.commit.assert_not_called()

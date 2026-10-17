@@ -37,17 +37,18 @@ def _create_multi_item_excel(items_data: list[tuple[str, int, float]]) -> bytes:
     return buf.getvalue()
 
 
-# ── 1. Model Index Declarations ──────────────────────────────────────────
+# 1. Model Index Declarations
 
 def test_models_have_indexes_declared():
     """Verify that all required single and composite indexes are defined on ORM tables."""
     inv_tx_index_names = {idx.name for idx in InventoryTransaction.__table__.indexes}
-    assert "ix_inv_tx_loc_item_date" in inv_tx_index_names
+    assert "ix_inv_tx_org_loc_item_date" in inv_tx_index_names
     assert "ix_inv_tx_item_date" in inv_tx_index_names
 
     req_index_names = {idx.name for idx in Requisition.__table__.indexes}
     assert "ix_requisitions_status_urgency" in req_index_names
     assert "ix_requisitions_loc_created" in req_index_names
+    assert "ix_requisitions_org_status" in req_index_names
 
     req_item_index_names = {idx.name for idx in RequisitionItem.__table__.indexes}
     assert "ix_req_items_req_item" in req_item_index_names
@@ -62,7 +63,7 @@ def test_models_have_indexes_declared():
     assert "ix_users_role_active" in user_index_names
 
 
-# ── 2. N+1 Elimination in Vendor Delivery Ingestion ───────────────────────
+# 2. N+1 Elimination in Vendor Delivery Ingestion
 
 def test_vendor_service_prefetched_stock_processing(db):
     """Verify multi-row Excel parsing properly chains opening and closing stocks in-memory."""
@@ -127,7 +128,7 @@ def test_vendor_service_prefetched_stock_processing(db):
     assert latest_tx.closing_stock == first_tx.closing_stock + 15
 
 
-# ── 3. Admin Overview Consolidated SQL Aggregation ────────────────────────
+# 3. Admin Overview Consolidated SQL Aggregation
 
 def test_admin_overview_metrics(client, admin_user):
     headers = get_auth_header(client, admin_user["username"], admin_user["password"])
@@ -143,7 +144,7 @@ def test_admin_overview_metrics(client, admin_user):
     assert "admin" in users_data["by_role"]
 
 
-# ── 4. Audit Log SQL-Level Filtering ─────────────────────────────────────
+# 4. Audit Log SQL-Level Filtering
 
 def test_audit_repo_sql_level_filtering(db, admin_user):
     repo = AuditRepository(db)
@@ -169,7 +170,7 @@ def test_audit_repo_sql_level_filtering(db, admin_user):
     assert all(log.resource_type == "item" for log in filtered_item)
 
 
-# ── 5. Lookup Endpoints Redis Caching ─────────────────────────────────────
+# 5. Lookup Endpoints Redis Caching
 
 def test_inventory_lookup_redis_caching(client, admin_user):
     from unittest.mock import patch
@@ -202,10 +203,13 @@ def test_inventory_lookup_redis_caching(client, admin_user):
         # Clear cache before test
         cache_invalidate_pattern("ref:*")
 
-        # 1. First fetch -> should populate cache
+        # 1. First fetch -> should populate cache.
+        # Cache keys are tenant-scoped (they embed the org id); there is deliberately
+        # NO shared global "ref:locations" key that could leak one org's data to another.
         res1 = client.get("/api/inventory/locations", headers=headers)
         assert res1.status_code == 200
-        assert cache_get("ref:locations") is not None
+        assert any(k.startswith("cache:ref:locations:") for k in fake_redis_store)
+        assert "cache:ref:locations" not in fake_redis_store
 
         # 2. Second fetch -> serves from cache
         res2 = client.get("/api/inventory/locations", headers=headers)
@@ -224,5 +228,5 @@ def test_inventory_lookup_redis_caching(client, admin_user):
         assert create_res.status_code == 200
 
         # Cache should now be invalidated
-        assert cache_get("ref:locations") is None
+        assert not any(k.startswith("cache:ref:locations:") for k in fake_redis_store)
 

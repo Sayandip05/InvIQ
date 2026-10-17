@@ -189,6 +189,7 @@ def test_branch_management_create_update_toggle_and_safe_archive(client, db):
     tx = InventoryTransaction(
         location_id=branch2_id,
         item_id=test_item.id,
+        org_id=test_item.org_id,
         date=date.today(),
         opening_stock=0,
         received=50,

@@ -31,7 +31,7 @@ def _create_sample_excel(items_data: list[tuple[str, int, float]]) -> bytes:
     return buf.getvalue()
 
 
-# ── Invoice Number Generation ─────────────────────────────────────────────
+# Invoice Number Generation
 
 def test_generate_invoice_number(db, admin_user):
     repo = InvoiceRepository(db)
@@ -103,7 +103,7 @@ def test_generate_invoice_number(db, admin_user):
 
 
 
-# ── ReportLab PDF Generation ──────────────────────────────────────────────
+# ReportLab PDF Generation
 
 def test_invoice_pdf_rendering():
     invoice_data = {
@@ -139,7 +139,7 @@ def test_invoice_pdf_rendering():
     assert pdf_bytes[:5] == b"%PDF-"
 
 
-# ── Azure Blob Storage Service ───────────────────────────────────────────
+# Azure Blob Storage Service
 
 def test_azure_blob_storage_service_upload_and_download():
     with patch("azure.storage.blob.BlobServiceClient.from_connection_string") as mock_bsc:
@@ -169,7 +169,7 @@ def test_azure_blob_storage_service_upload_and_download():
             assert downloaded == b"%PDF-mock-bytes"
 
 
-# ── Vendor Upload with Auto Invoice Generation ───────────────────────────
+# Vendor Upload with Auto Invoice Generation
 
 def test_vendor_upload_creates_invoice(db):
     from app.core.security import hash_password
@@ -228,7 +228,7 @@ def test_vendor_upload_creates_invoice(db):
     assert inv.pdf_content[:5] == b"%PDF-"
 
 
-# ── API Endpoints ─────────────────────────────────────────────────────────
+# API Endpoints
 
 def test_vendor_invoice_api_endpoints(client, db, admin_user):
     headers = get_auth_header(client, admin_user["username"], admin_user["password"])
