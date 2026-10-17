@@ -39,7 +39,7 @@ class DataImportService:
         self.inv_service = InventoryService(self.inv_repo)
         self.mapper = DataImportMapper()
 
-    # ── 1. File Inspection & Sample Extraction ────────────────────────────────
+    # 1. File Inspection & Sample Extraction
 
     @staticmethod
     def inspect_file(
@@ -130,7 +130,7 @@ class DataImportService:
 
             return headers, sample_rows, total_count
 
-    # ── 2. Stream Row Generator ───────────────────────────────────────────────
+    # 2. Stream Row Generator
 
     @staticmethod
     def _stream_rows(
@@ -182,7 +182,7 @@ class DataImportService:
                 }
                 yield row_idx, row_dict
 
-    # ── 3. Deterministic Validation & Confidence Gating ───────────────────────
+    # 3. Deterministic Validation & Confidence Gating
 
     @staticmethod
     def _parse_date(val: Any) -> Optional[date]:
@@ -308,7 +308,7 @@ class DataImportService:
 
         return transformed, None
 
-    # ── 4. Batch Execution Engine ─────────────────────────────────────────────
+    # 4. Batch Execution Engine
 
     def execute_import(
         self,

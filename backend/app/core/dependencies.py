@@ -26,7 +26,7 @@ from app.core.exceptions import AuthenticationError, AuthorizationError
 from app.infrastructure.database.models import User
 
 
-# ── Repository factories ───────────────────────────────────────────────────
+# Repository factories
 
 
 def get_inventory_repo(db: Session = Depends(get_db)) -> InventoryRepository:
@@ -59,7 +59,7 @@ def get_requisition_service(
     return RequisitionService(repo, inv_repo)
 
 
-# ── Authentication dependency (FastAPI tutorial pattern) ───────────────────
+# Authentication dependency (FastAPI tutorial pattern)
 
 
 import logging
@@ -160,7 +160,7 @@ def get_current_user(
         raise credentials_exception
 
 
-# ── Active user shorthand ──────────────────────────────────────────────────
+# Active user shorthand
 
 
 def get_current_active_user(
@@ -172,7 +172,7 @@ def get_current_active_user(
     return current_user
 
 
-# ── Role-based access control ──────────────────────────────────────────────
+# Role-based access control
 
 
 def require_role(required_role: str):

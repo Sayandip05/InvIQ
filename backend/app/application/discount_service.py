@@ -22,9 +22,7 @@ from typing import Any, Dict, List, Optional
 logger = logging.getLogger("smart_inventory.discount_service")
 
 
-# ---------------------------------------------------------------------------
 # Public API
-# ---------------------------------------------------------------------------
 
 def apply_discount(gross_total: float, discount_config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
@@ -115,9 +113,7 @@ def validate_discount_config(config: Dict[str, Any]) -> List[str]:
     return errors
 
 
-# ---------------------------------------------------------------------------
 # Internal helpers
-# ---------------------------------------------------------------------------
 
 def _get_flat_pct(config: Dict[str, Any]) -> float:
     try:

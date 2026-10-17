@@ -16,9 +16,7 @@ from app.domain.calculations import calculate_reorder_quantity
 _logger = logging.getLogger("smart_inventory.agent")
 
 
-# ---------------------------------------------------------------------------
 # ReadOnlySession — structural write guard for the AI agent
-# ---------------------------------------------------------------------------
 
 _WRITE_METHODS = frozenset({
     "add", "add_all", "delete", "merge", "flush",
@@ -44,7 +42,7 @@ class ReadOnlySession:
     def __init__(self, session: Session) -> None:
         object.__setattr__(self, "_session", session)
 
-    # ── Passthrough for read operations ─────────────────────────────────
+    # Passthrough for read operations
 
     def query(self, *args, **kwargs):
         return object.__getattribute__(self, "_session").query(*args, **kwargs)
@@ -59,7 +57,7 @@ class ReadOnlySession:
             )
         return object.__getattribute__(self, "_session").execute(statement, *args, **kwargs)
 
-    # ── Block all mutating methods ───────────────────────────────────────
+    # Block all mutating methods
 
     def __getattr__(self, name: str):
         if name in _WRITE_METHODS:
@@ -205,7 +203,7 @@ def get_critical_items(
         return [{"error": str(e)}]
 
 
-# ── Medicine Brand & Generic Salt Synonym Mapping ─────────────────────────────
+# Medicine Brand & Generic Salt Synonym Mapping
 _GENERIC_TO_BRANDS = {
     "paracetamol": ["dolo", "combiflam", "calpol", "crocin", "paracetamol"],
     "acetaminophen": ["dolo", "combiflam", "calpol", "crocin"],
@@ -421,6 +419,7 @@ def get_location_summary(location_name: str) -> Dict[str, Any]:
 
         critical = sum(1 for s in location_data if s.health_status == "CRITICAL")
         warning = sum(1 for s in location_data if s.health_status == "WARNING")
+        healthy = sum(1 for s in location_data if s.health_status == "HEALTHY")
         return {
             "location": location_data[0].location_name,
             "total_items": len(location_data),
@@ -552,7 +551,7 @@ def get_consumption_trends(
         return {"error": str(e)}
 
 
-# ── Pharmacy-Specific Tools ────────────────────────────────────────────────────
+# Pharmacy-Specific Tools
 
 @tool
 def get_near_expiry_items(days: int = 60) -> List[Dict[str, Any]]:

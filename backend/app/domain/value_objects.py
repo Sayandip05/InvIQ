@@ -27,9 +27,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 
-# ---------------------------------------------------------------------------
 # StockStatus
-# ---------------------------------------------------------------------------
 
 class StockStatus(str, Enum):
     """
@@ -81,9 +79,7 @@ _STATUS_COLORS: dict[StockStatus, str] = {
 DAYS_REMAINING_INFINITE: int = 999
 
 
-# ---------------------------------------------------------------------------
 # StockThresholds
-# ---------------------------------------------------------------------------
 
 @dataclass(frozen=True)
 class _StockThresholdsData:
@@ -117,9 +113,7 @@ class _StockThresholdsData:
 StockThresholds: _StockThresholdsData = _StockThresholdsData()
 
 
-# ---------------------------------------------------------------------------
 # ReorderPolicy
-# ---------------------------------------------------------------------------
 
 @dataclass(frozen=True)
 class ReorderPolicy:

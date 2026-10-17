@@ -27,9 +27,7 @@ from app.domain.value_objects import (
 )
 
 
-# ---------------------------------------------------------------------------
 # Reorder quantity
-# ---------------------------------------------------------------------------
 
 def calculate_reorder_quantity(
     avg_daily_usage: float,
@@ -51,9 +49,7 @@ def calculate_reorder_quantity(
 
 
 
-# ---------------------------------------------------------------------------
 # Stock health classification
-# ---------------------------------------------------------------------------
 
 def classify_stock_health(days_remaining: Optional[float]) -> StockStatus:
     """
@@ -80,9 +76,7 @@ def classify_stock_health(days_remaining: Optional[float]) -> StockStatus:
     return StockStatus.from_days(days_remaining)
 
 
-# ---------------------------------------------------------------------------
 # Color mapping
-# ---------------------------------------------------------------------------
 
 def get_health_color(status: str) -> str:
     """
@@ -104,9 +98,7 @@ def get_health_color(status: str) -> str:
         return "#6b7280"  # unknown / UNKNOWN → gray
 
 
-# ---------------------------------------------------------------------------
 # Stock item formatter
-# ---------------------------------------------------------------------------
 
 def format_stock_item(item: Any) -> Dict:
     """

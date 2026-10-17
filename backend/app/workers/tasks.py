@@ -23,7 +23,7 @@ from app.api.routes.websocket import publish_domain_event
 
 logger = logging.getLogger("smart_inventory.workers")
 
-# ── Celery App Import with Graceful Fallback Decorator ────────────────────────
+# Celery App Import with Graceful Fallback Decorator
 try:
     from app.workers.celery_app import celery_app
     _celery_available = True
@@ -51,7 +51,7 @@ def _task_wrapper(name: str, max_retries: int = 3, default_retry_delay: int = 5)
     return decorator
 
 
-# ── 1. Bulk CSV/Excel Data Import Task ───────────────────────────────────────
+# 1. Bulk CSV/Excel Data Import Task
 
 @_task_wrapper(name="app.workers.tasks.import_csv_task")
 def import_csv_task(
@@ -127,7 +127,7 @@ def import_csv_task(
         return _execute(session)
 
 
-# ── 2. PDF Delivery Invoice & Report Generation Task ──────────────────────────
+# 2. PDF Delivery Invoice & Report Generation Task
 
 @_task_wrapper(name="app.workers.tasks.generate_invoice_pdf_task")
 def generate_invoice_pdf_task(
@@ -251,7 +251,7 @@ def generate_invoice_pdf_task(
         return _execute(session)
 
 
-# ── 3. Vector Embeddings Sync Task for Qdrant RAG Memory ─────────────────────
+# 3. Vector Embeddings Sync Task for Qdrant RAG Memory
 
 @_task_wrapper(name="app.workers.tasks.sync_vector_embeddings_task")
 def sync_vector_embeddings_task(
@@ -339,7 +339,7 @@ def sync_onboarding_context_task(
     }
 
 
-# ── 4. Transactional Notification / Email Dispatch Task ──────────────────────
+# 4. Transactional Notification / Email Dispatch Task
 
 @_task_wrapper(name="app.workers.tasks.send_email_notification_task")
 def send_email_notification_task(
@@ -367,7 +367,7 @@ def send_email_notification_task(
     }
 
 
-# ── 5. Scheduled Celery Beat Recurring Jobs ──────────────────────────────────
+# 5. Scheduled Celery Beat Recurring Jobs
 
 @_task_wrapper(name="app.workers.tasks.celery_fefo_audit")
 def celery_fefo_audit(org_id: Optional[int] = None, db=None):
@@ -399,7 +399,7 @@ def celery_cold_chain_check(org_id: Optional[int] = None, db=None):
         return run_cold_chain_health_check(session, org_id=org_id)
 
 
-# ── 6. Monthly Sales Cache Updater ────────────────────────────────────────────
+# 6. Monthly Sales Cache Updater
 
 @_task_wrapper(name="app.workers.tasks.update_monthly_sales_cache_task")
 def update_monthly_sales_cache_task(

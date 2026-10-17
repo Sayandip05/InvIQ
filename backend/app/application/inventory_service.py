@@ -83,6 +83,12 @@ class InventoryService:
             # 1. Acquire transaction-level advisory lock on (location_id, item_id) to eliminate first-write races
             self.repo.acquire_advisory_lock(location_id, item_id)
 
+            # Resolve the owning organization (tenant-scoped transactions require it)
+            item = self.repo.get_item_by_id(item_id)
+            if item is None:
+                raise ValidationError(f"Item {item_id} does not exist")
+            org_id = item.org_id
+
             # 2. Reject backdated entries if later activity already exists for this item/location
             if self.repo.has_later_transactions(location_id, item_id, transaction_date) is True:
                 raise ValidationError(
@@ -110,6 +116,7 @@ class InventoryService:
                 flush_only=flush_only,
                 location_id=location_id,
                 item_id=item_id,
+                org_id=org_id,
                 date=transaction_date,
                 opening_stock=opening_stock,
                 received=received,
@@ -124,8 +131,7 @@ class InventoryService:
                 multiplier=multiplier,
             )
 
-            # ── Stock alert detection ───────────────────────────────────
-            item = self.repo.get_item_by_id(item_id)
+            # Stock alert detection (item already resolved above)
             if item and closing_stock <= item.min_stock:
                 alert_status = "CRITICAL" if closing_stock <= 0 else "WARNING"
                 logger.warning(
@@ -149,7 +155,7 @@ class InventoryService:
                 )
 
 
-                # ── Email alert to admins & managers ───────────────────
+                # Email alert to admins & managers
                 # Resolve location name and recipient emails, then
                 # dispatch in a background thread so SMTP latency never
                 # blocks the HTTP transaction response.
@@ -380,7 +386,7 @@ class InventoryService:
                         break
                     deduct = min(remaining_to_dispense, b["available_qty"])
                     # flush_only=True — all batch deductions flush without individual commits;
-                    # a single atomic commit fires after ALL batches are allocated (Bug 1 fix).
+                    # a single atomic commit fires after ALL batches are allocated.
                     tx_res = self.add_transaction(
                         location_id=location_id,
                         item_id=item.id,

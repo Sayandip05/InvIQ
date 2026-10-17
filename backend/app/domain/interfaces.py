@@ -34,9 +34,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional, Protocol, runtime_checkable
 
 
-# ---------------------------------------------------------------------------
 # IInventoryRepository
-# ---------------------------------------------------------------------------
 
 @runtime_checkable
 class IInventoryRepository(Protocol):
@@ -88,9 +86,7 @@ class IInventoryRepository(Protocol):
         ...
 
 
-# ---------------------------------------------------------------------------
 # IUserRepository
-# ---------------------------------------------------------------------------
 
 @runtime_checkable
 class IUserRepository(Protocol):
@@ -154,9 +150,7 @@ class IUserRepository(Protocol):
         ...
 
 
-# ---------------------------------------------------------------------------
 # IRequisitionRepository
-# ---------------------------------------------------------------------------
 
 @runtime_checkable
 class IRequisitionRepository(Protocol):
@@ -211,9 +205,7 @@ class IRequisitionRepository(Protocol):
         ...
 
 
-# ---------------------------------------------------------------------------
 # IAuditRepository
-# ---------------------------------------------------------------------------
 
 @runtime_checkable
 class IAuditRepository(Protocol):
@@ -245,9 +237,7 @@ class IAuditRepository(Protocol):
         ...
 
 
-# ---------------------------------------------------------------------------
 # IAnalyticsRepository
-# ---------------------------------------------------------------------------
 
 @runtime_checkable
 class IAnalyticsRepository(Protocol):

@@ -27,7 +27,7 @@ from app.infrastructure.cache.redis_client import get_redis
 
 logger = logging.getLogger("smart_inventory.cache")
 
-# ── TTL constants ─────────────────────────────────────────────────────────
+# TTL constants
 DASHBOARD_TTL  = 120   # 2 minutes
 ANALYTICS_TTL  = 300   # 5 minutes
 REALTIME_TTL   = 30    # 30 seconds
@@ -36,7 +36,7 @@ DEFAULT_TTL    = 300
 # Key prefix — separates our app keys from slowapi rate-limit keys in Redis
 _PREFIX = "cache:"
 
-# ── In-Memory Cache Fallback (thread-safe, TTL-aware) ─────────────────────
+# In-Memory Cache Fallback (thread-safe, TTL-aware)
 _local_cache_lock = threading.Lock()
 _local_cache: Dict[str, Tuple[float, Any]] = {}  # key -> (expiry_timestamp, value)
 
@@ -49,7 +49,7 @@ def _cleanup_local_cache_if_needed():
         _local_cache.pop(k, None)
 
 
-# ── Core primitives ───────────────────────────────────────────────────────
+# Core primitives
 
 def cache_get(key: str) -> Optional[Any]:
     """
@@ -189,7 +189,7 @@ def cache_invalidate_pattern(pattern: str) -> int:
 
 
 
-# ── @cached decorator ─────────────────────────────────────────────────────
+# @cached decorator
 
 def cached(key: str, ttl: int = DEFAULT_TTL):
     """

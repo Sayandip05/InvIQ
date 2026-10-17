@@ -32,7 +32,7 @@ from app.application.agent_tools import (
 
 logger = logging.getLogger("smart_inventory.agent")
 
-# ── All 10 inventory tools (7 core + 3 pharmacy-specific) ─────────────────────
+# All 10 inventory tools (7 core + 3 pharmacy-specific)
 INVENTORY_TOOLS = [
     get_inventory_overview,
     get_critical_items,
@@ -47,7 +47,7 @@ INVENTORY_TOOLS = [
 ]
 
 
-# ── Lazy-initialized agent singleton ───────────────────────────────────────
+# Lazy-initialized agent singleton
 _agent = None
 _agent_available = False
 _agent_executor = concurrent.futures.ThreadPoolExecutor(max_workers=8)

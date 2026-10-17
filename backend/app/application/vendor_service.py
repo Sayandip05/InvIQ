@@ -169,7 +169,7 @@ class VendorService:
                     "error": "The delivery file is missing required columns. It must include 'item_name' and 'quantity'.",
                 }
 
-            # ── Phase 1: In-Memory Validation (All-or-Nothing Dry Run) ────────
+            # Phase 1: In-Memory Validation (All-or-Nothing Dry Run)
             today = date.today()
             validation_errors: List[Dict[str, Any]] = []
             validated_rows: List[Dict[str, Any]] = []
@@ -318,7 +318,7 @@ class VendorService:
                     "error": "The delivery file contains no valid medicine rows to process.",
                 }
 
-            # ── Phase 2: Atomic Database Execution ────────────────────────────
+            # Phase 2: Atomic Database Execution
             # Resolve org_id strictly from location or vendor user if not provided
             if org_id is None:
                 loc = self.db.query(Location).filter(Location.id == location_id).first()
@@ -386,6 +386,7 @@ class VendorService:
                 self.inv_repo.create_transaction(
                     location_id=location_id,
                     item_id=item.id,
+                    org_id=org_id,
                     date=item_data["delivery_date"],
                     opening_stock=opening_stock,
                     received=item_data["quantity"],

@@ -73,7 +73,7 @@ def build_pdf_report(
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f8fafc")]),
     ]
 
-    # ── INVENTORY / LOW_STOCK REPORT ──────────────────────────────────────
+    # INVENTORY / LOW_STOCK REPORT
     if report_type in ("inventory", "low_stock"):
         rows = (
             svc.get_low_stock_rows(location_id=location_id, org_id=org_id)
@@ -112,7 +112,7 @@ def build_pdf_report(
             t.setStyle(TableStyle(HEADER_STYLE))
             elements.append(t)
 
-    # ── REQUISITIONS REPORT ───────────────────────────────────────────────
+    # REQUISITIONS REPORT
     elif report_type == "requisitions":
         elements.append(Paragraph("Requisitions Summary", styles["Heading2"]))
 
@@ -146,7 +146,7 @@ def build_pdf_report(
             t.setStyle(TableStyle(HEADER_STYLE))
             elements.append(t)
 
-    # ── MONTHLY SALES REPORT ──────────────────────────────────────
+    # MONTHLY SALES REPORT
     elif report_type == "monthly_sales":
         now = datetime.now(timezone.utc)
         target_year = now.year

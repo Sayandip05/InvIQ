@@ -31,7 +31,7 @@ from app.core.config import settings
 logger = logging.getLogger("smart_inventory.rate_limit")
 
 
-# ── Key functions ─────────────────────────────────────────────────────────
+# Key functions
 
 def get_client_ip(request: Request) -> str:
     """
@@ -96,7 +96,7 @@ def _get_storage_uri() -> str:
     return "memory://"
 
 
-# ── Limiter instance ──────────────────────────────────────────────────────
+# Limiter instance
 
 limiter = Limiter(
     key_func=get_user_id_or_ip,
@@ -106,7 +106,7 @@ limiter = Limiter(
 )
 
 
-# ── Pre-defined limit strings ─────────────────────────────────────────────
+# Pre-defined limit strings
 # Import these in routes instead of hardcoding strings
 
 AUTH_LIMIT         = settings.RATE_LIMIT_AUTH           # "5/minute"
@@ -118,7 +118,7 @@ ANALYTICS_LIMIT    = "30/minute"
 REFRESH_LIMIT      = "10/minute"
 
 
-# ── 429 error handler ────────────────────────────────────────────────────
+# 429 error handler
 
 def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
     """

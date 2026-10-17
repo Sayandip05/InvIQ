@@ -27,24 +27,24 @@ from app.core.exceptions import AuthenticationError, AuthorizationError
 
 logger = logging.getLogger("smart_inventory.security")
 
-# ── Password hashing (Argon2 — winner of Password Hashing Competition) ────
+# Password hashing (Argon2 — winner of Password Hashing Competition)
 # Uses recommended settings: memory-hard, resistant to GPU/ASIC attacks
 password_hash = PasswordHash.recommended()
 
-# ── Timing attack prevention ───────────────────────────────────────────────
+# Timing attack prevention
 # Always run a hash verify even if user doesn't exist, so an attacker
 # cannot enumerate valid usernames via response timing differences.
 # See: https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/
 DUMMY_HASH = password_hash.hash("dummypassword_not_used_ever")
 
-# ── OAuth2 scheme — enables Swagger /docs "Authorize" button ──────────────
+# OAuth2 scheme — enables Swagger /docs "Authorize" button
 # Even though we use JSON login (not form data), declaring this makes
 # the OpenAPI spec expose the Bearer token flow correctly.
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
 
 
-# ── Password utilities ────────────────────────────────────────────────────
+# Password utilities
 
 def hash_password(password: str) -> str:
     """Hash a plaintext password using Argon2."""
@@ -101,7 +101,7 @@ def authenticate_user(user, plain_password: str) -> bool:
     return verify_password(plain_password, user.hashed_password)
 
 
-# ── JWT token utilities ───────────────────────────────────────────────────
+# JWT token utilities
 
 def create_access_token(
     data: Dict[str, Any], expires_delta: Optional[timedelta] = None
@@ -184,7 +184,7 @@ def verify_refresh_token(token: str) -> Dict[str, Any]:
     return payload
 
 
-# ── Role hierarchy ────────────────────────────────────────────────────────
+# Role hierarchy
 
 ALLOWED_ROLES = {"admin", "staff", "vendor"}
 ROLE_HIERARCHY = {

@@ -31,9 +31,7 @@ from app.infrastructure.database.models import (
 logger = logging.getLogger("smart_inventory.report_service")
 
 
-# ---------------------------------------------------------------------------
 # Public DTOs (plain dicts — no ORM objects leave this service)
-# ---------------------------------------------------------------------------
 
 StockRow = Dict[str, Any]
 TransactionRow = Dict[str, Any]
@@ -52,7 +50,7 @@ class ReportService:
     def __init__(self, db: Session) -> None:
         self._db = db
 
-    # ── Inventory & Low-Stock ────────────────────────────────────────────
+    # Inventory & Low-Stock
 
     def get_stock_rows(
         self,
@@ -119,7 +117,7 @@ class ReportService:
             if r["current_stock"] <= r["min_stock"]
         ]
 
-    # ── Transactions ─────────────────────────────────────────────────────
+    # Transactions
 
     def get_transaction_rows(
         self,
@@ -170,7 +168,7 @@ class ReportService:
             for r in rows
         ]
 
-    # ── Requisitions ─────────────────────────────────────────────────────
+    # Requisitions
 
     def get_requisition_rows(
         self,
@@ -273,9 +271,7 @@ class ReportService:
 
 
 
-# ---------------------------------------------------------------------------
 # Convenience factory — use in FastAPI Depends
-# ---------------------------------------------------------------------------
 
 def get_report_service(db: Session) -> ReportService:
     """FastAPI dependency factory for ReportService."""

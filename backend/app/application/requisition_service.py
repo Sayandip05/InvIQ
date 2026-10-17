@@ -97,7 +97,7 @@ class RequisitionService:
             if not location:
                 raise NotFoundError("Location", location_id)
 
-            # ── Tenant ownership check on location ──────────────────────────
+            # Tenant ownership check on location
             if org_id is not None and location.org_id != org_id:
                 raise AuthorizationError("Location does not belong to your organization")
 
@@ -112,7 +112,7 @@ class RequisitionService:
                 if not item:
                     raise NotFoundError("Item", item_data["item_id"])
 
-                # ── Tenant ownership check on item ──────────────────────────
+                # Tenant ownership check on item
                 if org_id is not None and item.org_id != org_id:
                     raise AuthorizationError(
                         f"Item '{item.name}' does not belong to your organization"
@@ -148,6 +148,7 @@ class RequisitionService:
                     requisition = self.repo.create(
                         requisition_number=req_number,
                         location_id=location_id,
+                        org_id=location.org_id,
                         requested_by=requested_by,
                         department=department,
                         urgency=urgency,
@@ -218,16 +219,10 @@ class RequisitionService:
     ) -> Dict[str, Any]:
         from app.core.exceptions import AuthorizationError
         try:
-            requisition = self.repo.get_by_id(requisition_id, load_items=True)
+            requisition = self.repo.get_by_id(requisition_id, load_items=True, org_id=org_id)
 
             if not requisition:
                 raise NotFoundError("Requisition", requisition_id)
-
-            # ── Tenant ownership check ──────────────────────────────────────
-            if org_id is not None:
-                location = self.repo.get_location(requisition.location_id)
-                if not location or location.org_id != org_id:
-                    raise AuthorizationError("Requisition does not belong to your organization")
 
             if requisition.status != "PENDING":
                 raise InvalidStateError(
@@ -278,7 +273,7 @@ class RequisitionService:
             inv_service = InventoryService(self.inv_repo)
             today = date.today()
 
-            # ── Atomic batch: flush each deduction, commit once at the end ──
+            # Atomic batch: flush each deduction, commit once at the end
             for req_item in requisition.items:
                 if req_item.quantity_approved and req_item.quantity_approved > 0:
                     raw_mult = getattr(req_item, "multiplier", 1)
@@ -341,16 +336,10 @@ class RequisitionService:
     ) -> Dict[str, Any]:
         from app.core.exceptions import AuthorizationError
         try:
-            requisition = self.repo.get_by_id(requisition_id)
+            requisition = self.repo.get_by_id(requisition_id, org_id=org_id)
 
             if not requisition:
                 raise NotFoundError("Requisition", requisition_id)
-
-            # ── Tenant ownership check ──────────────────────────────────────
-            if org_id is not None:
-                location = self.repo.get_location(requisition.location_id)
-                if not location or location.org_id != org_id:
-                    raise AuthorizationError("Requisition does not belong to your organization")
 
             if requisition.status != "PENDING":
                 raise InvalidStateError(
@@ -387,17 +376,10 @@ class RequisitionService:
     ) -> Dict[str, Any]:
         from app.core.exceptions import AuthorizationError
         try:
-            requisition = self.repo.get_by_id(requisition_id)
+            requisition = self.repo.get_by_id(requisition_id, org_id=org_id)
 
             if not requisition:
                 raise NotFoundError("Requisition", requisition_id)
-
-            # ── Tenant ownership check ──────────────────────────────────────
-            if org_id is not None:
-                location = self.repo.get_location(requisition.location_id)
-                if not location or location.org_id != org_id:
-                    raise AuthorizationError("Requisition does not belong to your organization")
-
 
             if requisition.status != "PENDING":
                 raise InvalidStateError("Only PENDING requisitions can be cancelled")
@@ -423,28 +405,27 @@ class RequisitionService:
     ) -> Dict[str, Any]:
         from app.core.exceptions import AuthorizationError
         try:
-            requisition = self.repo.get_by_id(requisition_id, load_items=True)
+            requisition = self.repo.get_by_id(requisition_id, load_items=True, org_id=org_id)
 
             if not requisition:
                 raise NotFoundError("Requisition", requisition_id)
 
-            # ── Tenant ownership check ──────────────────────────────────────
-            if org_id is not None:
-                location = self.repo.get_location(requisition.location_id)
-                if not location or location.org_id != org_id:
-                    raise AuthorizationError("Requisition does not belong to your organization")
-
-            if requisition.status not in ("APPROVED", "PENDING"):
-                raise InvalidStateError(f"Cannot fulfill: requisition is already {requisition.status}")
-
-            # If not yet approved, approve and deduct stock first
-            if requisition.status == "PENDING":
-              # Bug 3 fix: use a very large limit so stats aren't silently capped at 100 rows.
-              rows = self.get_requisition_rows(date_from=date_from, date_to=date_to, org_id=org_id, limit=100_000)
-              requisition = self.repo.get_by_id(requisition_id, load_items=True)
+            # Only APPROVED requisitions can be fulfilled. Stock is deducted during
+            # approval (approve_requisition), so a PENDING requisition must be
+            # approved first instead of being auto-approved here.
+            if requisition.status != "APPROVED":
+                raise InvalidStateError(
+                    f"Cannot fulfill: requisition must be APPROVED (currently {requisition.status})"
+                )
 
             requisition.status = "FULFILLED"
             self.repo.commit()
+
+            logger.info(
+                "Requisition %s fulfilled by %s",
+                requisition.requisition_number,
+                fulfilled_by,
+            )
 
             return {
                 "success": True,

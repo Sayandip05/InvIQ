@@ -34,9 +34,7 @@ logger = logging.getLogger("smart_inventory")
 _INSECURE_SECRET = "your-super-secret-key-change-in-production"
 
 
-# ---------------------------------------------------------------------------
 # .env path discovery
-# ---------------------------------------------------------------------------
 
 def _find_env_file() -> Optional[str]:
     """Return the first existing .env path from the candidate list, or None."""
@@ -51,9 +49,7 @@ def _find_env_file() -> Optional[str]:
     return None
 
 
-# ---------------------------------------------------------------------------
 # Settings — Pydantic BaseSettings
-# ---------------------------------------------------------------------------
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -63,13 +59,13 @@ class Settings(BaseSettings):
         extra="ignore",                     # silently skip unknown env vars
     )
 
-    # ── Application ────────────────────────────────────────────────────
+    # Application
     ENVIRONMENT: str = "development"
     PROJECT_NAME: str = "Smart Inventory Assistant"
     VERSION: str = "2.0.0"
     API_V1_PREFIX: str = "/api"
 
-    # ── Database ───────────────────────────────────────────────────────
+    # Database
     DATABASE_URL: str = ""
     DIRECT_URL: Optional[str] = None
     DB_POOL_SIZE: int = 5
@@ -77,7 +73,7 @@ class Settings(BaseSettings):
     DB_POOL_TIMEOUT: int = 30
     DB_POOL_RECYCLE: int = 1800
 
-    # ── Frontend / CORS ────────────────────────────────────────────────
+    # Frontend / CORS
     FRONTEND_URL: str = "http://localhost:5173"
     # Comma-separated in .env; exposed as list via property below.
     CORS_ORIGINS: str = (
@@ -89,57 +85,57 @@ class Settings(BaseSettings):
         """Parsed CORS origins list — use this in middleware config."""
         return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
 
-    # ── AI / LLM ───────────────────────────────────────────────────────
+    # AI / LLM
     GROQ_API_KEY: Optional[str] = None
     LLM_MODEL: str = "openai/gpt-oss-120b"
     LLM_TEMPERATURE: float = 0.1
     LLM_MAX_TOKENS: int = 1024
 
-    # ── Gemini (Embeddings for Vector Memory) ───────────────────────────
+    # Gemini (Embeddings for Vector Memory)
     GEMINI_API_KEY: Optional[str] = None
     GEMINI_EMBEDDING_MODEL: str = "gemini-embedding-001"
     GEMINI_EMBEDDING_DIM: int = 768
 
-    # ── LangSmith (Observability) ──────────────────────────────────────
+    # LangSmith (Observability)
     LANGCHAIN_API_KEY: Optional[str] = None
     LANGCHAIN_PROJECT: str = "InvIQ"
     LANGCHAIN_TRACING_V2: str = "false"
     LANGCHAIN_ENDPOINT: str = "https://api.smith.langchain.com"
 
-    # ── Qdrant Cloud (Vector Store) ────────────────────────────────────
+    # Qdrant Cloud (Vector Store)
     QDRANT_ENABLED: bool = True
     QDRANT_URL: str = ""
     QDRANT_API_KEY: str = ""
     QDRANT_COLLECTION: str = "chat_memory"
 
-    # ── Auth & Security ────────────────────────────────────────────────
+    # Auth & Security
     SECRET_KEY: str = _INSECURE_SECRET
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    # ── Login Lockout ──────────────────────────────────────────────────
+    # Login Lockout
     MAX_LOGIN_ATTEMPTS: int = 5
     LOCKOUT_DURATION_MINUTES: int = 15
 
 
-    # ── Admin Seed (first startup only) ───────────────────────────────
+    # Admin Seed (first startup only)
     ADMIN_EMAIL: str = "admin@inventory.local"
     ADMIN_USERNAME: str = "admin"
     ADMIN_PASSWORD: str = ""
     ADMIN_FULL_NAME: str = "System Administrator"
 
-    # ── Upstash Redis (Caching & Rate Limiting) ────────────────────────
+    # Upstash Redis (Caching & Rate Limiting)
     REDIS_URL: str = ""
     UPSTASH_REDIS_REST_URL: str = ""
     UPSTASH_REDIS_REST_TOKEN: str = ""
     REDIS_ENABLED: bool = True
 
-    # ── Rate Limiting ──────────────────────────────────────────────────
+    # Rate Limiting
     RATE_LIMIT_DEFAULT: str = "60/minute"
     RATE_LIMIT_AUTH: str = "5/minute"
 
-    # ── SMTP (Email Alerts) ────────────────────────────────────────────
+    # SMTP (Email Alerts)
     SMTP_ENABLED: bool = False
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587
@@ -148,7 +144,7 @@ class Settings(BaseSettings):
     SMTP_FROM_EMAIL: str = ""
     SMTP_FROM_NAME: str = "InvIQ Smart Inventory"
 
-    # ── External APIs ──────────────────────────────────────────────────
+    # External APIs
     GOOGLE_OAUTH_VERIFY_URL: str = (
         "https://www.googleapis.com/oauth2/v3/userinfo"
     )
@@ -159,13 +155,13 @@ class Settings(BaseSettings):
     SARVAM_API_KEY: str = ""
 
 
-    # ── Azure Blob Storage (General PDF & Document Storage) ────────────
+    # Azure Blob Storage (General PDF & Document Storage)
     AZURE_STORAGE_CONNECTION_STRING: Optional[str] = None
     AZURE_STORAGE_CONTAINER_NAME: str = "inviq-documents"
     AZURE_STORAGE_ACCOUNT_NAME: Optional[str] = None
     AZURE_STORAGE_ACCOUNT_KEY: Optional[str] = None
 
-    # ── Data Import (AI-powered CSV/Excel column mapping) ──────────────
+    # Data Import (AI-powered CSV/Excel column mapping)
     # Confidence threshold applied to most mapped fields (0.0–1.0).
     # Rows/fields below this score are quarantined, never auto-written.
     IMPORT_DEFAULT_CONFIDENCE: float = 0.70
@@ -194,7 +190,7 @@ class Settings(BaseSettings):
     # is unavailable).  Prevents unbounded thread/DB-connection growth under load.
     IMPORT_MAX_WORKERS: int = 4
 
-    # ── Derived helpers ────────────────────────────────────────────────
+    # Derived helpers
 
     @property
     def rate_limit_storage_url(self) -> str:
@@ -228,7 +224,7 @@ class Settings(BaseSettings):
         """Alias for rate_limit_storage_url for slowapi limiter."""
         return self.rate_limit_storage_url
 
-    # ── Production safety validation ───────────────────────────────────
+    # Production safety validation
 
     @model_validator(mode="after")
     def _validate_production(self) -> "Settings":
@@ -280,16 +276,12 @@ class Settings(BaseSettings):
         return self
 
 
-# ---------------------------------------------------------------------------
 # Singleton — import this everywhere
-# ---------------------------------------------------------------------------
 
 settings = Settings()
 
 
-# ---------------------------------------------------------------------------
 # LangSmith helper — call from FastAPI lifespan, NOT at import time
-# ---------------------------------------------------------------------------
 
 def configure_langsmith() -> None:
     """

@@ -36,7 +36,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-# ── Paths ─────────────────────────────────────────────────────────────────────
+# Paths
 # core(0) → app(1) → backend(2) → InvIQ project root(3)
 _PROJECT_ROOT = Path(__file__).resolve().parents[3]
 _LOG_DIR = _PROJECT_ROOT / "logs"
@@ -52,7 +52,7 @@ _MAX_BYTES    = 10 * 1024 * 1024
 _BACKUP_COUNT = 5
 
 
-# ── Formatters ────────────────────────────────────────────────────────────────
+# Formatters
 
 _PLAIN_FMT  = "%(asctime)s | %(levelname)-8s | %(name)-32s | %(message)s"
 _DATE_FMT   = "%Y-%m-%d %H:%M:%S"
@@ -77,7 +77,7 @@ class _JsonFormatter(logging.Formatter):
         return json.dumps(payload, ensure_ascii=False)
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# Helpers
 
 def _rotating(path: Path, level: int) -> logging.handlers.RotatingFileHandler | None:
     """Create a RotatingFileHandler; return None if the filesystem is read-only."""
@@ -115,7 +115,7 @@ def _utf8_stream_handler(level: int, formatter: logging.Formatter) -> logging.St
     return handler
 
 
-# ── Public API ────────────────────────────────────────────────────────────────
+# Public API
 
 def setup_logging(environment: str = "development") -> None:
     """
@@ -138,7 +138,7 @@ def setup_logging(environment: str = "development") -> None:
 
     base_level = logging.DEBUG if is_dev else logging.INFO
 
-    # ── Root logger ───────────────────────────────────────────────────────────
+    # Root logger
     root = logging.getLogger()
     root.handlers.clear()
     root.setLevel(base_level)
@@ -164,7 +164,7 @@ def setup_logging(environment: str = "development") -> None:
         # Production: JSON to stdout only
         root.addHandler(_utf8_stream_handler(logging.INFO, _JsonFormatter()))
 
-    # ── Per-logger customisation ───────────────────────────────────────────────
+    # Per-logger customisation
 
     # uvicorn HTTP access → access.log (dev only)
     access_logger = logging.getLogger("uvicorn.access")
