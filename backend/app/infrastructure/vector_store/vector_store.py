@@ -84,7 +84,7 @@ class VectorMemory:
             self._available = False
             self._client = None
 
-    # ── Internal helpers ──────────────────────────────────────────────────
+    # Internal helpers
 
     def _ensure_collection(self) -> None:
         """Create or recreate the collection with the correct vector dimensions."""
@@ -129,7 +129,7 @@ class VectorMemory:
             logger.debug("Gemini embedding failed: %s", e)
             return [0.0] * self._dim
 
-    # ── Public API ────────────────────────────────────────────────────────
+    # Public API
 
     @property
     def is_available(self) -> bool:

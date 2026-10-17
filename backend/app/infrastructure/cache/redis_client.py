@@ -24,7 +24,7 @@ from app.core.config import settings
 
 logger = logging.getLogger("smart_inventory.redis")
 
-# ── Module-level singleton ───────────────────────────────────────────────────
+# Module-level singleton
 _redis_client = None          # upstash_redis.Redis instance or None
 _redis_available: bool = False
 _import_failed: bool = False  # True once upstash_redis import fails — prevents retry spam
@@ -117,7 +117,7 @@ def close_redis() -> None:
     logger.info("Upstash Redis client reference cleared")
 
 
-# ── Typed helpers (used by cache_service, token_blacklist, login_attempts) ───
+# Typed helpers (used by cache_service, token_blacklist, login_attempts)
 
 def redis_get_json(key: str) -> Optional[Any]:
     """Get a JSON-deserialized value from Redis. Returns None on any failure."""

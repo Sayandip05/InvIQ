@@ -23,7 +23,7 @@ class BillingRepository:
     def __init__(self, db: Session) -> None:
         self._db = db
 
-    # ── Create ────────────────────────────────────────────────────────────
+    # Create
 
     def create_session(
         self,
@@ -48,7 +48,7 @@ class BillingRepository:
         )
         return session
 
-    # ── Read ──────────────────────────────────────────────────────────────
+    # Read
 
     def get_by_id(self, session_id: int, org_id: Optional[int] = None) -> Optional[BillingSession]:
         """Fetch a BillingSession by primary key, optionally scoped to org."""
@@ -72,7 +72,7 @@ class BillingRepository:
             .all()
         )
 
-    # ── Append item to cart ───────────────────────────────────────────────
+    # Append item to cart
 
     def append_item(
         self,
@@ -90,7 +90,7 @@ class BillingRepository:
         self._db.refresh(session)
         return session
 
-    # ── Checkout ─────────────────────────────────────────────────────────
+    # Checkout
 
     def checkout(
         self,
@@ -121,7 +121,7 @@ class BillingRepository:
         )
         return session
 
-    # ── Cancel ────────────────────────────────────────────────────────────
+    # Cancel
 
     def cancel(self, session: BillingSession) -> BillingSession:
         """Mark a session CANCELLED (stock reversal is done by the route layer)."""
@@ -132,7 +132,7 @@ class BillingRepository:
         logger.info("BillingSession #%s CANCELLED", session.id)
         return session
 
-    # ── Monthly aggregation (fallback when Redis is cold) ─────────────────
+    # Monthly aggregation (fallback when Redis is cold)
 
     def get_monthly_aggregate(self, org_id: int, year: int, month: int) -> Dict[str, Any]:
         """

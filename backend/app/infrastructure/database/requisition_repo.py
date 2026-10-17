@@ -23,12 +23,15 @@ class RequisitionRepository:
         self.db = db
 
     def get_by_id(
-        self, requisition_id: int, load_items: bool = False
+        self, requisition_id: int, load_items: bool = False, org_id: Optional[int] = None
     ) -> Optional[Requisition]:
         query = self.db.query(Requisition)
         if load_items:
             query = query.options(joinedload(Requisition.items))
-        return query.filter(Requisition.id == requisition_id).first()
+        query = query.filter(Requisition.id == requisition_id)
+        if org_id is not None:
+            query = query.filter(Requisition.org_id == org_id)
+        return query.first()
 
     def get_with_full_details(self, requisition_id: int, org_id: Optional[int] = None) -> Optional[Requisition]:
         query = (

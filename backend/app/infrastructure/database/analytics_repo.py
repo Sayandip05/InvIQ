@@ -25,30 +25,40 @@ def get_latest_stock_health(
     Get stock health for most recent transaction across all locations and items
     with optional multi-tenant and dimension filters.
     """
-    latest_date = db.query(func.max(InventoryTransaction.date)).scalar()
+    # Tenant-scoped calendar: the "latest date" must be computed within the caller's
+    # org, otherwise one busy org's activity distorts another org's usage windows.
+    latest_date_q = db.query(func.max(InventoryTransaction.date))
+    if org_id is not None:
+        latest_date_q = latest_date_q.filter(InventoryTransaction.org_id == org_id)
+    latest_date = latest_date_q.scalar()
 
     if not latest_date:
         return []
 
     # Subquery: exact latest transaction per location and item (deterministic tie-break by max ID)
+    latest_tx_q = db.query(
+        func.max(InventoryTransaction.id).label("max_id"),
+    )
+    if org_id is not None:
+        latest_tx_q = latest_tx_q.filter(InventoryTransaction.org_id == org_id)
     latest_tx_sub = (
-        db.query(
-            func.max(InventoryTransaction.id).label("max_id"),
-        )
+        latest_tx_q
         .group_by(InventoryTransaction.location_id, InventoryTransaction.item_id)
         .subquery()
     )
 
+    daily_usage_q = db.query(
+        InventoryTransaction.location_id,
+        InventoryTransaction.item_id,
+        func.avg(InventoryTransaction.issued).label("avg_daily_usage"),
+    ).filter(
+        InventoryTransaction.date >= (latest_date - timedelta(days=StockThresholds.USAGE_WINDOW_DAYS)),
+        InventoryTransaction.date <= latest_date,
+    )
+    if org_id is not None:
+        daily_usage_q = daily_usage_q.filter(InventoryTransaction.org_id == org_id)
     subq = (
-        db.query(
-            InventoryTransaction.location_id,
-            InventoryTransaction.item_id,
-            func.avg(InventoryTransaction.issued).label("avg_daily_usage"),
-        )
-        .filter(
-            InventoryTransaction.date >= (latest_date - timedelta(days=StockThresholds.USAGE_WINDOW_DAYS)),
-            InventoryTransaction.date <= latest_date,
-        )
+        daily_usage_q
         .group_by(InventoryTransaction.location_id, InventoryTransaction.item_id)
         .subquery()
     )

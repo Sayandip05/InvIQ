@@ -27,7 +27,7 @@ logger = logging.getLogger("smart_inventory.login_attempts")
 _LOCKOUT_TTL_SECONDS = settings.LOCKOUT_DURATION_MINUTES * 60
 _PREFIX = "lockout:"
 
-# ── In-memory fallback (dev without Redis) ────────────────────────────────
+# In-memory fallback (dev without Redis)
 _mem_attempts: dict[str, int] = {}
 
 

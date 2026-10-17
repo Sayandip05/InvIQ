@@ -15,7 +15,7 @@ logger = logging.getLogger("smart_inventory.token_blacklist")
 
 import time
 
-# ── In-memory fallback (only for dev without Redis) ────────────────────────
+# In-memory fallback (only for dev without Redis)
 # Stores token -> expiration epoch timestamp to prevent unbounded leaks.
 _memory_blacklist: dict[str, float] = {}
 
@@ -90,7 +90,7 @@ def blacklist_refresh_token(token: str) -> None:
     blacklist_token(token, expires_in_minutes=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60)
 
 
-# ── Single-use password reset JTI store ───────────────────────────────────
+# Single-use password reset JTI store
 _RESET_PREFIX = "pw_reset_jti:"
 _memory_reset_jtis: dict[str, float] = {}  # jti -> expiry_epoch (in-memory fallback)
 
