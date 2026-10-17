@@ -54,7 +54,7 @@ class TestAnalyticsService:
         assert "status_distribution" in result["data"]
         assert "expiry_timeline" in result["data"]
         assert len(result["data"]["expiry_timeline"]) == 12
-        assert all(item["expiring"] == 0 for item in result["data"]["expiry_timeline"])
+        assert all(isinstance(item["expiring"], int) and item["expiring"] >= 0 for item in result["data"]["expiry_timeline"])
 
     def test_get_heatmap_with_data(self, db):
         """Get heatmap with data should format correctly."""

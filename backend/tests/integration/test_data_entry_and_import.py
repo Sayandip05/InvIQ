@@ -37,6 +37,20 @@ def clear_caches_before_test():
     cache_invalidate_pattern("*")
 
 
+import openpyxl
+
+
+def _create_excel(rows):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    for r in rows:
+        ws.append(r)
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return buf.getvalue()
+
+
 def _auth_headers(user: User) -> dict:
     token = create_access_token(data={"sub": str(user.id)})
     return {"Authorization": f"Bearer {token}"}
@@ -63,14 +77,14 @@ def test_data_import_preview_mapping_and_quarantine(client, db):
 
     headers = _auth_headers(admin)
 
-    # 1. Upload CSV with mixed valid and corrupted rows
-    csv_content = (
-        b"Item Name,Received Qty,Transaction Date,Batch Number,Expiry Date\n"
-        b"Amoxicillin 500mg,100,2026-05-01,BTX-101,2027-05-01\n"
-        b"Paracetamol 650mg,INVALID_QTY,2026-05-01,BTX-102,2027-06-01\n"
-        b",50,2026-05-01,BTX-103,2027-07-01\n"
-    )
-    files = {"file": ("stock_manifest.csv", io.BytesIO(csv_content), "text/csv")}
+    # 1. Upload Excel with mixed valid and corrupted rows
+    excel_content = _create_excel([
+        ["Item Name", "Received Qty", "Transaction Date", "Batch Number", "Expiry Date"],
+        ["Amoxicillin 500mg", 100, "2026-05-01", "BTX-101", "2027-05-01"],
+        ["Paracetamol 650mg", "INVALID_QTY", "2026-05-01", "BTX-102", "2027-06-01"],
+        [None, 50, "2026-05-01", "BTX-103", "2027-07-01"],
+    ])
+    files = {"file": ("stock_manifest.xlsx", io.BytesIO(excel_content), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")}
 
     res_upload = client.post(
         "/api/data-import/upload?target_entity=inventory_transaction",
@@ -146,8 +160,11 @@ def test_import_default_location_tenant_validation_and_ownership(client, db):
     headers_2 = _auth_headers(admin_2)
 
     # 1. Admin 1 uploads import file
-    csv_content = b"Item Name,Received,Date\nMetformin 500mg,60,2026-05-02\n"
-    files = {"file": ("items.csv", io.BytesIO(csv_content), "text/csv")}
+    excel_content = _create_excel([
+        ["Item Name", "Received", "Date"],
+        ["Metformin 500mg", 60, "2026-05-02"],
+    ])
+    files = {"file": ("items.xlsx", io.BytesIO(excel_content), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")}
 
     res_upload = client.post(
         "/api/data-import/upload?target_entity=inventory_transaction",

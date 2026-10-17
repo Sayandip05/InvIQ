@@ -34,11 +34,28 @@ def test_heuristic_mapper():
     assert mappings["Batch #"]["target_field"] == "batch_number"
 
 
+import openpyxl
+
+
+def _create_excel(rows):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    for r in rows:
+        ws.append(r)
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return buf.getvalue()
+
+
 def test_upload_and_preview_endpoint(client, test_user, db):
     auth_header = get_auth_header(client, test_user["username"], test_user["password"])
 
-    csv_content = b"Medicine,Quantity,Date\nIbuprofen 400mg,200,2026-04-01\n"
-    files = {"file": ("medicines.csv", io.BytesIO(csv_content), "text/csv")}
+    excel_content = _create_excel([
+        ["Medicine", "Quantity", "Date"],
+        ["Ibuprofen 400mg", 200, "2026-04-01"]
+    ])
+    files = {"file": ("medicines.xlsx", io.BytesIO(excel_content), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")}
 
     response = client.post(
         "/api/data-import/upload?target_entity=inventory_transaction",
@@ -50,7 +67,7 @@ def test_upload_and_preview_endpoint(client, test_user, db):
     data = response.json()
     assert data["success"] is True
     assert "job_id" in data
-    assert data["filename"] == "medicines.csv"
+    assert data["filename"] == "medicines.xlsx"
     assert data["total_rows"] == 1
     assert "mapping_result" in data
 
@@ -72,12 +89,12 @@ def test_confirm_import_and_quarantine(client, test_user, db):
 
 
     # Valid row + invalid quantity row
-    csv_content = (
-        b"Item Name,Received,Date\n"
-        b"Cough Syrup 100ml,50,2026-04-10\n"
-        b"Invalid Item,NOT_A_NUMBER,2026-04-10\n"
-    )
-    files = {"file": ("mixed.csv", io.BytesIO(csv_content), "text/csv")}
+    excel_content = _create_excel([
+        ["Item Name", "Received", "Date"],
+        ["Cough Syrup 100ml", 50, "2026-04-10"],
+        ["Invalid Item", "NOT_A_NUMBER", "2026-04-10"],
+    ])
+    files = {"file": ("mixed.xlsx", io.BytesIO(excel_content), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")}
 
     upload_res = client.post(
         "/api/data-import/upload?target_entity=inventory_transaction",
